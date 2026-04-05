@@ -32,8 +32,9 @@ interface ChatRoomProps {
   channel: Channel
   initialMessages: Message[]
   token: string
-  currentUserId: string
-  currentUserName?: string
+  currentMemberId: string
+  currentMemberName?: string
+  currentMemberAvatarUrl?: string | null
 }
 
 function formatTime(iso: string | null): string {
@@ -65,7 +66,7 @@ function Avatar({ name, avatarUrl, size = 8 }: { name: string; avatarUrl: string
   )
 }
 
-export function ChatRoom({ channel, initialMessages, token: _token, currentUserId, currentUserName = 'You' }: ChatRoomProps) {
+export function ChatRoom({ channel, initialMessages, token: _token, currentMemberId, currentMemberName = 'You', currentMemberAvatarUrl = null }: ChatRoomProps) {
   const [messages, setMessages] = useState<Message[]>(initialMessages)
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
@@ -106,10 +107,10 @@ export function ChatRoom({ channel, initialMessages, token: _token, currentUserI
             created_at: string
             edited_at: string | null
           }
-          // Don't double-add messages we sent ourselves (we optimistically rendered them)
+          // Skip if already in state (optimistic was already replaced with real ID)
           setMessages((prev) => {
             if (prev.some((m) => m.id === newMsg.id)) return prev
-            // Fetch with author info
+            // Message from another user — fetch with author info
             apiClientGet<Message[]>(`/api/chat/channels/${channel.id}/messages?limit=1`)
               .then((msgs) => {
                 const latest = msgs.at(-1)
@@ -118,7 +119,6 @@ export function ChatRoom({ channel, initialMessages, token: _token, currentUserI
                 }
               })
               .catch(() => {
-                // Fallback: add without author info
                 setMessages((p) =>
                   p.some((m) => m.id === newMsg.id)
                     ? p
@@ -161,7 +161,7 @@ export function ChatRoom({ channel, initialMessages, token: _token, currentUserI
 
     // ── Presence channel ───────────────────────────────────────────────────────
     const presenceChannel = supabase.channel(`chat:${channel.id}:presence`, {
-      config: { presence: { key: currentUserId } },
+      config: { presence: { key: currentMemberId || 'anon' } },
     })
 
     presenceChannel
@@ -171,7 +171,7 @@ export function ChatRoom({ channel, initialMessages, token: _token, currentUserI
         setOnlineCount(online.length)
       })
       .on('broadcast', { event: 'typing' }, ({ payload }: { payload: { userId: string; name: string; isTyping: boolean } }) => {
-        if (payload.userId === currentUserId) return
+        if (payload.userId === currentMemberId) return
         setTypingUsers((prev) => {
           if (payload.isTyping) {
             return prev.includes(payload.name) ? prev : [...prev, payload.name]
@@ -182,8 +182,8 @@ export function ChatRoom({ channel, initialMessages, token: _token, currentUserI
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {
           await presenceChannel.track({
-            userId: currentUserId,
-            name: currentUserName,
+            userId: currentMemberId,
+            name: currentMemberName,
             onlineAt: new Date().toISOString(),
           })
         }
@@ -194,7 +194,7 @@ export function ChatRoom({ channel, initialMessages, token: _token, currentUserI
       supabase.removeChannel(presenceChannel)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [channel.id, currentUserId, currentUserName])
+  }, [channel.id, currentMemberId, currentMemberName])
 
   // Broadcast typing indicator
   const broadcastTyping = useCallback(
@@ -202,10 +202,10 @@ export function ChatRoom({ channel, initialMessages, token: _token, currentUserI
       supabase.channel(`chat:${channel.id}:presence`).send({
         type: 'broadcast',
         event: 'typing',
-        payload: { userId: currentUserId, name: currentUserName, isTyping },
+        payload: { userId: currentMemberId, name: currentMemberName, isTyping },
       })
     },
-    [supabase, channel.id, currentUserId, currentUserName],
+    [supabase, channel.id, currentMemberId, currentMemberName],
   )
 
   function handleInputChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
@@ -228,13 +228,32 @@ export function ChatRoom({ channel, initialMessages, token: _token, currentUserI
     broadcastTyping(false)
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current)
 
+    // Optimistic update — show immediately, replace with real data when Realtime fires
+    const optimisticId = `optimistic-${Date.now()}`
+    const optimistic: Message = {
+      id: optimisticId,
+      channelId: channel.id,
+      body,
+      createdAt: new Date().toISOString(),
+      editedAt: null,
+      authorId: currentMemberId,
+      authorName: currentMemberName,
+      authorAvatarUrl: currentMemberAvatarUrl ?? null,
+    }
+    setMessages((prev) => [...prev, optimistic])
+
     try {
-      await apiClientPost(`/api/chat/channels/${channel.id}/messages`, { body })
+      const created = await apiClientPost<Message>(`/api/chat/channels/${channel.id}/messages`, { body })
+      // Replace optimistic with real message
+      setMessages((prev) => prev.map((m) => m.id === optimisticId ? { ...created, channelId: channel.id } : m))
+    } catch {
+      // Remove optimistic on failure
+      setMessages((prev) => prev.filter((m) => m.id !== optimisticId))
     } finally {
       setSending(false)
       inputRef.current?.focus()
     }
-  }, [input, sending, channel.id, broadcastTyping])
+  }, [input, sending, channel.id, broadcastTyping, currentMemberId, currentMemberName, currentMemberAvatarUrl])
 
   async function handleEdit(msgId: string) {
     const body = editBody.trim()
@@ -333,7 +352,7 @@ export function ChatRoom({ channel, initialMessages, token: _token, currentUserI
               {group.msgs.map((msg, idx) => {
                 const prevMsg = idx > 0 ? group.msgs[idx - 1] : null
                 const isSameAuthor = prevMsg?.authorId === msg.authorId
-                const isOwnMessage = msg.authorId === currentUserId
+                const isOwnMessage = msg.authorId === currentMemberId
                 const isEditing = editingId === msg.id
                 const isHovered = hoveredId === msg.id
 

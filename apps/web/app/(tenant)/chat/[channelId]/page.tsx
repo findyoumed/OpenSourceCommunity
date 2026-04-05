@@ -23,6 +23,12 @@ interface Message {
   authorAvatarUrl: string | null
 }
 
+interface MemberProfile {
+  id: string
+  displayName: string
+  avatarUrl: string | null
+}
+
 export default async function ChatChannelPage({
   params,
 }: {
@@ -32,15 +38,17 @@ export default async function ChatChannelPage({
   const supabase = await createClient()
   const session = await supabase.auth.getSession()
   const token = session.data.session?.access_token
-  const userId = session.data.session?.user?.id
-  const userName = session.data.session?.user?.user_metadata?.full_name as string | undefined
 
   let channel: Channel | null = null
   let initialMessages: Message[] = []
+  let memberProfile: MemberProfile | null = null
 
   try {
-    channel = await apiGet<Channel>(`/api/chat/channels/${channelId}`, token)
-    initialMessages = await apiGet<Message[]>(`/api/chat/channels/${channelId}/messages?limit=50`, token)
+    [channel, initialMessages, memberProfile] = await Promise.all([
+      apiGet<Channel>(`/api/chat/channels/${channelId}`, token),
+      apiGet<Message[]>(`/api/chat/channels/${channelId}/messages?limit=50`, token),
+      apiGet<MemberProfile>('/api/me', token, 60),
+    ])
   } catch {
     notFound()
   }
@@ -52,8 +60,9 @@ export default async function ChatChannelPage({
       channel={channel}
       initialMessages={initialMessages}
       token={token ?? ''}
-      currentUserId={userId ?? ''}
-      {...(userName !== undefined ? { currentUserName: userName } : {})}
+      currentMemberId={memberProfile?.id ?? ''}
+      currentMemberName={memberProfile?.displayName ?? 'You'}
+      currentMemberAvatarUrl={memberProfile?.avatarUrl ?? null}
     />
   )
 }
