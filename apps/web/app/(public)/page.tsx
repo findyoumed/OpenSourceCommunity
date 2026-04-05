@@ -773,7 +773,7 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {/* Phase 1 — Shipped */}
             <div className="rounded-2xl border-2 border-emerald-200 bg-gradient-to-br from-emerald-50 to-teal-50 p-7 shadow-sm">
               <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700 mb-3">
@@ -796,24 +796,7 @@ export default function LandingPage() {
               </p>
             </div>
 
-            {/* Phase 3 — Social Loop */}
-            <div className="rounded-2xl border border-violet-200 bg-white p-7 shadow-sm">
-              <div className="h-11 w-11 rounded-xl bg-violet-50 flex items-center justify-center mb-5">
-                <svg className="h-5 w-5 text-violet-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                  <path d="m17 11-5-5-5 5" /><path d="M12 6v9" />
-                </svg>
-              </div>
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-violet-100 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-violet-700 mb-3">
-                Phase 3
-              </div>
-              <h3 className="text-lg font-semibold text-surface-foreground mb-2">Social Loop</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Every social mention becomes a community conversation. Reply in your forum — the answer goes back to Reddit, Twitter, or wherever it came from.
-              </p>
-            </div>
-
-            {/* Phase 4 — Fediverse */}
+            {/* Phase 3 — Fediverse */}
             <div className="rounded-2xl border border-border bg-white p-7 shadow-sm">
               <div className="h-11 w-11 rounded-xl bg-indigo-50 flex items-center justify-center mb-5">
                 <svg className="h-5 w-5 text-indigo-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -822,7 +805,7 @@ export default function LandingPage() {
                 </svg>
               </div>
               <div className="inline-flex items-center gap-1.5 rounded-full bg-indigo-100 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-indigo-700 mb-3">
-                Phase 4
+                Phase 3
               </div>
               <h3 className="text-lg font-semibold text-surface-foreground mb-2">Fediverse (ActivityPub)</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">
@@ -830,13 +813,13 @@ export default function LandingPage() {
               </p>
             </div>
 
-            {/* Phase 6 — Slack Bridge */}
+            {/* Phase 4 — Slack Bridge */}
             <div className="rounded-2xl border border-border bg-white p-7 shadow-sm">
               <div className="h-11 w-11 rounded-xl bg-sky-50 flex items-center justify-center mb-5">
                 <SlackIcon className="h-5 w-5 text-sky-600" />
               </div>
               <div className="inline-flex items-center gap-1.5 rounded-full bg-sky-100 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-sky-700 mb-3">
-                Phase 6
+                Phase 4
               </div>
               <h3 className="text-lg font-semibold text-surface-foreground mb-2">Slack Bridge</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">
