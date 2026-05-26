@@ -35,6 +35,17 @@ app.use('*', cors({
   },
 }))
 
+// [LOG: 20260526_2248]
+// Welcome / Root check (Registered before tenantMiddleware to prevent 404)
+app.get('/', (c) => c.json({
+  status: 'alive',
+  message: 'OpenSourceCommunity API Server is running! 🟢',
+  timestamp: new Date().toISOString()
+}))
+
+// Health check (Registered before tenantMiddleware to prevent 404)
+app.get('/health', (c) => c.json({ status: 'ok', timestamp: new Date().toISOString() }))
+
 // Public setup endpoint — must be registered BEFORE tenantMiddleware
 setupRoutes(app)
 
@@ -63,17 +74,6 @@ registerChatRoutes(app)
 
 // Admin routes (analytics, audit log, content reports)
 registerAdminRoutes(app)
-
-// [LOG: 20260526_2248]
-// Welcome / Root check
-app.get('/', (c) => c.json({
-  status: 'alive',
-  message: 'OpenSourceCommunity API Server is running! 🟢',
-  timestamp: new Date().toISOString()
-}))
-
-// Health check
-app.get('/health', (c) => c.json({ status: 'ok', timestamp: new Date().toISOString() }))
 
 // 404 handler
 app.notFound((c) => c.json({ error: 'Not found' }, 404))
