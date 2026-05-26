@@ -1,3 +1,4 @@
+// [LOG: 20260526_2138]
 import type { NextConfig } from 'next'
 
 const config: NextConfig = {
