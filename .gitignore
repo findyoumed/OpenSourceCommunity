@@ -70,3 +70,8 @@ temp/
 # ─── Claude Code (may contain local paths / secrets) ───────────────────────────
 .claude/
 .vercel
+
+# ─── AI Agent & Local automation ───────────────────────────────────────────────
+.agents/
+skills-lock.json
+commit-and-push.bat
