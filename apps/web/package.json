@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev --port 3001 --turbo",
     "build": "next build",
-    "build:cf": "node -e \"const env = {...process.env}; const p = 'D:\\\\work\\\\OpenSourceCommunity\\\\apps\\\\web\\\\temp_bin;' + (env.Path || env.PATH || ''); env.Path = env.PATH = p; env.npm_config_user_agent = 'npm/10.0.0 node/v20.0.0 win32 x64'; require('child_process').execSync('next-on-pages', {stdio: 'inherit', env})\"",
+    "build:cf": "next-on-pages",
+    "build:local": "node -e \"const env = {...process.env}; const p = 'D:\\\\work\\\\OpenSourceCommunity\\\\apps\\\\web\\\\temp_bin;' + (env.Path || env.PATH || ''); env.Path = env.PATH = p; env.npm_config_user_agent = 'npm/10.0.0 node/v20.0.0 win32 x64'; require('child_process').execSync('next-on-pages', {stdio: 'inherit', env})\"",
     "deploy": "npm run build:cf && wrangler pages deploy .vercel/output/static",
     "typecheck": "tsc --noEmit",
     "lint": "next lint",
