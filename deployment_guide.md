@@ -25,7 +25,7 @@
 | **Production Branch** | `main` | 실서버로 보낼 핵심 메인 브랜치입니다. |
 | **Framework Preset** | **`Next.js`** | 프레임워크 규격을 Next.js로 지정합니다. |
 | **Root Directory** | **`apps/web`** | 모노레포 하위의 프론트 폴더 경로를 지정합니다. |
-| **Build Command** | `pnpm build` | 최적화 빌드를 수행하는 프로덕션 명령어입니다. |
+| **Build Command** | `pnpm --filter web build` | 핀포인트로 오직 프론트엔드만 격리 배포하여 백엔드 중복 에러를 방지하는 무적의 빌드 명령어입니다. |
 | **Build Output Directory** | **`.vercel/output`** | Cloudflare Pages의 Next.js 표준 빌드 아웃풋 경로입니다. |
 
 ### 🔑 1-1. 프론트엔드와 백엔드 실서버 연동 열쇠 (중요!)
