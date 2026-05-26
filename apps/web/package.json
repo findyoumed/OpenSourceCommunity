@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "dev": "next dev --port 3001",
+    "dev": "next dev --port 3001 --turbo",
     "build": "next build",
     "build:cf": "npx @cloudflare/next-on-pages",
     "deploy": "npm run build:cf && wrangler pages deploy .vercel/output/static",
