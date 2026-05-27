@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { RichEditor } from '@/components/editor'
 import { apiClientPost } from '@/lib/api-client'
+import { useTranslation } from '@/lib/i18n-context'
 
 interface IdeaCategory {
   id: string
@@ -14,10 +15,16 @@ interface IdeaCategory {
 interface NewIdeaFormProps {
   categories: IdeaCategory[]
   token: string
+  lang?: string | null
 }
 
-export function NewIdeaForm({ categories, token: _token }: NewIdeaFormProps) {
+export function NewIdeaForm({
+  categories,
+  token: _token,
+  lang: _lang,
+}: NewIdeaFormProps) {
   const router = useRouter()
+  const { t } = useTranslation()
   const [isPending, startTransition] = useTransition()
   const [title, setTitle] = useState('')
   const [body, setBody] = useState('')
@@ -33,7 +40,7 @@ export function NewIdeaForm({ categories, token: _token }: NewIdeaFormProps) {
     const trimmedTitle = title.trim()
     const trimmedBody = body.trim()
     if (!trimmedTitle) {
-      setError('Title is required.')
+      setError(t('ideas.new.errorTitleRequired'))
       return
     }
     setError(null)
@@ -49,7 +56,9 @@ export function NewIdeaForm({ categories, token: _token }: NewIdeaFormProps) {
         const data = await apiClientPost<{ id: string }>('/api/ideas', payload)
         router.push(`/ideas/${data.id}`)
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
+        setError(
+          err instanceof Error ? err.message : t('ideas.new.errorGeneric')
+        )
       }
     })
   }
@@ -60,14 +69,14 @@ export function NewIdeaForm({ categories, token: _token }: NewIdeaFormProps) {
         {/* Title */}
         <div>
           <label htmlFor="idea-title" className={labelClass}>
-            Title <span className="text-red-500">*</span>
+            {t('ideas.new.fieldTitle')} <span className="text-red-500">*</span>
           </label>
           <input
             id="idea-title"
             type="text"
             required
             maxLength={300}
-            placeholder="Summarize your idea in one line"
+            placeholder={t('ideas.new.fieldTitlePlaceholder')}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             className={inputClass}
@@ -76,11 +85,11 @@ export function NewIdeaForm({ categories, token: _token }: NewIdeaFormProps) {
 
         {/* Body */}
         <div>
-          <label className={labelClass}>Details</label>
+          <label className={labelClass}>{t('ideas.new.fieldBody')}</label>
           <RichEditor
             value={body}
             onChange={setBody}
-            placeholder="Describe the problem and how your idea solves it…"
+            placeholder={t('ideas.new.fieldBodyPlaceholder')}
             minHeight="200px"
             disabled={isPending}
           />
@@ -90,7 +99,7 @@ export function NewIdeaForm({ categories, token: _token }: NewIdeaFormProps) {
         {categories.length > 0 && (
           <div>
             <label htmlFor="idea-category" className={labelClass}>
-              Category
+              {t('ideas.new.fieldCategory')}
             </label>
             <select
               id="idea-category"
@@ -98,7 +107,7 @@ export function NewIdeaForm({ categories, token: _token }: NewIdeaFormProps) {
               onChange={(e) => setCategory(e.target.value)}
               className={inputClass}
             >
-              <option value="">— Select a category —</option>
+              <option value="">{t('ideas.new.fieldCategoryPlaceholder')}</option>
               {categories.map((c) => (
                 <option key={c.id} value={c.name}>
                   {c.name}
@@ -121,15 +130,16 @@ export function NewIdeaForm({ categories, token: _token }: NewIdeaFormProps) {
           disabled={isPending || !title.trim()}
           className="rounded-lg bg-brand px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          {isPending ? 'Submitting…' : 'Submit idea'}
+          {isPending ? t('ideas.new.submittingBtn') : t('ideas.new.submitBtn')}
         </button>
         <Link
           href="/ideas"
           className="rounded-lg border border-border px-5 py-2.5 text-sm font-medium text-muted-foreground hover:bg-muted transition-colors"
         >
-          Cancel
+          {t('ideas.new.cancelBtn')}
         </Link>
       </div>
     </form>
   )
 }
+

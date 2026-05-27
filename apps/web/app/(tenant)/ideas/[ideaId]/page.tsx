@@ -9,6 +9,7 @@ import { STATUS_CONFIG } from '../ideas-config'
 import type { IdeaStatus } from '../ideas-config'
 import { Badge } from '@/components/ui/badge'
 import { Avatar } from '@/components/ui/avatar'
+import { t } from '@/lib/i18n'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -124,8 +125,15 @@ export default async function IdeaDetailPage({
   const token = (await supabase.auth.getSession()).data.session?.access_token
 
   let detail: IdeaDetailResponse | null = null
+  let userLanguage = 'en'
+
   try {
-    detail = await apiGet<IdeaDetailResponse>(`/api/ideas/${ideaId}`, token)
+    const [detailData, profile] = await Promise.all([
+      apiGet<IdeaDetailResponse>(`/api/ideas/${ideaId}`, token),
+      apiGet<{ language: string | null }>('/api/me', token, 60),
+    ])
+    detail = detailData
+    userLanguage = profile?.language ?? 'en'
   } catch {
     notFound()
   }
@@ -133,13 +141,16 @@ export default async function IdeaDetailPage({
 
   const { idea, comments, statusHistory, hasVoted } = detail
   const statusConfig = STATUS_CONFIG[idea.status] ?? STATUS_CONFIG.new
+  const statusLabelKey = `ideas.status.${idea.status}` as any
   const bodyHtml = renderBody(idea.body)
 
   return (
     <div className="space-y-6">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-1.5 text-sm text-muted-foreground">
-        <Link href="/ideas" className="hover:text-surface-foreground transition-colors">Ideas</Link>
+        <Link href="/ideas" className="hover:text-surface-foreground transition-colors">
+          {t('ideas.title', userLanguage)}
+        </Link>
         <span className="text-border">/</span>
         <span className="truncate max-w-[200px] text-surface-foreground font-medium">
           {idea.title}
@@ -155,7 +166,7 @@ export default async function IdeaDetailPage({
               statusConfig.className,
             ].join(' ')}
           >
-            {statusConfig.label}
+            {t(statusLabelKey, userLanguage)}
           </span>
           {idea.category && (
             <Badge variant="secondary">{idea.category}</Badge>
@@ -165,10 +176,12 @@ export default async function IdeaDetailPage({
         <h1 className="text-xl font-bold text-surface-foreground">{idea.title}</h1>
 
         <p className="text-xs text-muted-foreground">
-          Submitted by{' '}
+          {t('ideas.detail.submittedBy', userLanguage)}{' '}
           <span className="font-medium text-surface-foreground">{idea.authorName}</span>{' '}
           &middot;{' '}
-          {new Intl.DateTimeFormat('en', { dateStyle: 'long' }).format(new Date(idea.createdAt))}
+          {new Intl.DateTimeFormat(userLanguage === 'ko' ? 'ko-KR' : 'en-US', {
+            dateStyle: 'long',
+          }).format(new Date(idea.createdAt))}
         </p>
 
         {bodyHtml && (
@@ -184,6 +197,7 @@ export default async function IdeaDetailPage({
             voteCount={idea.voteCount}
             hasVoted={hasVoted}
             token={token ?? ''}
+            lang={userLanguage}
           />
         </div>
       </div>
@@ -192,11 +206,12 @@ export default async function IdeaDetailPage({
       {statusHistory.length > 0 && (
         <section>
           <h2 className="mb-3 text-base font-semibold text-surface-foreground">
-            Status history
+            {t('ideas.detail.statusHistory', userLanguage)}
           </h2>
           <div className="relative ml-3 space-y-4 border-l-2 border-border pl-6">
             {statusHistory.map((entry) => {
               const sc = STATUS_CONFIG[entry.status] ?? STATUS_CONFIG.new
+              const scLabelKey = `ideas.status.${entry.status}` as any
               return (
                 <div key={entry.id} className="relative">
                   <div className="absolute -left-[calc(1.5rem+1px)] top-1 h-3 w-3 rounded-full border-2 border-card bg-muted-foreground" />
@@ -207,12 +222,12 @@ export default async function IdeaDetailPage({
                         sc.className,
                       ].join(' ')}
                     >
-                      {sc.label}
+                      {t(scLabelKey, userLanguage)}
                     </span>
                     <time className="text-xs text-muted-foreground">
-                      {new Intl.DateTimeFormat('en', { dateStyle: 'medium' }).format(
-                        new Date(entry.createdAt),
-                      )}
+                      {new Intl.DateTimeFormat(userLanguage === 'ko' ? 'ko-KR' : 'en-US', {
+                        dateStyle: 'medium',
+                      }).format(new Date(entry.createdAt))}
                     </time>
                   </div>
                   {entry.note && (
@@ -228,22 +243,26 @@ export default async function IdeaDetailPage({
       {/* Comments */}
       <section>
         <h2 className="mb-4 text-base font-semibold text-surface-foreground">
-          Comments ({comments.length})
+          {t('ideas.detail.commentsTitle', userLanguage)} ({comments.length})
         </h2>
 
         {comments.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No comments yet. Be the first!</p>
+          <p className="text-sm text-muted-foreground">
+            {t('ideas.detail.noComments', userLanguage)}
+          </p>
         ) : (
           <div className="space-y-4">
             {comments.map((comment) => (
-              <CommentCard key={comment.id} comment={comment} />
+              <CommentCard key={comment.id} comment={comment} lang={userLanguage} />
             ))}
           </div>
         )}
 
         <div className="mt-6 pt-6 border-t border-border">
-          <h3 className="mb-3 text-sm font-semibold text-surface-foreground">Leave a comment</h3>
-          <CommentForm ideaId={idea.id} token={token ?? ''} />
+          <h3 className="mb-3 text-sm font-semibold text-surface-foreground">
+            {t('ideas.detail.leaveComment', userLanguage)}
+          </h3>
+          <CommentForm ideaId={idea.id} token={token ?? ''} lang={userLanguage} />
         </div>
       </section>
     </div>
@@ -252,7 +271,13 @@ export default async function IdeaDetailPage({
 
 // ─── Comment card ─────────────────────────────────────────────────────────────
 
-function CommentCard({ comment }: { comment: IdeaComment }) {
+function CommentCard({
+  comment,
+  lang = 'en',
+}: {
+  comment: IdeaComment
+  lang?: string | null
+}) {
   const bodyHtml = renderBody(comment.body)
 
   return (
@@ -275,12 +300,12 @@ function CommentCard({ comment }: { comment: IdeaComment }) {
             {comment.authorName}
             {comment.isOfficial && (
               <span className="ml-2 inline-flex items-center rounded-full bg-brand/10 px-1.5 py-0.5 text-xs font-medium text-brand">
-                Team
+                {t('ideas.detail.teamLabel', lang)}
               </span>
             )}
           </p>
           <time className="text-xs text-muted-foreground">
-            {new Intl.DateTimeFormat('en', {
+            {new Intl.DateTimeFormat(lang === 'ko' ? 'ko-KR' : 'en-US', {
               dateStyle: 'medium',
               timeStyle: 'short',
             }).format(new Date(comment.createdAt))}
@@ -296,3 +321,4 @@ function CommentCard({ comment }: { comment: IdeaComment }) {
     </div>
   )
 }
+

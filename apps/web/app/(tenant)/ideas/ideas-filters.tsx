@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation'
 import type { IdeaStatus } from './ideas-config'
 import { STATUS_CONFIG } from './ideas-config'
+import { t } from '@/lib/i18n'
 
 interface IdeaCategory {
   id: string
@@ -16,6 +17,7 @@ interface IdeasFiltersProps {
   status: string | undefined
   category: string | undefined
   categories: IdeaCategory[]
+  lang?: string | null
 }
 
 function buildHref({
@@ -35,20 +37,22 @@ function buildHref({
   return `/ideas${str ? `?${str}` : ''}`
 }
 
-const sortLabels: Record<SortOption, string> = {
-  votes: 'Most votes',
-  newest: 'Newest',
-  trending: 'Trending',
-}
-
-export function IdeasFilters({ sortOption, status, category, categories }: IdeasFiltersProps) {
+export function IdeasFilters({
+  sortOption,
+  status,
+  category,
+  categories,
+  lang = 'en',
+}: IdeasFiltersProps) {
   const router = useRouter()
+
+  const sortOptions: SortOption[] = ['votes', 'newest', 'trending']
 
   return (
     <div className="flex flex-wrap items-center gap-3">
       {/* Sort */}
       <div className="flex items-center gap-1 rounded-lg border border-border bg-card p-1">
-        {(['votes', 'newest', 'trending'] as const).map((s) => (
+        {sortOptions.map((s) => (
           <a
             key={s}
             href={buildHref({ sort: s, status, category })}
@@ -59,7 +63,7 @@ export function IdeasFilters({ sortOption, status, category, categories }: Ideas
                 : 'text-muted-foreground hover:bg-muted',
             ].join(' ')}
           >
-            {sortLabels[s]}
+            {t(`ideas.filter.sort.${s}` as any, lang)}
           </a>
         ))}
       </div>
@@ -73,10 +77,10 @@ export function IdeasFilters({ sortOption, status, category, categories }: Ideas
           router.push(buildHref({ sort: sortOption, status: val || undefined, category }))
         }}
       >
-        <option value="">All statuses</option>
+        <option value="">{t('ideas.filter.statusAll', lang)}</option>
         {(Object.keys(STATUS_CONFIG) as IdeaStatus[]).map((s) => (
           <option key={s} value={s}>
-            {STATUS_CONFIG[s]!.label}
+            {t(`ideas.status.${s}` as any, lang)}
           </option>
         ))}
       </select>
@@ -91,7 +95,7 @@ export function IdeasFilters({ sortOption, status, category, categories }: Ideas
             router.push(buildHref({ sort: sortOption, status, category: val || undefined }))
           }}
         >
-          <option value="">All categories</option>
+          <option value="">{t('ideas.filter.categoryAll', lang)}</option>
           {categories.map((c) => (
             <option key={c.id} value={c.id}>
               {c.name}
@@ -102,3 +106,4 @@ export function IdeasFilters({ sortOption, status, category, categories }: Ideas
     </div>
   )
 }
+

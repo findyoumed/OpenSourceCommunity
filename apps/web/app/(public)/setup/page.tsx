@@ -2,6 +2,7 @@
 
 import { useState, useEffect, type ChangeEvent } from 'react'
 import Link from 'next/link'
+import { useTranslation } from '@/lib/i18n-context'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -28,88 +29,7 @@ interface SetupResult {
 
 // ─── Module definitions ───────────────────────────────────────────────────────
 
-const MODULE_LIST = [
-  {
-    id: 'forums',
-    name: 'Forums',
-    description: 'Threaded discussions organised by category',
-    icon: (
-      <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} aria-hidden>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-      </svg>
-    ),
-  },
-  {
-    id: 'ideas',
-    name: 'Ideas',
-    description: 'Collect, vote on, and track feature requests',
-    icon: (
-      <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} aria-hidden>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636-.707.707M21 12h-1M4 12H3m3.343-5.657-.707-.707m2.828 9.9a5 5 0 1 1 7.072 0l-.548.547A3.374 3.374 0 0 0 14 18.469V19a2 2 0 1 1-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-      </svg>
-    ),
-  },
-  {
-    id: 'events',
-    name: 'Events',
-    description: 'Schedule and RSVP to community events',
-    icon: (
-      <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} aria-hidden>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z" />
-      </svg>
-    ),
-  },
-  {
-    id: 'courses',
-    name: 'Courses',
-    description: 'Structured learning paths and content',
-    icon: (
-      <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} aria-hidden>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 14l9-5-9-5-9 5 9 5zm0 0v7M12 14l6.16-3.422a12.083 12.083 0 0 1 .665 6.479A11.952 11.952 0 0 1 12 20.055a11.952 11.952 0 0 1-6.824-2.998 12.078 12.078 0 0 1 .665-6.479L12 14z" />
-      </svg>
-    ),
-  },
-  {
-    id: 'webinars',
-    name: 'Webinars',
-    description: 'Live video sessions with Q&A support',
-    icon: (
-      <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} aria-hidden>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.069A1 1 0 0 1 21 8.82v6.36a1 1 0 0 1-1.447.89L15 14M5 18h8a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2z" />
-      </svg>
-    ),
-  },
-  {
-    id: 'kb',
-    name: 'Knowledge Base',
-    description: 'Searchable documentation and how-to articles',
-    icon: (
-      <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} aria-hidden>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-      </svg>
-    ),
-  },
-  {
-    id: 'chat',
-    name: 'Chat',
-    description: 'Real-time messaging channels',
-    icon: (
-      <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} aria-hidden>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 0 1-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-      </svg>
-    ),
-  },
-  {
-    id: 'social-intel',
-    name: 'Social Intelligence',
-    description: 'AI-powered insights on member engagement',
-    icon: (
-      <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} aria-hidden>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-1" />
-      </svg>
-    ),
-  },
-] as const
+import { apiClientPost } from '@/lib/api-client'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -125,9 +45,15 @@ function slugify(str: string): string {
 
 // ─── Step indicator ───────────────────────────────────────────────────────────
 
-const STEPS = ['Community', 'Modules', 'Admin Account', 'Done!']
-
 function StepIndicator({ current }: { current: number }) {
+  const { t } = useTranslation()
+  const STEPS = [
+    t('auth.setup.step.community'),
+    t('auth.setup.step.modules'),
+    t('auth.setup.step.admin'),
+    t('auth.setup.step.done'),
+  ]
+
   return (
     <nav aria-label="Setup progress" className="mb-8">
       <ol className="flex items-center justify-center gap-0">
@@ -187,11 +113,95 @@ const labelClass = 'block text-sm font-medium text-surface-foreground mb-1'
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function SetupPage() {
+  const { t } = useTranslation()
   const [step, setStep] = useState(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [result, setResult] = useState<SetupResult | null>(null)
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false)
+
+  const MODULE_LIST = [
+    {
+      id: 'forums',
+      name: t('nav.forums'),
+      description: t('settings.notifications.desc.forums'),
+      icon: (
+        <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} aria-hidden>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+        </svg>
+      ),
+    },
+    {
+      id: 'ideas',
+      name: t('nav.ideas'),
+      description: t('settings.notifications.desc.ideas'),
+      icon: (
+        <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} aria-hidden>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636-.707.707M21 12h-1M4 12H3m3.343-5.657-.707-.707m2.828 9.9a5 5 0 1 1 7.072 0l-.548.547A3.374 3.374 0 0 0 14 18.469V19a2 2 0 1 1-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+        </svg>
+      ),
+    },
+    {
+      id: 'events',
+      name: t('nav.events'),
+      description: t('settings.notifications.desc.events'),
+      icon: (
+        <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} aria-hidden>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z" />
+        </svg>
+      ),
+    },
+    {
+      id: 'courses',
+      name: t('nav.courses'),
+      description: t('courses.description'),
+      icon: (
+        <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} aria-hidden>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 14l9-5-9-5-9 5 9 5zm0 0v7M12 14l6.16-3.422a12.083 12.083 0 0 1 .665 6.479A11.952 11.952 0 0 1 12 20.055a11.952 11.952 0 0 1-6.824-2.998 12.078 12.078 0 0 1 .665-6.479L12 14z" />
+        </svg>
+      ),
+    },
+    {
+      id: 'webinars',
+      name: t('nav.webinars'),
+      description: t('webinars.description'),
+      icon: (
+        <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} aria-hidden>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.069A1 1 0 0 1 21 8.82v6.36a1 1 0 0 1-1.447.89L15 14M5 18h8a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2z" />
+        </svg>
+      ),
+    },
+    {
+      id: 'kb',
+      name: t('nav.kb'),
+      description: t('settings.notifications.desc.kb'),
+      icon: (
+        <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} aria-hidden>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+        </svg>
+      ),
+    },
+    {
+      id: 'chat',
+      name: t('nav.chat'),
+      description: 'Real-time messaging channels',
+      icon: (
+        <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} aria-hidden>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 0 1-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+        </svg>
+      ),
+    },
+    {
+      id: 'social-intel',
+      name: t('nav.intelligence'),
+      description: 'AI-powered insights on member engagement',
+      icon: (
+        <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} aria-hidden>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-1" />
+        </svg>
+      ),
+    },
+  ]
 
   const [form, setForm] = useState<SetupFormData>({
     name: '',
@@ -298,9 +308,9 @@ export default function SetupPage() {
             </svg>
           </div>
 
-          <h2 className="text-2xl font-bold text-surface-foreground">Your community is ready!</h2>
+          <h2 className="text-2xl font-bold text-surface-foreground">{t('auth.setup.done.title')}</h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            <strong>{form.name}</strong> has been created and your admin account is set up.
+            {t('auth.setup.done.desc').replace('{name}', form.name)}
           </p>
 
           <div className="my-6 rounded-lg bg-brand/5 px-4 py-3 text-sm text-brand font-medium">
@@ -311,14 +321,14 @@ export default function SetupPage() {
             href={communityUrl}
             className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-brand px-5 py-3 text-sm font-semibold text-white hover:bg-brand transition-colors"
           >
-            Go to your community
+            {t('auth.setup.done.action')}
             <span aria-hidden>→</span>
           </a>
 
           <p className="mt-4 text-sm text-muted-foreground">
             Already at your community URL?{' '}
             <Link href="/login" className="font-semibold text-brand hover:underline">
-              Sign in now
+              {t('auth.login.submitBtn')}
             </Link>
           </p>
         </div>
@@ -331,7 +341,7 @@ export default function SetupPage() {
       {/* Logo / title */}
       <div className="mb-6 text-center">
         <span className="text-2xl font-bold text-brand">OpenSourceCommunity</span>
-        <p className="mt-1 text-sm text-muted-foreground">Set up your community in minutes</p>
+        <p className="mt-1 text-sm text-muted-foreground">{t('auth.setup.title')}</p>
       </div>
 
       <StepIndicator current={step} />
@@ -340,10 +350,10 @@ export default function SetupPage() {
         {/* Step 0: Community info */}
         {step === 0 && (
           <div className="space-y-5">
-            <h2 className="text-lg font-semibold text-surface-foreground">Tell us about your community</h2>
+            <h2 className="text-lg font-semibold text-surface-foreground">{t('auth.setup.intro.title')}</h2>
 
             <div>
-              <label htmlFor="name" className={labelClass}>Community name</label>
+              <label htmlFor="name" className={labelClass}>{t('auth.setup.intro.nameLabel')}</label>
               <input
                 id="name"
                 type="text"
@@ -357,8 +367,8 @@ export default function SetupPage() {
 
             <div>
               <label htmlFor="slug" className={labelClass}>
-                Slug
-                <span className="ml-1 text-muted-foreground font-normal">(becomes your subdomain)</span>
+                {t('auth.setup.intro.slugLabel')}
+                <span className="ml-1 text-muted-foreground font-normal">{t('auth.setup.intro.slugHint')}</span>
               </label>
               <input
                 id="slug"
@@ -373,30 +383,30 @@ export default function SetupPage() {
               />
               {form.slug && (
                 <p className="mt-1.5 text-xs text-brand font-medium">
-                  Preview: <span className="font-bold">{form.slug}.{typeof window !== 'undefined' ? window.location.host : 'opensourcecommunity.io'}</span>
+                  {t('auth.setup.intro.slugPreview')}: <span className="font-bold">{form.slug}.{typeof window !== 'undefined' ? window.location.host : 'opensourcecommunity.io'}</span>
                 </p>
               )}
               {form.slug && !/^[a-z0-9-]{2,50}$/.test(form.slug) && (
                 <p className="mt-1 text-xs text-red-600">
-                  2–50 lowercase letters, numbers, and hyphens only
+                  {t('auth.setup.intro.slugError')}
                 </p>
               )}
             </div>
 
             <div>
-              <label htmlFor="description" className={labelClass}>Description</label>
+              <label htmlFor="description" className={labelClass}>{t('auth.setup.intro.descLabel')}</label>
               <textarea
                 id="description"
                 rows={3}
                 value={form.description}
                 onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setField('description', e.target.value)}
-                placeholder="What is this community about?"
+                placeholder={t('auth.setup.intro.descPlaceholder')}
                 className={`${inputClass} resize-none`}
               />
             </div>
 
             <div>
-              <label htmlFor="primaryColor" className={labelClass}>Primary colour</label>
+              <label htmlFor="primaryColor" className={labelClass}>{t('auth.setup.intro.colorLabel')}</label>
               <div className="flex items-center gap-3">
                 <input
                   id="primaryColor"
@@ -415,8 +425,8 @@ export default function SetupPage() {
         {step === 1 && (
           <div className="space-y-4">
             <div>
-              <h2 className="text-lg font-semibold text-surface-foreground">Choose your modules</h2>
-              <p className="text-sm text-muted-foreground mt-0.5">Toggle which features to enable — you can change this any time.</p>
+              <h2 className="text-lg font-semibold text-surface-foreground">{t('auth.setup.modules.title')}</h2>
+              <p className="text-sm text-muted-foreground mt-0.5">{t('auth.setup.modules.subtitle')}</p>
             </div>
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -454,7 +464,7 @@ export default function SetupPage() {
             </div>
 
             {form.modules.length === 0 && (
-              <p className="text-xs text-amber-600 font-medium">Select at least one module to continue.</p>
+              <p className="text-xs text-amber-600 font-medium">{t('auth.setup.modules.error')}</p>
             )}
           </div>
         )}
@@ -462,7 +472,7 @@ export default function SetupPage() {
         {/* Step 2: Admin account */}
         {step === 2 && (
           <div className="space-y-5">
-            <h2 className="text-lg font-semibold text-surface-foreground">Create your admin account</h2>
+            <h2 className="text-lg font-semibold text-surface-foreground">{t('auth.setup.admin.title')}</h2>
 
             {submitError && (
               <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -471,7 +481,7 @@ export default function SetupPage() {
             )}
 
             <div>
-              <label htmlFor="adminEmail" className={labelClass}>Email address</label>
+              <label htmlFor="adminEmail" className={labelClass}>{t('auth.login.emailLabel')}</label>
               <input
                 id="adminEmail"
                 type="email"
@@ -486,7 +496,7 @@ export default function SetupPage() {
 
             <div>
               <label htmlFor="adminDisplayName" className={labelClass}>
-                Display name <span className="text-muted-foreground font-normal">(optional)</span>
+                {t('auth.setup.admin.nameLabel')} <span className="text-muted-foreground font-normal">(optional)</span>
               </label>
               <input
                 id="adminDisplayName"
@@ -500,7 +510,7 @@ export default function SetupPage() {
             </div>
 
             <div>
-              <label htmlFor="adminPassword" className={labelClass}>Password</label>
+              <label htmlFor="adminPassword" className={labelClass}>{t('auth.login.passwordLabel')}</label>
               <input
                 id="adminPassword"
                 type="password"
@@ -514,7 +524,7 @@ export default function SetupPage() {
             </div>
 
             <div>
-              <label htmlFor="adminPasswordConfirm" className={labelClass}>Confirm password</label>
+              <label htmlFor="adminPasswordConfirm" className={labelClass}>{t('auth.setup.admin.passwordConfirm')}</label>
               <input
                 id="adminPasswordConfirm"
                 type="password"
@@ -527,7 +537,7 @@ export default function SetupPage() {
                 className={inputClass}
               />
               {form.adminPasswordConfirm && form.adminPassword !== form.adminPasswordConfirm && (
-                <p className="mt-1 text-xs text-red-600">Passwords do not match</p>
+                <p className="mt-1 text-xs text-red-600">{t('auth.setup.admin.passwordMismatch')}</p>
               )}
             </div>
           </div>
@@ -544,7 +554,7 @@ export default function SetupPage() {
               }}
               className="rounded-lg border border-border px-5 py-2.5 text-sm font-medium text-muted-foreground hover:bg-muted transition-colors"
             >
-              Back
+              {t('auth.setup.nav.back')}
             </button>
           )}
 
@@ -555,7 +565,7 @@ export default function SetupPage() {
               disabled={!canAdvance()}
               className="rounded-lg bg-brand px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand disabled:opacity-40 transition-colors"
             >
-              Continue
+              {t('auth.setup.nav.continue')}
             </button>
           ) : (
             <button
@@ -565,7 +575,7 @@ export default function SetupPage() {
               className="flex items-center gap-2 rounded-lg bg-brand px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand disabled:opacity-40 transition-colors"
             >
               {isSubmitting && <Spinner />}
-              {isSubmitting ? 'Creating...' : 'Create community'}
+              {isSubmitting ? t('auth.setup.nav.creating') : t('auth.setup.nav.create')}
             </button>
           )}
         </div>
@@ -573,9 +583,9 @@ export default function SetupPage() {
 
       {/* Already have a community */}
       <p className="mt-5 text-center text-sm text-muted-foreground">
-        Already have a community?{' '}
+        {t('auth.signup.hasAccount')}{' '}
         <Link href="/login" className="font-semibold text-brand hover:underline">
-          Sign in
+          {t('auth.login.submitBtn')}
         </Link>
       </p>
     </div>
@@ -592,3 +602,4 @@ function Spinner() {
     </svg>
   )
 }
+

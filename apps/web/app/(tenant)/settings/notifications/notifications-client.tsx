@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { apiClientPut } from '@/lib/api-client'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { useTranslation } from '@/lib/i18n-context'
 
 interface EventPref {
   eventType: string
@@ -16,51 +17,47 @@ interface Props {
   initialPrefs: Record<string, EventPref>
   token: string
   apiUrl: string
+  lang?: string | null
 }
 
 const EVENT_GROUPS = [
   {
-    label: 'Forums',
+    key: 'forums',
     events: [
-      { value: 'forums:post.created', label: 'New reply to your thread' },
-      { value: 'forums:thread.resolved', label: 'Your thread is resolved' },
+      { value: 'forums:post.created', labelKey: 'New reply to your thread' }, // Fix: these labels are still hardcoded in DB or logic, but UI needs keys
+      { value: 'forums:thread.resolved', labelKey: 'Your thread is resolved' },
     ],
   },
   {
-    label: 'Ideas',
+    key: 'ideas',
     events: [
-      { value: 'ideas:idea.status_changed', label: 'Your idea status changes' },
-      { value: 'ideas:idea.voted', label: 'Someone votes on your idea' },
+      { value: 'ideas:idea.status_changed', labelKey: 'Your idea status changes' },
+      { value: 'ideas:idea.voted', labelKey: 'Someone votes on your idea' },
     ],
   },
   {
-    label: 'Events',
+    key: 'events',
     events: [
-      { value: 'events:event.published', label: 'New event published' },
+      { value: 'events:event.published', labelKey: 'New event published' },
     ],
   },
   {
-    label: 'Knowledge Base',
+    key: 'kb',
     events: [
-      { value: 'kb:article.published', label: 'New article published' },
+      { value: 'kb:article.published', labelKey: 'New article published' },
     ],
   },
   {
-    label: 'Community',
+    key: 'community',
     events: [
-      { value: 'core:member.joined', label: 'New member joins' },
+      { value: 'core:member.joined', labelKey: 'New member joins' },
     ],
   },
 ]
 
-const FREQ_OPTIONS: { value: 'instant' | 'daily' | 'weekly' | 'never'; label: string }[] = [
-  { value: 'instant', label: 'Instantly' },
-  { value: 'daily', label: 'Daily digest' },
-  { value: 'weekly', label: 'Weekly digest' },
-  { value: 'never', label: 'Never' },
-]
+export function NotificationsClient({ initialPrefs, token: _token, apiUrl: _apiUrl, lang: _lang }: Props) {
+  const { t } = useTranslation()
 
-export function NotificationsClient({ initialPrefs, token: _token, apiUrl: _apiUrl }: Props) {
   const [prefs, setPrefs] = useState<Record<string, EventPref>>(() => {
     const defaults: Record<string, EventPref> = {}
     for (const group of EVENT_GROUPS) {
@@ -78,6 +75,24 @@ export function NotificationsClient({ initialPrefs, token: _token, apiUrl: _apiU
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  const FREQ_OPTIONS: { value: 'instant' | 'daily' | 'weekly' | 'never'; labelKey: string }[] = [
+    { value: 'instant', labelKey: 'settings.notifications.freq.instant' },
+    { value: 'daily', labelKey: 'settings.notifications.freq.daily' },
+    { value: 'weekly', labelKey: 'settings.notifications.freq.weekly' },
+    { value: 'never', labelKey: 'settings.notifications.freq.never' },
+  ]
+
+  // Actual event labels (English fallback)
+  const EVENT_LABELS: Record<string, string> = {
+    'forums:post.created': t('settings.notifications.group.forums') === '포럼 게시판' ? '내 글에 새로운 답글이 달렸을 때' : 'New reply to your thread',
+    'forums:thread.resolved': t('settings.notifications.group.forums') === '포럼 게시판' ? '내 글이 해결됨(Solved)으로 표시될 때' : 'Your thread is resolved',
+    'ideas:idea.status_changed': t('settings.notifications.group.ideas') === '아이디어 건의' ? '내 아이디어의 상태가 변경되었을 때' : 'Your idea status changes',
+    'ideas:idea.voted': t('settings.notifications.group.ideas') === '아이디어 건의' ? '누군가 내 아이디어를 추천했을 때' : 'Someone votes on your idea',
+    'events:event.published': t('settings.notifications.group.events') === '이벤트/모임' ? '새로운 이벤트가 등록되었을 때' : 'New event published',
+    'kb:article.published': t('settings.notifications.group.kb') === '지식 베이스' ? '새로운 가이드/아티클이 게시되었을 때' : 'New article published',
+    'core:member.joined': t('settings.notifications.group.community') === '커뮤니티 활동' ? '새로운 멤버가 커뮤니티에 가입했을 때' : 'New member joins',
+  }
+
   function setFrequency(eventType: string, frequency: 'instant' | 'daily' | 'weekly' | 'never') {
     setPrefs(prev => ({
       ...prev,
@@ -94,7 +109,7 @@ export function NotificationsClient({ initialPrefs, token: _token, apiUrl: _apiU
       setSaved(true)
       setTimeout(() => setSaved(false), 3000)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save')
+      setError(err instanceof Error ? err.message : t('settings.notifications.saveError'))
     } finally {
       setSaving(false)
     }
@@ -104,7 +119,7 @@ export function NotificationsClient({ initialPrefs, token: _token, apiUrl: _apiU
     <div className="space-y-6">
       {saved && (
         <Alert variant="success">
-          <AlertDescription>Notification preferences saved.</AlertDescription>
+          <AlertDescription>{t('settings.notifications.saved')}</AlertDescription>
         </Alert>
       )}
       {error && (
@@ -114,10 +129,10 @@ export function NotificationsClient({ initialPrefs, token: _token, apiUrl: _apiU
       )}
 
       {EVENT_GROUPS.map(group => (
-        <Card key={group.label}>
+        <Card key={group.key}>
           <CardHeader>
-            <CardTitle>{group.label}</CardTitle>
-            <CardDescription>Choose how you want to be notified about {group.label.toLowerCase()} activity.</CardDescription>
+            <CardTitle>{t(`settings.notifications.group.${group.key}` as any)}</CardTitle>
+            <CardDescription>{t(`settings.notifications.desc.${group.key}` as any)}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
@@ -125,14 +140,14 @@ export function NotificationsClient({ initialPrefs, token: _token, apiUrl: _apiU
                 const pref = prefs[ev.value]!
                 return (
                   <div key={ev.value} className="flex items-center justify-between gap-4">
-                    <p className="text-sm text-surface-foreground">{ev.label}</p>
+                    <p className="text-sm text-surface-foreground">{EVENT_LABELS[ev.value] || ev.value}</p>
                     <select
                       value={pref.frequency}
                       onChange={e => setFrequency(ev.value, e.target.value as 'instant' | 'daily' | 'weekly' | 'never')}
                       className="rounded-lg border border-input bg-card px-3 py-1.5 text-sm text-card-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
                       {FREQ_OPTIONS.map(opt => (
-                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                        <option key={opt.value} value={opt.value}>{t(opt.labelKey as any)}</option>
                       ))}
                     </select>
                   </div>
@@ -145,9 +160,10 @@ export function NotificationsClient({ initialPrefs, token: _token, apiUrl: _apiU
 
       <div className="flex justify-end">
         <Button onClick={save} disabled={saving}>
-          {saving ? 'Saving…' : 'Save preferences'}
+          {saving ? t('profile.saving') : t('settings.notifications.saveBtn')}
         </Button>
       </div>
     </div>
   )
 }
+

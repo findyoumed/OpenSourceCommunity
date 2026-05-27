@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { apiGet } from '@/lib/api'
 import type { Metadata } from 'next'
 import { FeedbackButtons } from './feedback-buttons'
+import { t } from '@/lib/i18n'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -45,8 +46,8 @@ export async function generateMetadata({
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function formatLongDate(iso: string): string {
-  return new Intl.DateTimeFormat('en', {
+function formatLongDate(iso: string, lang: string = 'en'): string {
+  return new Intl.DateTimeFormat(lang === 'ko' ? 'ko-KR' : 'en-US', {
     month: 'long',
     day: 'numeric',
     year: 'numeric',
@@ -126,6 +127,14 @@ export default async function KbArticlePage({
   // Resolve the article — articleSlug may be a UUID or a real slug
   let article: KbArticleDetail | null = null
   let fetchError = false
+  let userLanguage = 'en'
+
+  try {
+    const [profile] = await Promise.all([
+      apiGet<{ language: string | null }>('/api/me', token, 60),
+    ])
+    userLanguage = profile?.language ?? 'en'
+  } catch {}
 
   // First try by ID (UUID shape)
   const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -159,7 +168,7 @@ export default async function KbArticlePage({
   if (fetchError || !article) {
     return (
       <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-        Failed to load this article. Please try refreshing.
+        {t('kb.category.error', userLanguage)}
       </div>
     )
   }
@@ -171,7 +180,7 @@ export default async function KbArticlePage({
       {/* ── Breadcrumb ────────────────────────────────────────────────────── */}
       <nav className="flex items-center gap-1.5 text-sm text-muted-foreground" aria-label="Breadcrumb">
         <Link href="/kb" className="hover:text-surface-foreground transition-colors">
-          Knowledge Base
+          {t('kb.title', userLanguage)}
         </Link>
         <span aria-hidden>/</span>
         <Link
@@ -202,7 +211,7 @@ export default async function KbArticlePage({
           )}
           <h1 className="text-xl font-bold text-surface-foreground sm:text-2xl">{article.title}</h1>
           <p className="mt-2 text-xs text-muted-foreground">
-            Last updated {formatLongDate(article.updatedAt)}
+            {t('kb.article.lastUpdated', userLanguage)} {formatLongDate(article.updatedAt, userLanguage)}
           </p>
         </div>
 
@@ -216,7 +225,7 @@ export default async function KbArticlePage({
 
         {/* Footer: feedback */}
         <div className="border-t border-border bg-muted px-6 py-5 sm:px-8">
-          <FeedbackButtons articleId={article.id} />
+          <FeedbackButtons articleId={article.id} lang={userLanguage} />
         </div>
       </article>
 
@@ -228,8 +237,9 @@ export default async function KbArticlePage({
         <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
           <path strokeLinecap="round" strokeLinejoin="round" d="m15 18-6-6 6-6" />
         </svg>
-        Back to {categorySlug.replace(/-/g, ' ')}
+        {t('kb.article.backBtn', userLanguage)} {categorySlug.replace(/-/g, ' ')}
       </Link>
     </div>
   )
 }
+

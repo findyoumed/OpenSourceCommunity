@@ -1,15 +1,26 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { createClient } from '@/lib/supabase/server'
+import { apiGet } from '@/lib/api'
+import { t } from '@/lib/i18n'
 
-export const metadata: Metadata = {
-  title: 'OpenSourceCommunity — The open-source community platform',
-  description:
-    'The official home of the OpenSourceCommunity project. Discuss, learn, share ideas, and connect with contributors building the open-source community platform.',
-  openGraph: {
-    title: 'OpenSourceCommunity — The open-source community platform',
-    description:
-      'Forums, ideas, events, courses, and AI-powered social intelligence. Open source. Self-hostable. Come build with us.',
-  },
+export async function generateMetadata(): Promise<Metadata> {
+  const supabase = await createClient()
+  const token = (await supabase.auth.getSession()).data.session?.access_token
+  let lang = 'en'
+  try {
+    const profile = await apiGet<{ language: string | null }>('/api/me', token, 60)
+    lang = profile?.language ?? 'en'
+  } catch {}
+
+  return {
+    title: `OpenSourceCommunity — ${lang === 'ko' ? '오픈 소스 커뮤니티 플랫폼' : 'The open-source community platform'}`,
+    description: t('landing.hero.description', lang),
+    openGraph: {
+      title: `OpenSourceCommunity — ${lang === 'ko' ? '오픈 소스 커뮤니티 플랫폼' : 'The open-source community platform'}`,
+      description: t('landing.footer.tagline', lang),
+    },
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -158,7 +169,28 @@ function SlackIcon({ className }: { className?: string }) {
    MOCK DASHBOARD COMPONENT (Hero visual)
    ═══════════════════════════════════════════════════════════════════════════ */
 
-function HeroDashboardMockup() {
+function HeroDashboardMockup({ lang = 'en' }: { lang?: string | null }) {
+  const isKo = lang === 'ko'
+
+  const NAV_ITEMS = isKo 
+    ? ['대시보드', '포럼 게시판', '아이디어 건의', '이벤트/모임', '멤버 목록', '인텔리전스']
+    : ['Dashboard', 'Forums', 'Ideas', 'Events', 'Members', 'Intelligence']
+
+  const STATS = [
+    { label: isKo ? '회원 수' : 'Members', value: '12,847', change: '+14%', color: 'text-brand', bg: 'bg-brand/5', ring: 'ring-brand/10' },
+    { label: isKo ? '오늘 활성' : 'Active today', value: '1,293', change: '+8%', color: 'text-emerald-600', bg: 'bg-emerald-50', ring: 'ring-emerald-100' },
+    { label: isKo ? '게시글' : 'Posts', value: '847', change: '+23%', color: 'text-violet-600', bg: 'bg-violet-50', ring: 'ring-violet-100' },
+    { label: isKo ? '긍정 지수' : 'Sentiment', value: '94%', change: '+2%', color: 'text-amber-600', bg: 'bg-amber-50', ring: 'ring-amber-100' },
+  ]
+
+  const ACTIVITY = [
+    { name: 'Sarah K.', action: isKo ? '님이 아이디어 게시' : 'posted in Ideas', time: isKo ? '2분 전' : '2m ago', avatarColor: 'bg-brand/70' },
+    { name: 'Marcus T.', action: isKo ? '님이 답글 작성' : 'replied to a thread', time: isKo ? '5분 전' : '5m ago', avatarColor: 'bg-emerald-400' },
+    { name: 'Aisha R.', action: isKo ? '님이 참여 신청' : 'RSVP\'d to Webinar', time: isKo ? '12분 전' : '12m ago', avatarColor: 'bg-violet-400' },
+    { name: 'David L.', action: isKo ? '님이 뱃지 획득' : 'earned Top Advocate badge', time: isKo ? '18분 전' : '18m ago', avatarColor: 'bg-amber-400' },
+    { name: 'Priya S.', action: isKo ? '님이 강좌 수료' : 'completed Course 3', time: isKo ? '24분 전' : '24m ago', avatarColor: 'bg-rose-400' },
+  ]
+
   return (
     <div className="rounded-xl border border-border/60 bg-card shadow-2xl shadow-neutral-900/10 overflow-hidden">
       {/* Browser chrome */}
@@ -183,7 +215,7 @@ function HeroDashboardMockup() {
             <span className="text-xs font-semibold text-white tracking-tight">Acme Community</span>
           </div>
           {/* Nav items */}
-          {['Dashboard', 'Forums', 'Ideas', 'Events', 'Members', 'Intelligence'].map((item, i) => (
+          {NAV_ITEMS.map((item, i) => (
             <div
               key={item}
               className={`flex items-center gap-2 rounded-md px-2.5 py-1.5 text-xs font-medium ${
@@ -203,7 +235,7 @@ function HeroDashboardMockup() {
           <div className="flex-1" />
           <div className="flex items-center gap-2 rounded-md px-2.5 py-1.5 text-xs text-muted-foreground">
             <div className="h-5 w-5 rounded-full bg-neutral-700" />
-            <span>Settings</span>
+            <span>{isKo ? '설정' : 'Settings'}</span>
           </div>
         </div>
 
@@ -211,19 +243,14 @@ function HeroDashboardMockup() {
         <div className="flex-1 p-4 bg-muted/50">
           {/* Stats row */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-4">
-            {[
-              { label: 'Members', value: '12,847', change: '+14%', color: 'text-brand', bg: 'bg-brand/5', ring: 'ring-brand/10' },
-              { label: 'Active today', value: '1,293', change: '+8%', color: 'text-emerald-600', bg: 'bg-emerald-50', ring: 'ring-emerald-100' },
-              { label: 'Posts', value: '847', change: '+23%', color: 'text-violet-600', bg: 'bg-violet-50', ring: 'ring-violet-100' },
-              { label: 'Sentiment', value: '94%', change: '+2%', color: 'text-amber-600', bg: 'bg-amber-50', ring: 'ring-amber-100' },
-            ].map((stat) => (
+            {STATS.map((stat) => (
               <div
                 key={stat.label}
                 className={`rounded-lg ${stat.bg} ring-1 ${stat.ring} p-3`}
               >
                 <div className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">{stat.label}</div>
                 <div className={`text-lg font-bold ${stat.color} mt-0.5 leading-tight`}>{stat.value}</div>
-                <div className="text-[10px] font-medium text-emerald-500 mt-0.5">{stat.change} this week</div>
+                <div className="text-[10px] font-medium text-emerald-500 mt-0.5">{stat.change} {isKo ? '이번 주' : 'this week'}</div>
               </div>
             ))}
           </div>
@@ -231,16 +258,10 @@ function HeroDashboardMockup() {
           {/* Activity feed */}
           <div className="rounded-lg bg-card ring-1 ring-slate-200/60 p-3">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold text-surface-foreground">Recent Activity</span>
-              <span className="text-[10px] text-muted-foreground font-medium">View all</span>
+              <span className="text-xs font-semibold text-surface-foreground">{isKo ? '최근 활동' : 'Recent Activity'}</span>
+              <span className="text-[10px] text-muted-foreground font-medium">{isKo ? '모두 보기' : 'View all'}</span>
             </div>
-            {[
-              { name: 'Sarah K.', action: 'posted in Ideas', time: '2m ago', avatarColor: 'bg-brand/70' },
-              { name: 'Marcus T.', action: 'replied to a thread', time: '5m ago', avatarColor: 'bg-emerald-400' },
-              { name: 'Aisha R.', action: 'RSVP\'d to Webinar', time: '12m ago', avatarColor: 'bg-violet-400' },
-              { name: 'David L.', action: 'earned Top Advocate badge', time: '18m ago', avatarColor: 'bg-amber-400' },
-              { name: 'Priya S.', action: 'completed Course 3', time: '24m ago', avatarColor: 'bg-rose-400' },
-            ].map((item) => (
+            {ACTIVITY.map((item) => (
               <div key={item.name} className="flex items-center gap-2.5 py-1.5">
                 <div className={`h-6 w-6 rounded-full ${item.avatarColor} flex-shrink-0`} />
                 <div className="flex-1 min-w-0">
@@ -261,7 +282,15 @@ function HeroDashboardMockup() {
    MOCK INTELLIGENCE DASHBOARD
    ═══════════════════════════════════════════════════════════════════════════ */
 
-function IntelligenceMockup() {
+function IntelligenceMockup({ lang = 'en' }: { lang?: string | null }) {
+  const isKo = lang === 'ko'
+
+  const MENTIONS = [
+    { platform: 'Reddit', badge: 'bg-orange-500/20 text-orange-300', text: isKo ? '"OpenSourceCommunity는 우리가 써본 것 중 최고입니다..."' : '"OpenSourceCommunity is the best platform we\'ve used..."', sentiment: 'positive' },
+    { platform: 'Twitter/X', badge: 'bg-sky-500/20 text-sky-300', text: isKo ? '"Circle에서 @OpenSourceCommunity로 방금 이전했어요..."' : '"Just migrated from Circle to @OpenSourceCommunity..."', sentiment: 'positive' },
+    { platform: 'LinkedIn', badge: 'bg-blue-500/20 text-blue-300', text: isKo ? '"커뮤니티 성장을 위한 흥미로운 접근 방식이네요..."' : '"Interesting approach to community-led growth..."', sentiment: 'neutral' },
+  ]
+
   return (
     <div className="rounded-xl border border-neutral-700/50 bg-neutral-800/80 shadow-2xl overflow-hidden">
       {/* Header bar */}
@@ -271,7 +300,7 @@ function IntelligenceMockup() {
           <div className="h-2.5 w-2.5 rounded-full bg-amber-400/60" />
           <div className="h-2.5 w-2.5 rounded-full bg-emerald-400/60" />
         </div>
-        <span className="ml-2 text-[11px] font-medium text-muted-foreground">Social Intelligence</span>
+        <span className="ml-2 text-[11px] font-medium text-muted-foreground">{isKo ? '소셜 인텔리전스' : 'Social Intelligence'}</span>
       </div>
 
       <div className="p-4 space-y-4">
@@ -279,8 +308,8 @@ function IntelligenceMockup() {
         <div className="rounded-lg bg-red-500/10 border border-red-500/30 px-3.5 py-2.5 flex items-center gap-3">
           <div className="h-2 w-2 rounded-full bg-red-400 animate-pulse flex-shrink-0" />
           <div>
-            <div className="text-xs font-semibold text-red-300">Crisis Alert</div>
-            <div className="text-[11px] text-red-300/70">Negative spike detected on r/saas &mdash; 12 mentions in 2h</div>
+            <div className="text-xs font-semibold text-red-300">{isKo ? '위기 알림' : 'Crisis Alert'}</div>
+            <div className="text-[11px] text-red-300/70">{isKo ? 'r/saas에서 부정적 신호 감지 — 2시간 내 12회 언급' : 'Negative spike detected on r/saas — 12 mentions in 2h'}</div>
           </div>
         </div>
 
@@ -288,7 +317,7 @@ function IntelligenceMockup() {
         <div className="grid grid-cols-2 gap-3">
           {/* Sentiment gauge */}
           <div className="rounded-lg bg-neutral-700/50 p-3">
-            <div className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-2">Overall Sentiment</div>
+            <div className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-2">{isKo ? '전체 긍정 지수' : 'Overall Sentiment'}</div>
             {/* Arc gauge - simplified */}
             <div className="flex items-center justify-center py-2">
               <svg viewBox="0 0 100 60" className="w-24 h-14">
@@ -305,12 +334,12 @@ function IntelligenceMockup() {
                 <text x="50" y="52" textAnchor="middle" className="fill-white text-[16px] font-bold">78%</text>
               </svg>
             </div>
-            <div className="text-center text-[10px] text-emerald-400 font-medium">+3% vs last week</div>
+            <div className="text-center text-[10px] text-emerald-400 font-medium">{isKo ? '+3% 지난주 대비' : '+3% vs last week'}</div>
           </div>
 
           {/* Top advocates */}
           <div className="rounded-lg bg-neutral-700/50 p-3">
-            <div className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-2">Top Advocates</div>
+            <div className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-2">{isKo ? '활동 회원 TOP' : 'Top Advocates'}</div>
             <div className="space-y-2">
               {[
                 { name: '@sarah_dev', score: 94, color: 'bg-brand/70' },
@@ -329,13 +358,9 @@ function IntelligenceMockup() {
 
         {/* Recent mentions */}
         <div className="rounded-lg bg-neutral-700/50 p-3">
-          <div className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-2">Recent Mentions</div>
+          <div className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-2">{isKo ? '최근 언급된 내용' : 'Recent Mentions'}</div>
           <div className="space-y-2">
-            {[
-              { platform: 'Reddit', badge: 'bg-orange-500/20 text-orange-300', text: '"OpenSourceCommunity is the best platform we\'ve used..."', sentiment: 'positive' },
-              { platform: 'Twitter/X', badge: 'bg-sky-500/20 text-sky-300', text: '"Just migrated from Circle to @OpenSourceCommunity..."', sentiment: 'positive' },
-              { platform: 'LinkedIn', badge: 'bg-blue-500/20 text-blue-300', text: '"Interesting approach to community-led growth..."', sentiment: 'neutral' },
-            ].map((mention) => (
+            {MENTIONS.map((mention) => (
               <div key={mention.platform} className="flex items-start gap-2">
                 <span className={`flex-shrink-0 rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ${mention.badge}`}>
                   {mention.platform}
@@ -357,7 +382,19 @@ function IntelligenceMockup() {
    MAIN LANDING PAGE
    ═══════════════════════════════════════════════════════════════════════════ */
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  const supabase = await createClient()
+  const { data: { session } } = await supabase.auth.getSession()
+  const token = session?.access_token
+
+  let userLanguage = 'en'
+  try {
+    const profile = await apiGet<{ language: string | null }>('/api/me', token, 60)
+    userLanguage = profile?.language ?? 'en'
+  } catch {}
+
+  const isKo = userLanguage === 'ko'
+
   return (
     <main className="min-h-screen bg-card text-surface-foreground overflow-hidden">
 
@@ -376,9 +413,9 @@ export default function LandingPage() {
 
           {/* Nav links */}
           <nav className="hidden lg:flex items-center gap-8 text-sm font-medium text-muted-foreground">
-            <Link href="#modules" className="hover:text-surface-foreground transition-colors">Features</Link>
+            <Link href="#modules" className="hover:text-surface-foreground transition-colors">{t('landing.footer.features', userLanguage)}</Link>
             <Link href="#open-source" className="hover:text-surface-foreground transition-colors">Open Source</Link>
-            <Link href="/docs" className="hover:text-surface-foreground transition-colors">Docs</Link>
+            <Link href="/docs" className="hover:text-surface-foreground transition-colors">{t('landing.footer.docs', userLanguage)}</Link>
           </nav>
 
           {/* CTA buttons */}
@@ -387,14 +424,14 @@ export default function LandingPage() {
               href="/login"
               className="hidden sm:inline-flex items-center rounded-lg border border-border px-4 py-2 text-sm font-medium text-surface-foreground hover:bg-muted hover:border-border transition-all"
             >
-              Sign in
+              {t('auth.login.submitBtn', userLanguage)}
             </Link>
             <Link
               href="https://github.com/JonJLevesque/OpenSourceCommunity"
               className="inline-flex items-center gap-2 rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white shadow-sm shadow-brand/20 hover:opacity-90 transition-all"
             >
               <GitHubIcon className="h-4 w-4" />
-              <span className="hidden sm:inline">View on GitHub</span>
+              <span className="hidden sm:inline">{t('landing.hero.cta.github', userLanguage)}</span>
               <span className="sm:hidden">GitHub</span>
             </Link>
           </div>
@@ -413,45 +450,39 @@ export default function LandingPage() {
             </defs>
             <rect width="100%" height="100%" fill="url(#heroGrid)" />
           </svg>
-          {/* Radial gradient overlay */}
           <div className="absolute inset-0 bg-gradient-to-b from-white via-white/90 to-white" />
-          {/* Indigo glow */}
           <div className="absolute top-20 left-1/2 -translate-x-1/2 h-[500px] w-[800px] rounded-full bg-brand/5 blur-3xl" />
         </div>
 
         <div className="mx-auto max-w-7xl px-6">
           <div className="flex flex-col lg:flex-row lg:items-center lg:gap-16">
-            {/* Text column */}
             <div className="lg:w-[42%] flex-shrink-0">
-              {/* Eyebrow pill */}
               <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-1.5 text-xs font-semibold tracking-wide text-emerald-700 mb-8">
                 <span className="relative flex h-2 w-2">
                   <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
                   <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
                 </span>
-                Open source &middot; Non-commercial &middot; Self-hostable
+                {t('landing.hero.eyebrow', userLanguage)}
               </div>
 
               <h1 className="text-4xl sm:text-5xl lg:text-5xl xl:text-6xl font-extrabold tracking-tight leading-[1.08] text-surface-foreground">
-                Welcome to{' '}
+                {t('landing.hero.title1', userLanguage)}{' '}
                 <br className="hidden sm:block" />
                 <span className="bg-gradient-to-r from-indigo-500 to-violet-600 bg-clip-text text-transparent">
-                  OpenSource<wbr />Community
+                  {t('landing.hero.title2', userLanguage)}
                 </span>
               </h1>
 
               <p className="mt-6 text-lg lg:text-xl text-muted-foreground leading-relaxed max-w-xl">
-                The official community of the OSC project. Discuss ideas, share knowledge, attend events,
-                and help shape the future of open-source community software.
+                {t('landing.hero.description', userLanguage)}
               </p>
 
-              {/* CTAs */}
               <div className="mt-10 flex flex-wrap items-center gap-4">
                 <Link
                   href="/signup"
                   className="inline-flex items-center gap-2 rounded-xl bg-brand px-7 py-3.5 text-base font-semibold text-white shadow-lg shadow-brand/25 hover:opacity-90 hover:shadow-brand/30 transition-all"
                 >
-                  Join the OSCommunity
+                  {t('landing.hero.cta.join', userLanguage)}
                   <ArrowRightIcon className="h-4 w-4" />
                 </Link>
                 <Link
@@ -459,24 +490,20 @@ export default function LandingPage() {
                   className="inline-flex items-center gap-2 rounded-xl border border-border px-7 py-3.5 text-base font-semibold text-surface-foreground hover:bg-muted hover:border-border transition-all"
                 >
                   <GitHubIcon className="h-5 w-5" />
-                  View on GitHub
+                  {t('landing.hero.cta.github', userLanguage)}
                 </Link>
               </div>
 
-              {/* Trust strip */}
               <p className="mt-8 text-sm text-muted-foreground leading-relaxed">
-                Open source &middot; Non-commercial license &middot; No vendor lock-in &middot; Self-host in 5 minutes
+                {t('landing.hero.trust', userLanguage)}
               </p>
             </div>
 
-            {/* Dashboard visual */}
             <div className="mt-14 lg:mt-0 lg:w-[58%]">
-              {/* Tilt/perspective wrapper */}
               <div className="relative" style={{ perspective: '2000px' }}>
                 <div style={{ transform: 'rotateY(-3deg) rotateX(2deg)' }}>
-                  <HeroDashboardMockup />
+                  <HeroDashboardMockup lang={userLanguage} />
                 </div>
-                {/* Floating glow behind the card */}
                 <div className="absolute -inset-4 -z-10 rounded-2xl bg-gradient-to-br from-indigo-200/30 via-violet-200/20 to-transparent blur-2xl" />
               </div>
             </div>
@@ -489,14 +516,14 @@ export default function LandingPage() {
         <div className="mx-auto max-w-7xl px-6 py-6">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
             {[
-              { value: '11', label: 'community modules' },
-              { value: '100%', label: 'open source' },
-              { value: 'Self-host', label: 'in 5 minutes' },
-              { value: 'Non-commercial', label: 'license' },
+              { value: '11', labelKey: 'landing.stats.modules' },
+              { value: '100%', labelKey: 'landing.stats.opensource' },
+              { value: isKo ? '5분 만에' : 'Self-host', labelKey: 'landing.stats.selfhost' },
+              { value: isKo ? '비상업적' : 'Non-commercial', labelKey: 'landing.stats.license' },
             ].map((stat) => (
-              <div key={stat.label}>
+              <div key={stat.labelKey}>
                 <div className="text-xl sm:text-2xl font-bold text-surface-foreground">{stat.value}</div>
-                <div className="text-sm text-muted-foreground mt-0.5">{stat.label}</div>
+                <div className="text-sm text-muted-foreground mt-0.5">{t(stat.labelKey as any, userLanguage)}</div>
               </div>
             ))}
           </div>
@@ -508,125 +535,51 @@ export default function LandingPage() {
         <div className="mx-auto max-w-7xl">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-surface-foreground">
-              Everything in one place
+              {t('landing.features.title', userLanguage)}
             </h2>
             <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
-              OSC ships with 11 built-in modules. Modular by design &mdash; enable what you need,
-              disable what you don&apos;t. Each module is independently deployable and fully customizable.
+              {t('landing.features.subtitle', userLanguage)}
             </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {/* Forums */}
-            <div className="group rounded-2xl border border-border bg-card p-6 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-200">
-              <div className="h-11 w-11 rounded-xl bg-brand/5 flex items-center justify-center mb-4">
-                <ForumIcon className="h-5.5 w-5.5 text-brand" />
-              </div>
-              <h3 className="text-base font-semibold text-surface-foreground mb-1.5">Forums</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">Threaded discussions, categories, reactions</p>
-            </div>
-
-            {/* Ideas */}
-            <div className="group rounded-2xl border border-border bg-card p-6 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-200">
-              <div className="h-11 w-11 rounded-xl bg-amber-50 flex items-center justify-center mb-4">
-                <LightbulbIcon className="h-5.5 w-5.5 text-amber-600" />
-              </div>
-              <h3 className="text-base font-semibold text-surface-foreground mb-1.5">Ideas</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">Vote-based feature request board</p>
-            </div>
-
-            {/* Events */}
-            <div className="group rounded-2xl border border-border bg-card p-6 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-200">
-              <div className="h-11 w-11 rounded-xl bg-emerald-50 flex items-center justify-center mb-4">
-                <CalendarIcon className="h-5.5 w-5.5 text-emerald-600" />
-              </div>
-              <h3 className="text-base font-semibold text-surface-foreground mb-1.5">Events</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">In-person and virtual event listings + RSVP</p>
-            </div>
-
-            {/* Courses */}
-            <div className="group rounded-2xl border border-border bg-card p-6 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-200">
-              <div className="h-11 w-11 rounded-xl bg-violet-50 flex items-center justify-center mb-4">
-                <BookIcon className="h-5.5 w-5.5 text-violet-600" />
-              </div>
-              <h3 className="text-base font-semibold text-surface-foreground mb-1.5">Courses</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">Structured learning paths and lessons</p>
-            </div>
-
-            {/* Webinars */}
-            <div className="group rounded-2xl border border-border bg-card p-6 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-200">
-              <div className="h-11 w-11 rounded-xl bg-rose-50 flex items-center justify-center mb-4">
-                <VideoIcon className="h-5.5 w-5.5 text-rose-600" />
-              </div>
-              <h3 className="text-base font-semibold text-surface-foreground mb-1.5">Webinars</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">Live and recorded video sessions</p>
-            </div>
-
-            {/* Knowledge Base */}
-            <div className="group rounded-2xl border border-border bg-card p-6 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-200">
-              <div className="h-11 w-11 rounded-xl bg-sky-50 flex items-center justify-center mb-4">
-                <DocumentIcon className="h-5.5 w-5.5 text-sky-600" />
-              </div>
-              <h3 className="text-base font-semibold text-surface-foreground mb-1.5">Knowledge Base</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">Searchable docs and articles</p>
-            </div>
-
-            {/* Chat */}
-            <div className="group rounded-2xl border border-border bg-card p-6 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-200">
-              <div className="h-11 w-11 rounded-xl bg-teal-50 flex items-center justify-center mb-4">
-                <ChatIcon className="h-5.5 w-5.5 text-teal-600" />
-              </div>
-              <h3 className="text-base font-semibold text-surface-foreground mb-1.5">Chat</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">Real-time channels powered by Supabase Realtime</p>
-            </div>
-
-            {/* Social Intelligence — FEATURED */}
-            <div className="group rounded-2xl border-2 border-orange-400/30 bg-gradient-to-br from-orange-500/10 to-amber-500/10 p-6 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-200 relative overflow-hidden">
-              <div className="absolute top-3 right-3 rounded-full bg-orange-500/15 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-orange-500">
-                Featured
-              </div>
-              <div className="h-11 w-11 rounded-xl bg-orange-500/15 flex items-center justify-center mb-4">
-                <BrainIcon className="h-5.5 w-5.5 text-orange-500" />
-              </div>
-              <h3 className="text-base font-semibold text-surface-foreground mb-1.5">Social Intelligence</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                AI-powered mention monitoring, sentiment analysis, advocate identification, and crisis alerting across 11 platforms — Reddit, Twitter/X, LinkedIn, YouTube, GitHub, Discord, TikTok, G2, Trustpilot, Product Hunt, and HackerNews
-              </p>
-            </div>
-
-            {/* Members */}
-            <div className="group rounded-2xl border border-border bg-card p-6 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-200">
-              <div className="h-11 w-11 rounded-xl bg-indigo-50 flex items-center justify-center mb-4">
-                <UsersIcon className="h-5.5 w-5.5 text-indigo-600" />
-              </div>
-              <h3 className="text-base font-semibold text-surface-foreground mb-1.5">Members</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">Member directory, profiles, roles, and community leaderboards</p>
-            </div>
-
-            {/* Notifications */}
-            <div className="group rounded-2xl border border-border bg-card p-6 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-200">
-              <div className="h-11 w-11 rounded-xl bg-pink-50 flex items-center justify-center mb-4">
-                <BellIcon className="h-5.5 w-5.5 text-pink-600" />
-              </div>
-              <h3 className="text-base font-semibold text-surface-foreground mb-1.5">Notifications</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">In-app alerts, email digests, and real-time activity feeds</p>
-            </div>
-
-            {/* Multilingual AI — Live */}
-            <div className="group rounded-2xl border border-border bg-card p-6 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-200">
-              <div className="h-11 w-11 rounded-xl bg-violet-50 flex items-center justify-center mb-4">
-                <GlobeIcon className="h-5.5 w-5.5 text-violet-600" />
-              </div>
-              <h3 className="text-base font-semibold text-surface-foreground mb-1.5">Multilingual AI</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">AI-powered translation via Gemini and Claude. Read any post in your language — with one click.</p>
-            </div>
+            {[
+              { id: 'forums', icon: ForumIcon, iconClass: 'text-brand', bg: 'bg-brand/5' },
+              { id: 'ideas', icon: LightbulbIcon, iconClass: 'text-amber-600', bg: 'bg-amber-50' },
+              { id: 'events', icon: CalendarIcon, iconClass: 'text-emerald-600', bg: 'bg-emerald-50' },
+              { id: 'courses', icon: BookIcon, iconClass: 'text-violet-600', bg: 'bg-violet-50' },
+              { id: 'webinars', icon: VideoIcon, iconClass: 'text-rose-600', bg: 'bg-rose-50' },
+              { id: 'kb', icon: DocumentIcon, iconClass: 'text-sky-600', bg: 'bg-sky-50' },
+              { id: 'chat', icon: ChatIcon, iconClass: 'text-teal-600', bg: 'bg-teal-50' },
+              { id: 'intel', icon: BrainIcon, iconClass: 'text-orange-500', bg: 'bg-orange-500/15', featured: true },
+              { id: 'members', icon: UsersIcon, iconClass: 'text-indigo-600', bg: 'bg-indigo-50' },
+              { id: 'notifications', icon: BellIcon, iconClass: 'text-pink-600', bg: 'bg-pink-50' },
+              { id: 'multilingual', icon: GlobeIcon, iconClass: 'text-violet-600', bg: 'bg-violet-50' },
+            ].map((f) => {
+              const Icon = f.icon
+              return (
+                <div key={f.id} className={`group rounded-2xl border ${f.featured ? 'border-orange-400/30 bg-gradient-to-br from-orange-500/10 to-amber-500/10' : 'border-border bg-card'} p-6 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-200 relative overflow-hidden`}>
+                  {f.featured && (
+                    <div className="absolute top-3 right-3 rounded-full bg-orange-500/15 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-orange-500">
+                      {isKo ? '주요 기능' : 'Featured'}
+                    </div>
+                  )}
+                  <div className={`h-11 w-11 rounded-xl ${f.bg} flex items-center justify-center mb-4`}>
+                    <Icon className={`h-5.5 w-5.5 ${f.iconClass}`} />
+                  </div>
+                  <h3 className="text-base font-semibold text-surface-foreground mb-1.5">{t(`landing.features.${f.id}.title` as any, userLanguage)}</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {t(`landing.features.${f.id}.desc` as any, userLanguage)}
+                  </p>
+                </div>
+              )
+            })}
           </div>
         </div>
       </section>
 
       {/* ━━━ SOCIAL INTELLIGENCE DEEP-DIVE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
       <section id="social-intelligence" className="bg-neutral-900 text-white py-28 px-6 relative overflow-hidden">
-        {/* Background decoration */}
         <div className="absolute inset-0 -z-0" aria-hidden="true">
           <div className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full bg-orange-500/5 blur-3xl" />
           <div className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full bg-brand/5 blur-3xl" />
@@ -634,49 +587,46 @@ export default function LandingPage() {
 
         <div className="mx-auto max-w-7xl relative z-10">
           <div className="flex flex-col lg:flex-row lg:items-center lg:gap-16">
-            {/* Text column */}
             <div className="lg:w-1/2 mb-12 lg:mb-0">
               <div className="inline-flex items-center gap-2 rounded-full border border-orange-500/30 bg-orange-500/10 px-4 py-1.5 text-xs font-semibold tracking-wide text-orange-300 mb-6">
                 <BrainIcon className="h-3.5 w-3.5" />
-                The differentiator
+                {t('landing.intel.eyebrow', userLanguage)}
               </div>
 
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight leading-tight">
-                The intelligence layer{' '}
+                {isKo ? '오직 OSC에만 있는' : 'The intelligence layer'}{' '}
                 <span className="bg-gradient-to-r from-orange-400 to-amber-300 bg-clip-text text-transparent">
-                  no one else has
+                  {isKo ? '지능형 레이어' : 'no one else has'}
                 </span>
               </h2>
 
               <p className="mt-6 text-lg text-muted-foreground leading-relaxed max-w-lg">
-                Social Intelligence monitors 11 platforms — Reddit, Twitter/X, LinkedIn, YouTube, GitHub, Discord, TikTok, G2, Trustpilot, Product Hunt, and HackerNews — for every
-                mention of your community. It surfaces what matters before it becomes a crisis.
+                {t('landing.intel.description', userLanguage)}
               </p>
 
               <div className="mt-8 space-y-4">
                 {[
-                  'Monitor brand mentions across 11 platforms — Reddit, Twitter/X, LinkedIn, YouTube, GitHub, Discord, TikTok, and more',
-                  'AI-powered sentiment analysis detects shifts before they trend',
-                  'Identify and nurture your top advocates automatically',
-                  'Crisis alerting with instant notifications when negativity spikes',
-                ].map((item) => (
-                  <div key={item} className="flex items-start gap-3">
+                  'landing.intel.point1',
+                  'landing.intel.point2',
+                  'landing.intel.point3',
+                  'landing.intel.point4',
+                ].map((key) => (
+                  <div key={key} className="flex items-start gap-3">
                     <div className="h-5 w-5 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
                       <CheckIcon className="h-3 w-3 text-emerald-400" />
                     </div>
-                    <span className="text-sm text-muted-foreground/70 leading-relaxed">{item}</span>
+                    <span className="text-sm text-muted-foreground/70 leading-relaxed">{t(key as any, userLanguage)}</span>
                   </div>
                 ))}
               </div>
 
               <p className="mt-8 text-sm text-muted-foreground">
-                Built into every OSC instance &mdash; open source, no subscriptions, fully self-hosted.
+                {t('landing.intel.footer', userLanguage)}
               </p>
             </div>
 
-            {/* Intelligence dashboard mockup */}
             <div className="lg:w-1/2">
-              <IntelligenceMockup />
+              <IntelligenceMockup lang={userLanguage} />
             </div>
           </div>
         </div>
@@ -687,25 +637,22 @@ export default function LandingPage() {
         <div className="mx-auto max-w-7xl">
           <div className="text-center mb-14">
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-surface-foreground">
-              Self-host in 5 minutes
+              {t('landing.os.title', userLanguage)}
             </h2>
             <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
-              Clone, install, start. No sales calls, no credit cards, no vendor lock-in. Your data stays yours.
+              {t('landing.os.subtitle', userLanguage)}
             </p>
           </div>
 
-          {/* Terminal code block */}
           <div className="mx-auto max-w-2xl rounded-xl border border-neutral-800 bg-neutral-950 shadow-2xl overflow-hidden">
-            {/* Terminal top bar */}
             <div className="flex items-center gap-2 border-b border-neutral-800 bg-neutral-900 px-4 py-3">
               <div className="flex items-center gap-1.5">
                 <div className="h-3 w-3 rounded-full bg-red-500/80" />
                 <div className="h-3 w-3 rounded-full bg-amber-500/80" />
                 <div className="h-3 w-3 rounded-full bg-emerald-500/80" />
               </div>
-              <span className="ml-3 text-xs text-muted-foreground font-mono">terminal</span>
+              <span className="ml-3 text-xs text-muted-foreground font-mono">{t('landing.os.terminal', userLanguage)}</span>
             </div>
-            {/* Code */}
             <div className="p-5 font-mono text-sm leading-7 overflow-x-auto">
               <div>
                 <span className="text-emerald-400">$</span>{' '}
@@ -734,24 +681,23 @@ export default function LandingPage() {
                 <span className="text-sky-300">pnpm dev</span>
               </div>
               <div className="mt-2">
-                <span className="text-muted-foreground"># Ready at http://localhost:3000</span>
+                <span className="text-muted-foreground"># {t('landing.os.ready', userLanguage)}</span>
               </div>
             </div>
           </div>
 
-          {/* Deploy your own card */}
           <div className="mt-12 max-w-sm mx-auto">
             <div className="rounded-2xl border border-border bg-card p-6 text-center">
-              <h3 className="text-lg font-semibold text-surface-foreground mb-2">Run your own instance</h3>
+              <h3 className="text-lg font-semibold text-surface-foreground mb-2">{t('landing.os.runInstance.title', userLanguage)}</h3>
               <p className="text-sm text-muted-foreground leading-relaxed mb-5">
-                Self-host OSC on your own infrastructure. Non-commercial open-source license. Full control over your data.
+                {t('landing.os.runInstance.desc', userLanguage)}
               </p>
               <Link
                 href="https://github.com/JonJLevesque/OpenSourceCommunity"
                 className="inline-flex items-center gap-2 rounded-lg bg-brand px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition-all"
               >
                 <GitHubIcon className="h-4 w-4" />
-                Get the code
+                {t('landing.os.runInstance.cta', userLanguage)}
               </Link>
             </div>
           </div>
@@ -763,69 +709,33 @@ export default function LandingPage() {
         <div className="mx-auto max-w-5xl">
           <div className="text-center mb-14">
             <div className="inline-flex items-center gap-2 rounded-full border border-violet-200 bg-violet-50 px-4 py-1.5 text-xs font-semibold tracking-wide text-violet-600 mb-6">
-              What&apos;s coming
+              {t('landing.roadmap.eyebrow', userLanguage)}
             </div>
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-surface-foreground">
-              The roadmap
+              {t('landing.roadmap.title', userLanguage)}
             </h2>
             <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
-              Built in public. These are the next big things landing in OSC.
+              {t('landing.roadmap.subtitle', userLanguage)}
             </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* Phase 1 — Shipped */}
-            <div className="rounded-2xl border-2 border-emerald-200 bg-gradient-to-br from-emerald-50 to-teal-50 p-7 shadow-sm">
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700 mb-3">
-                ✓ Phase 1 — Shipped
+            {[
+              { id: 'phase1', check: true },
+              { id: 'phase2', check: true },
+              { id: 'phase3', check: false },
+              { id: 'phase4', check: false },
+            ].map((p) => (
+              <div key={p.id} className={`rounded-2xl border-2 ${p.check ? 'border-emerald-200 bg-gradient-to-br from-emerald-50 to-teal-50' : 'border-border bg-white'} p-7 shadow-sm`}>
+                <div className={`inline-flex items-center gap-1.5 rounded-full ${p.check ? 'bg-emerald-100 text-emerald-700' : 'bg-indigo-100 text-indigo-700'} px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider mb-3`}>
+                  {p.check && '✓'} {t(`landing.roadmap.${p.id}` as any, userLanguage)}
+                </div>
+                <h3 className="text-lg font-semibold text-surface-foreground mb-2">{t(`landing.roadmap.${p.id}.title` as any, userLanguage)}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  {t(`landing.roadmap.${p.id}.desc` as any, userLanguage)}
+                </p>
               </div>
-              <h3 className="text-lg font-semibold text-surface-foreground mb-2">11 Social Connectors</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Full coverage shipped: Reddit, HackerNews, Twitter/X, LinkedIn, YouTube, GitHub, Discord, TikTok, G2, Trustpilot, and Product Hunt — all live.
-              </p>
-            </div>
-
-            {/* Phase 2 — Shipped */}
-            <div className="rounded-2xl border-2 border-emerald-200 bg-gradient-to-br from-emerald-50 to-teal-50 p-7 shadow-sm">
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700 mb-3">
-                ✓ Phase 2 — Shipped
-              </div>
-              <h3 className="text-lg font-semibold text-surface-foreground mb-2">Multilingual AI</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Powered by Gemini and Claude. Pick your language in the header — every forum post translates instantly. Redis-cached, one-click &ldquo;View original&rdquo;.
-              </p>
-            </div>
-
-            {/* Phase 3 — Fediverse */}
-            <div className="rounded-2xl border border-border bg-white p-7 shadow-sm">
-              <div className="h-11 w-11 rounded-xl bg-indigo-50 flex items-center justify-center mb-5">
-                <svg className="h-5 w-5 text-indigo-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <circle cx="12" cy="5" r="2" /><circle cx="5" cy="19" r="2" /><circle cx="19" cy="19" r="2" />
-                  <line x1="12" y1="7" x2="5" y2="17" /><line x1="12" y1="7" x2="19" y2="17" /><line x1="5" y1="17" x2="19" y2="17" />
-                </svg>
-              </div>
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-indigo-100 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-indigo-700 mb-3">
-                Phase 3
-              </div>
-              <h3 className="text-lg font-semibold text-surface-foreground mb-2">Fediverse (ActivityPub)</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Every OSC instance becomes a fediverse node. Forums federate like Mastodon threads, members get portable identities across the open social web.
-              </p>
-            </div>
-
-            {/* Phase 4 — Slack Bridge */}
-            <div className="rounded-2xl border border-border bg-white p-7 shadow-sm">
-              <div className="h-11 w-11 rounded-xl bg-sky-50 flex items-center justify-center mb-5">
-                <SlackIcon className="h-5 w-5 text-sky-600" />
-              </div>
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-sky-100 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-sky-700 mb-3">
-                Phase 4
-              </div>
-              <h3 className="text-lg font-semibold text-surface-foreground mb-2">Slack Bridge</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Sync your Slack workspace with OSC forums. Posts flow both ways — keep your team where they are while your community grows on a platform you own.
-              </p>
-            </div>
+            ))}
           </div>
 
           <div className="text-center mt-10">
@@ -833,7 +743,7 @@ export default function LandingPage() {
               href="https://github.com/JonJLevesque/OpenSourceCommunity/issues?q=label%3Aroadmap"
               className="inline-flex items-center gap-2 text-brand font-semibold text-base hover:opacity-80 transition-opacity"
             >
-              View the full roadmap on GitHub
+              {t('landing.roadmap.fullCta', userLanguage)}
               <ArrowRightIcon className="h-4 w-4" />
             </Link>
           </div>
@@ -842,7 +752,6 @@ export default function LandingPage() {
 
       {/* ━━━ FINAL CTA ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
       <section className="relative py-28 px-6 bg-gradient-to-br from-indigo-600 to-violet-700 text-white overflow-hidden">
-        {/* Grid pattern overlay */}
         <div className="absolute inset-0" aria-hidden="true">
           <svg className="absolute inset-0 h-full w-full" xmlns="http://www.w3.org/2000/svg">
             <defs>
@@ -854,15 +763,14 @@ export default function LandingPage() {
           </svg>
         </div>
 
-        {/* Glow effects */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[400px] w-[600px] rounded-full bg-white/5 blur-3xl" aria-hidden="true" />
 
         <div className="relative z-10 mx-auto max-w-3xl text-center">
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight">
-            Come build with us
+            {t('landing.cta.title', userLanguage)}
           </h2>
           <p className="mt-4 text-lg text-white/70 max-w-xl mx-auto">
-            OSC is an open-source project built in public. Join the community, share ideas, report bugs, and help shape what comes next.
+            {t('landing.cta.description', userLanguage)}
           </p>
 
           <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
@@ -870,7 +778,7 @@ export default function LandingPage() {
               href="/signup"
               className="inline-flex items-center gap-2 rounded-xl bg-white px-8 py-4 text-base font-semibold text-brand shadow-lg hover:bg-white/90 transition-all"
             >
-              Join the community
+              {t('landing.cta.joinBtn', userLanguage)}
               <ArrowRightIcon className="h-4 w-4" />
             </Link>
             <Link
@@ -878,7 +786,7 @@ export default function LandingPage() {
               className="inline-flex items-center gap-2 rounded-xl border border-white/30 px-8 py-4 text-base font-semibold text-white hover:bg-white/10 transition-all"
             >
               <GitHubIcon className="h-5 w-5" />
-              View on GitHub
+              {t('landing.hero.cta.github', userLanguage)}
             </Link>
           </div>
         </div>
@@ -888,7 +796,6 @@ export default function LandingPage() {
       <footer className="border-t border-border bg-card py-16 px-6">
         <div className="mx-auto max-w-7xl">
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-8 lg:gap-12">
-            {/* Brand column */}
             <div className="col-span-2 sm:col-span-1">
               <Link href="/" className="flex items-center gap-2.5">
                 <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center">
@@ -899,17 +806,28 @@ export default function LandingPage() {
                 </span>
               </Link>
               <p className="mt-3 text-sm text-muted-foreground leading-relaxed max-w-xs">
-                The open-source community platform with AI-powered social intelligence.
+                {t('landing.footer.tagline', userLanguage)}
               </p>
             </div>
 
             {/* Product */}
             <div>
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">Features</h4>
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">{t('landing.footer.features', userLanguage)}</h4>
               <ul className="space-y-2.5">
-                {['Forums', 'Ideas', 'Events', 'Courses', 'Webinars', 'Knowledge Base', 'Chat', 'Members', 'Notifications', 'Social Intelligence'].map((item) => (
-                  <li key={item}>
-                    <Link href="#modules" className="text-sm text-muted-foreground hover:text-surface-foreground transition-colors">{item}</Link>
+                {[
+                  { labelKey: 'landing.features.forums.title' },
+                  { labelKey: 'landing.features.ideas.title' },
+                  { labelKey: 'landing.features.events.title' },
+                  { labelKey: 'landing.features.courses.title' },
+                  { labelKey: 'landing.features.webinars.title' },
+                  { labelKey: 'landing.features.kb.title' },
+                  { labelKey: 'landing.features.chat.title' },
+                  { labelKey: 'landing.features.members.title' },
+                  { labelKey: 'landing.features.notifications.title' },
+                  { labelKey: 'landing.features.intel.title' },
+                ].map((item) => (
+                  <li key={item.labelKey}>
+                    <Link href="#modules" className="text-sm text-muted-foreground hover:text-surface-foreground transition-colors">{t(item.labelKey as any, userLanguage)}</Link>
                   </li>
                 ))}
               </ul>
@@ -917,32 +835,32 @@ export default function LandingPage() {
 
             {/* Developers */}
             <div>
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">Developers</h4>
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">{t('landing.footer.developers', userLanguage)}</h4>
               <ul className="space-y-2.5">
                 <li><Link href="https://github.com/JonJLevesque/OpenSourceCommunity" className="text-sm text-muted-foreground hover:text-surface-foreground transition-colors">GitHub</Link></li>
-                <li><Link href="/docs" className="text-sm text-muted-foreground hover:text-surface-foreground transition-colors">Documentation</Link></li>
-                <li><Link href="/docs/contributing" className="text-sm text-muted-foreground hover:text-surface-foreground transition-colors">Contributing</Link></li>
-                <li><Link href="https://github.com/JonJLevesque/OpenSourceCommunity/security" className="text-sm text-muted-foreground hover:text-surface-foreground transition-colors">Security</Link></li>
+                <li><Link href="/docs" className="text-sm text-muted-foreground hover:text-surface-foreground transition-colors">{t('landing.footer.docs', userLanguage)}</Link></li>
+                <li><Link href="/docs/contributing" className="text-sm text-muted-foreground hover:text-surface-foreground transition-colors">{t('landing.footer.contributing', userLanguage)}</Link></li>
+                <li><Link href="https://github.com/JonJLevesque/OpenSourceCommunity/security" className="text-sm text-muted-foreground hover:text-surface-foreground transition-colors">{t('landing.footer.security', userLanguage)}</Link></li>
               </ul>
             </div>
 
             {/* Community */}
             <div>
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">Community</h4>
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">{t('landing.footer.community', userLanguage)}</h4>
               <ul className="space-y-2.5">
                 <li><Link href="#" className="text-sm text-muted-foreground hover:text-surface-foreground transition-colors">Discord</Link></li>
                 <li><Link href="#" className="text-sm text-muted-foreground hover:text-surface-foreground transition-colors">Twitter / X</Link></li>
-                <li><Link href="#" className="text-sm text-muted-foreground hover:text-surface-foreground transition-colors">Blog</Link></li>
+                <li><Link href="#" className="text-sm text-muted-foreground hover:text-surface-foreground transition-colors">{t('landing.footer.blog', userLanguage)}</Link></li>
               </ul>
             </div>
 
             {/* Legal */}
             <div>
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">Legal</h4>
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">{t('landing.footer.legal', userLanguage)}</h4>
               <ul className="space-y-2.5">
-                <li><Link href="https://github.com/JonJLevesque/OpenSourceCommunity/blob/main/LICENSE" className="text-sm text-muted-foreground hover:text-surface-foreground transition-colors">License (Non-commercial)</Link></li>
-                <li><Link href="#" className="text-sm text-muted-foreground hover:text-surface-foreground transition-colors">Privacy Policy</Link></li>
-                <li><Link href="#" className="text-sm text-muted-foreground hover:text-surface-foreground transition-colors">Terms of Service</Link></li>
+                <li><Link href="https://github.com/JonJLevesque/OpenSourceCommunity/blob/main/LICENSE" className="text-sm text-muted-foreground hover:text-surface-foreground transition-colors">{t('landing.footer.license', userLanguage)}</Link></li>
+                <li><Link href="#" className="text-sm text-muted-foreground hover:text-surface-foreground transition-colors">{t('landing.footer.privacy', userLanguage)}</Link></li>
+                <li><Link href="#" className="text-sm text-muted-foreground hover:text-surface-foreground transition-colors">{t('landing.footer.terms', userLanguage)}</Link></li>
               </ul>
             </div>
           </div>
@@ -950,12 +868,12 @@ export default function LandingPage() {
           {/* Copyright */}
           <div className="mt-14 pt-6 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
             <p className="text-sm text-muted-foreground">
-              &copy; {new Date().getFullYear()} OpenSourceCommunity. All rights reserved.
+              &copy; {new Date().getFullYear()} OpenSourceCommunity. {t('landing.footer.rights', userLanguage)}
             </p>
             <p className="text-sm text-muted-foreground">
-              Released under the{' '}
+              {t('landing.footer.released', userLanguage)}{' '}
               <Link href="https://github.com/JonJLevesque/OpenSourceCommunity/blob/main/LICENSE" className="text-brand hover:text-brand transition-colors">
-                Non-commercial License
+                {isKo ? '비상업적 라이선스' : 'Non-commercial License'}
               </Link>
             </p>
           </div>
@@ -964,3 +882,4 @@ export default function LandingPage() {
     </main>
   )
 }
+

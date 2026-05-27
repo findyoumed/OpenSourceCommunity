@@ -5,6 +5,7 @@ import { apiGet } from '@/lib/api'
 import { ApiError } from '@/lib/api'
 import type { Metadata } from 'next'
 import { CompleteButton } from './complete-button'
+import { t } from '@/lib/i18n'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -73,9 +74,15 @@ export default async function LessonPage({
   const token = session?.access_token
 
   let detail: CourseDetailResponse
+  let userLanguage = 'en'
 
   try {
-    detail = await apiGet<CourseDetailResponse>(`/api/courses/${courseId}`, token, 0)
+    const [detailData, profile] = await Promise.all([
+      apiGet<CourseDetailResponse>(`/api/courses/${courseId}`, token, 0),
+      apiGet<{ language: string | null }>('/api/me', token, 60),
+    ])
+    detail = detailData
+    userLanguage = profile?.language ?? 'en'
   } catch (err) {
     if (err instanceof ApiError && err.status === 404) notFound()
     throw err
@@ -104,7 +111,7 @@ export default async function LessonPage({
       {/* ── Breadcrumb ────────────────────────────────────────────────────── */}
       <nav className="flex items-center gap-1.5 text-xs text-muted-foreground">
         <Link href="/courses" className="hover:text-brand transition-colors">
-          Courses
+          {t('courses.title', userLanguage)}
         </Link>
         <span>/</span>
         <Link href={`/courses/${courseId}`} className="hover:text-brand transition-colors">
@@ -124,6 +131,7 @@ export default async function LessonPage({
             lessonId={lessonId}
             token={token}
             isComplete={isComplete}
+            lang={userLanguage}
           />
         )}
       </div>
@@ -188,7 +196,7 @@ export default async function LessonPage({
             href={`/courses/${courseId}`}
             className="flex items-center gap-1.5 text-sm text-brand hover:text-surface-foreground font-medium transition-colors"
           >
-            Back to course
+            {t('courses.lesson.backToCourse', userLanguage)}
             <ChevronRightIcon />
           </Link>
         )}
@@ -196,6 +204,55 @@ export default async function LessonPage({
     </div>
   )
 }
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function extractBodyText(body: Record<string, unknown>): string {
+  if (typeof body.text === 'string') return body.text
+  if (typeof body.content === 'string') return body.content
+
+  // ProseMirror / TipTap document — walk the node tree
+  function walkNodes(node: unknown): string {
+    if (!node || typeof node !== 'object') return ''
+    const n = node as Record<string, unknown>
+    if (typeof n.text === 'string') return n.text
+    if (Array.isArray(n.content)) {
+      return (n.content as unknown[]).map(walkNodes).join('\n')
+    }
+    return ''
+  }
+
+  return walkNodes(body)
+}
+
+function isYouTubeUrl(url: string): boolean {
+  return /youtube\.com|youtu\.be/.test(url)
+}
+
+function toYouTubeEmbed(url: string): string {
+  const match = url.match(/(?:v=|youtu\.be\/)([A-Za-z0-9_-]{11})/)
+  if (!match) return url
+  return `https://www.youtube.com/embed/${match[1]}`
+}
+
+// ─── Icons ────────────────────────────────────────────────────────────────────
+
+function ChevronLeftIcon() {
+  return (
+    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
+      <polyline strokeLinecap="round" strokeLinejoin="round" points="15 18 9 12 15 6" />
+    </svg>
+  )
+}
+
+function ChevronRightIcon() {
+  return (
+    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
+      <polyline strokeLinecap="round" strokeLinejoin="round" points="9 18 15 12 9 6" />
+    </svg>
+  )
+}
+
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 

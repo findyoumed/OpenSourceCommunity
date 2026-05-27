@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import type { QaItem } from './page'
+import { useTranslation } from '@/lib/i18n-context'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -10,6 +11,7 @@ interface QaSectionProps {
   initialItems: QaItem[]
   isAuthenticated: boolean
   token: string | undefined
+  lang?: string | null
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -26,7 +28,8 @@ async function upvoteQuestion(webinarId: string, qaId: string): Promise<QaItem> 
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export function QaSection({ webinarId, initialItems, isAuthenticated, token }: QaSectionProps) {
+export function QaSection({ webinarId, initialItems, isAuthenticated, token, lang: _lang }: QaSectionProps) {
+  const { t } = useTranslation()
   const [items, setItems] = useState<QaItem[]>(initialItems)
   const [question, setQuestion] = useState('')
   const [submitError, setSubmitError] = useState<string | null>(null)
@@ -46,7 +49,7 @@ export function QaSection({ webinarId, initialItems, isAuthenticated, token }: Q
         setItems((prev) => [newItem, ...prev])
         setQuestion('')
       } catch (err) {
-        setSubmitError(err instanceof Error ? err.message : 'Could not submit question.')
+        setSubmitError(err instanceof Error ? err.message : t('webinars.qa.error'))
       }
     })
   }
@@ -85,7 +88,7 @@ export function QaSection({ webinarId, initialItems, isAuthenticated, token }: Q
     <div className="rounded-xl border border-border bg-card">
       <div className="border-b border-border px-6 py-4">
         <h2 className="text-sm font-semibold text-surface-foreground">
-          Q&amp;A
+          {t('webinars.qa.title')}
           {items.length > 0 && (
             <span className="ml-2 font-normal text-muted-foreground">({items.length})</span>
           )}
@@ -99,7 +102,7 @@ export function QaSection({ webinarId, initialItems, isAuthenticated, token }: Q
             <textarea
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
-              placeholder="Ask a question..."
+              placeholder={t('webinars.qa.placeholder')}
               rows={3}
               maxLength={2000}
               disabled={isPending}
@@ -114,18 +117,18 @@ export function QaSection({ webinarId, initialItems, isAuthenticated, token }: Q
                 disabled={isPending || !question.trim()}
                 className="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white hover:opacity-90 transition-colors disabled:opacity-50"
               >
-                {isPending ? 'Submitting...' : 'Submit question'}
+                {isPending ? t('webinars.qa.submittingBtn') : t('webinars.qa.submitBtn')}
               </button>
             </div>
           </form>
         ) : (
-          <p className="text-sm text-muted-foreground">Sign in to ask a question.</p>
+          <p className="text-sm text-muted-foreground">{t('webinars.qa.signinToAsk')}</p>
         )}
 
         {/* Q&A list */}
         {sorted.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-4">
-            No questions yet. Be the first to ask!
+            {t('webinars.qa.empty')}
           </p>
         ) : (
           <ul className="space-y-4">
@@ -156,7 +159,7 @@ export function QaSection({ webinarId, initialItems, isAuthenticated, token }: Q
                     {/* Answer */}
                     {item.answer && (
                       <div className="mt-2 rounded-lg bg-brand/5 px-3 py-2">
-                        <p className="mb-1 text-xs font-semibold text-brand">Answer</p>
+                        <p className="mb-1 text-xs font-semibold text-brand">{t('webinars.qa.answer')}</p>
                         <p className="text-sm text-surface-foreground">{item.answer}</p>
                       </div>
                     )}
@@ -164,7 +167,7 @@ export function QaSection({ webinarId, initialItems, isAuthenticated, token }: Q
                     {/* Meta */}
                     <p className="mt-1 text-xs text-muted-foreground">
                       {item.createdAt
-                        ? new Intl.DateTimeFormat('en', {
+                        ? new Intl.DateTimeFormat(_lang === 'ko' ? 'ko-KR' : 'en-US', {
                             month: 'short',
                             day: 'numeric',
                             hour: 'numeric',
@@ -172,7 +175,7 @@ export function QaSection({ webinarId, initialItems, isAuthenticated, token }: Q
                           }).format(new Date(item.createdAt))
                         : ''}
                       {item.answeredAt && (
-                        <span className="ml-2 text-emerald-600">Answered</span>
+                        <span className="ml-2 text-emerald-600">{t('webinars.qa.answered')}</span>
                       )}
                     </p>
                   </div>
@@ -195,3 +198,4 @@ function ChevronUpIcon() {
     </svg>
   )
 }
+

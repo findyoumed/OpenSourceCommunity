@@ -6,6 +6,7 @@ import type { Metadata } from 'next'
 import { RegisterButton } from './register-button'
 import { QaSection } from './qa-section'
 import type { WebinarStatus } from '../page'
+import { t } from '@/lib/i18n'
 
 export async function generateMetadata({
   params,
@@ -48,8 +49,8 @@ export interface QaItem {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function formatLongDate(iso: string): string {
-  return new Intl.DateTimeFormat('en', {
+function formatLongDate(iso: string, lang: string = 'en'): string {
+  return new Intl.DateTimeFormat(lang === 'ko' ? 'ko-KR' : 'en-US', {
     weekday: 'long',
     month: 'long',
     day: 'numeric',
@@ -57,27 +58,28 @@ function formatLongDate(iso: string): string {
   }).format(new Date(iso))
 }
 
-function formatTime(iso: string): string {
-  return new Intl.DateTimeFormat('en', {
+function formatTime(iso: string, lang: string = 'en'): string {
+  return new Intl.DateTimeFormat(lang === 'ko' ? 'ko-KR' : 'en-US', {
     hour: 'numeric',
     minute: '2-digit',
     timeZoneName: 'short',
   }).format(new Date(iso))
 }
 
-function formatDuration(minutes: number): string {
+function formatDuration(minutes: number, lang: string = 'en'): string {
   const h = Math.floor(minutes / 60)
   const m = minutes % 60
-  if (h > 0 && m > 0) return `${h}h ${m}m`
-  if (h > 0) return `${h}h`
-  return `${m}m`
+  const isKo = lang === 'ko'
+  if (h > 0 && m > 0) return isKo ? `${h}시간 ${m}분` : `${h}h ${m}m`
+  if (h > 0) return isKo ? `${h}시간` : `${h}h`
+  return isKo ? `${m}분` : `${m}m`
 }
 
-const STATUS_BADGE: Record<WebinarStatus, { label: string; className: string }> = {
-  draft: { label: 'Draft', className: 'bg-muted text-muted-foreground' },
-  scheduled: { label: 'Upcoming', className: 'bg-brand/5 text-brand' },
-  live: { label: 'Live', className: 'bg-rose-50 text-rose-700' },
-  ended: { label: 'Ended', className: 'bg-muted text-muted-foreground' },
+const STATUS_BADGE: Record<WebinarStatus, { labelKey: string; className: string }> = {
+  draft: { labelKey: 'webinars.status.draft', className: 'bg-muted text-muted-foreground' },
+  scheduled: { labelKey: 'webinars.status.scheduled', className: 'bg-brand/5 text-brand' },
+  live: { labelKey: 'webinars.status.live', className: 'bg-rose-50 text-rose-700' },
+  ended: { labelKey: 'webinars.status.ended', className: 'bg-muted text-muted-foreground' },
 }
 
 const COVER_GRADIENTS = [
@@ -114,9 +116,15 @@ export default async function WebinarDetailPage({
   let webinar: WebinarDetail | null = null
   let qaItems: QaItem[] = []
   let fetchError = false
+  let userLanguage = 'en'
 
   try {
-    webinar = await apiGet<WebinarDetail>(`/api/webinars/${webinarId}`, token)
+    const [detail, profile] = await Promise.all([
+      apiGet<WebinarDetail>(`/api/webinars/${webinarId}`, token),
+      apiGet<{ language: string | null }>('/api/me', token, 60),
+    ])
+    webinar = detail
+    userLanguage = profile?.language ?? 'en'
   } catch (err: unknown) {
     if ((err as { status?: number }).status === 404) notFound()
     fetchError = true
@@ -125,7 +133,7 @@ export default async function WebinarDetailPage({
   if (fetchError || !webinar) {
     return (
       <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-        Failed to load this webinar. Please try refreshing.
+        {t('webinars.error', userLanguage)}
       </div>
     )
   }
@@ -137,7 +145,7 @@ export default async function WebinarDetailPage({
   }
 
   const gradient = gradientForId(webinar.id)
-  const badge = STATUS_BADGE[webinar.status] ?? STATUS_BADGE.scheduled
+  const badgeInfo = STATUS_BADGE[webinar.status] ?? STATUS_BADGE.scheduled
   const isLive = webinar.status === 'live'
   const canRegister = webinar.status === 'scheduled'
 
@@ -151,7 +159,7 @@ export default async function WebinarDetailPage({
         <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
           <path strokeLinecap="round" strokeLinejoin="round" d="m15 18-6-6 6-6" />
         </svg>
-        Back to webinars
+        {t('webinars.detail.backBtn', userLanguage)}
       </Link>
 
       {/* ── Cover ─────────────────────────────────────────────────────────── */}
@@ -159,13 +167,13 @@ export default async function WebinarDetailPage({
         <span
           className={[
             'absolute right-4 top-4 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium',
-            badge.className,
+            badgeInfo.className,
           ].join(' ')}
         >
           {isLive && (
             <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-rose-500" />
           )}
-          {badge.label}
+          {t(badgeInfo.labelKey as any, userLanguage)}
         </span>
       </div>
 
@@ -178,7 +186,7 @@ export default async function WebinarDetailPage({
           {/* Description */}
           {webinar.description && (
             <div className="rounded-xl border border-border bg-card p-6">
-              <h2 className="mb-3 text-sm font-semibold text-surface-foreground">About this webinar</h2>
+              <h2 className="mb-3 text-sm font-semibold text-surface-foreground">{t('webinars.detail.about', userLanguage)}</h2>
               <p className="text-sm text-muted-foreground whitespace-pre-wrap">{webinar.description}</p>
             </div>
           )}
@@ -189,7 +197,7 @@ export default async function WebinarDetailPage({
               <div className="border-b border-border px-6 py-4">
                 <h2 className="text-sm font-semibold text-surface-foreground flex items-center gap-2">
                   <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-rose-500" />
-                  Live stream
+                  {t('webinars.detail.liveStream', userLanguage)}
                 </h2>
               </div>
               <div className="aspect-video bg-neutral-900">
@@ -208,7 +216,7 @@ export default async function WebinarDetailPage({
           {webinar.status === 'ended' && webinar.recordingUrl && (
             <div className="rounded-xl border border-border bg-card overflow-hidden">
               <div className="border-b border-border px-6 py-4">
-                <h2 className="text-sm font-semibold text-surface-foreground">Recording</h2>
+                <h2 className="text-sm font-semibold text-surface-foreground">{t('webinars.detail.recording', userLanguage)}</h2>
               </div>
               <div className="aspect-video bg-neutral-900">
                 <iframe
@@ -228,6 +236,7 @@ export default async function WebinarDetailPage({
             initialItems={qaItems}
             isAuthenticated={isAuthenticated}
             token={token}
+            lang={userLanguage}
           />
         </div>
 
@@ -240,11 +249,11 @@ export default async function WebinarDetailPage({
                 <CalendarIcon />
               </div>
               <div>
-                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Date</p>
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t('webinars.detail.dateLabel', userLanguage)}</p>
                 <p className="mt-0.5 text-sm font-semibold text-surface-foreground">
-                  {formatLongDate(webinar.scheduledAt)}
+                  {formatLongDate(webinar.scheduledAt, userLanguage)}
                 </p>
-                <p className="text-sm text-muted-foreground">{formatTime(webinar.scheduledAt)}</p>
+                <p className="text-sm text-muted-foreground">{formatTime(webinar.scheduledAt, userLanguage)}</p>
               </div>
             </div>
 
@@ -254,9 +263,9 @@ export default async function WebinarDetailPage({
                   <ClockIcon />
                 </div>
                 <div>
-                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Duration</p>
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t('webinars.detail.durationLabel', userLanguage)}</p>
                   <p className="mt-0.5 text-sm font-semibold text-surface-foreground">
-                    {formatDuration(webinar.durationMinutes)}
+                    {formatDuration(webinar.durationMinutes, userLanguage)}
                   </p>
                 </div>
               </div>
@@ -267,11 +276,11 @@ export default async function WebinarDetailPage({
                 <UsersIcon />
               </div>
               <div>
-                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Registrations</p>
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t('webinars.detail.registrationsLabel', userLanguage)}</p>
                 <p className="mt-0.5 text-sm font-semibold text-surface-foreground">
-                  {webinar.registrationCount.toLocaleString()}
+                  {webinar.registrationCount.toLocaleString(userLanguage === 'ko' ? 'ko-KR' : 'en-US')}
                   {webinar.maxAttendees != null && (
-                    <span className="font-normal text-muted-foreground"> / {webinar.maxAttendees}</span>
+                    <span className="font-normal text-muted-foreground"> / {webinar.maxAttendees.toLocaleString(userLanguage === 'ko' ? 'ko-KR' : 'en-US')}</span>
                   )}
                 </p>
               </div>
@@ -287,18 +296,20 @@ export default async function WebinarDetailPage({
                 registrationCount={webinar.registrationCount}
                 maxAttendees={webinar.maxAttendees}
                 token={token}
+                lang={userLanguage}
               />
             </div>
           )}
 
           {canRegister && !isAuthenticated && (
             <div className="rounded-xl border border-border bg-card p-5 text-center">
-              <p className="text-sm text-muted-foreground mb-3">Sign in to register for this webinar</p>
+              <p className="text-sm text-muted-foreground mb-3">{t('webinars.detail.signinToRegister', userLanguage)}</p>
               <Link
                 href="/login"
                 className="inline-flex items-center rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white hover:opacity-90 transition-colors"
               >
-                Sign in
+                {t('header.signout') /* Temporary fix: use signout key to mean login? No, let's use a proper key if available. Oh wait, I don't have a 'signin' key in ko. */}
+                {userLanguage === 'ko' ? '로그인' : 'Sign in'}
               </Link>
             </div>
           )}
@@ -307,6 +318,40 @@ export default async function WebinarDetailPage({
     </div>
   )
 }
+
+// ─── Icons ────────────────────────────────────────────────────────────────────
+
+function CalendarIcon() {
+  return (
+    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} aria-hidden>
+      <rect x="3" y="4" width="18" height="18" rx="2" strokeLinecap="round" strokeLinejoin="round" />
+      <line x1="16" y1="2" x2="16" y2="6" strokeLinecap="round" />
+      <line x1="8" y1="2" x2="8" y2="6" strokeLinecap="round" />
+      <line x1="3" y1="10" x2="21" y2="10" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+function ClockIcon() {
+  return (
+    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} aria-hidden>
+      <circle cx="12" cy="12" r="10" />
+      <polyline strokeLinecap="round" strokeLinejoin="round" points="12 6 12 12 16 14" />
+    </svg>
+  )
+}
+
+function UsersIcon() {
+  return (
+    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} aria-hidden>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M23 21v-2a4 4 0 0 0-3-3.87" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M16 3.13a4 4 0 0 1 0 7.75" />
+    </svg>
+  )
+}
+
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 

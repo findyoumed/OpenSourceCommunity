@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { apiGet } from '@/lib/api'
 import type { Metadata } from 'next'
 import { NewThreadForm } from './new-thread-form'
+import { t } from '@/lib/i18n'
 
 export async function generateMetadata({
   params,
@@ -38,9 +39,15 @@ export default async function NewThreadPage({
   const token = session.access_token
 
   let category: ForumCategory | null = null
+  let userLanguage = 'en'
+
   try {
-    const categories = await apiGet<ForumCategory[]>('/api/forums/categories', token)
+    const [categories, profile] = await Promise.all([
+      apiGet<ForumCategory[]>('/api/forums/categories', token),
+      apiGet<{ language: string | null }>('/api/me', token, 60),
+    ])
     category = categories.find((c) => c.slug === categorySlug) ?? null
+    userLanguage = profile?.language ?? 'en'
   } catch {
     notFound()
   }
@@ -52,18 +59,22 @@ export default async function NewThreadPage({
       {/* ── Breadcrumb ──────────────────────────────────────────────────────── */}
       <nav className="flex items-center gap-2 text-sm text-muted-foreground">
         <Link href="/forums" className="hover:text-muted-foreground">
-          Forums
+          {t('nav.forums', userLanguage)}
         </Link>
         <span>/</span>
         <Link href={`/forums/${categorySlug}`} className="hover:text-muted-foreground">
           {category.name}
         </Link>
         <span>/</span>
-        <span className="text-surface-foreground font-medium">New thread</span>
+        <span className="text-surface-foreground font-medium">
+          {t('forums.thread.new.title', userLanguage)}
+        </span>
       </nav>
 
       <div>
-        <h1 className="text-2xl font-bold text-surface-foreground">New thread</h1>
+        <h1 className="text-2xl font-bold text-surface-foreground">
+          {t('forums.thread.new.title', userLanguage)}
+        </h1>
       </div>
 
       <NewThreadForm
@@ -71,7 +82,9 @@ export default async function NewThreadPage({
         categoryName={category.name}
         categorySlug={categorySlug}
         token={token}
+        lang={userLanguage}
       />
     </div>
   )
 }
+

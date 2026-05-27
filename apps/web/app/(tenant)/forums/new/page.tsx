@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { apiGet } from '@/lib/api'
 import type { Metadata } from 'next'
+import { t } from '@/lib/i18n'
 
 export const metadata: Metadata = { title: 'New discussion' }
 
@@ -24,8 +25,15 @@ export default async function ForumsNewPage() {
   const token = session.access_token
 
   let categories: ForumCategory[] = []
+  let userLanguage = 'en'
+
   try {
-    categories = await apiGet<ForumCategory[]>('/api/forums/categories', token)
+    const [cats, profile] = await Promise.all([
+      apiGet<ForumCategory[]>('/api/forums/categories', token),
+      apiGet<{ language: string | null }>('/api/me', token, 60),
+    ])
+    categories = cats
+    userLanguage = profile?.language ?? 'en'
   } catch {
     // fall through — show error state
   }
@@ -35,24 +43,30 @@ export default async function ForumsNewPage() {
       {/* ── Breadcrumb ──────────────────────────────────────────────────────── */}
       <nav className="flex items-center gap-2 text-sm text-muted-foreground">
         <Link href="/forums" className="hover:text-muted-foreground">
-          Forums
+          {t('nav.forums', userLanguage)}
         </Link>
         <span>/</span>
-        <span className="text-surface-foreground font-medium">New discussion</span>
+        <span className="text-surface-foreground font-medium">
+          {t('forums.new.title', userLanguage)}
+        </span>
       </nav>
 
       <div>
-        <h1 className="text-2xl font-bold text-surface-foreground">New discussion</h1>
+        <h1 className="text-2xl font-bold text-surface-foreground">
+          {t('forums.new.title', userLanguage)}
+        </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Choose a category to post in
+          {t('forums.new.chooseCategory', userLanguage)}
         </p>
       </div>
 
       {categories.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border bg-card px-6 py-16 text-center">
-          <p className="text-sm font-medium text-muted-foreground">No categories available</p>
+          <p className="text-sm font-medium text-muted-foreground">
+            {t('forums.new.noCategories', userLanguage)}
+          </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            An admin needs to create forum categories first.
+            {t('forums.new.adminNeeded', userLanguage)}
           </p>
         </div>
       ) : (
@@ -89,3 +103,4 @@ export default async function ForumsNewPage() {
     </div>
   )
 }
+

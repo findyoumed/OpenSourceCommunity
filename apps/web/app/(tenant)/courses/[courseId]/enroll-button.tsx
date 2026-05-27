@@ -3,14 +3,17 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { apiClientPost } from '@/lib/api-client'
+import { useTranslation } from '@/lib/i18n-context'
 
 interface EnrollButtonProps {
   courseId: string
   token: string | undefined
+  lang?: string | null
 }
 
-export function EnrollButton({ courseId, token }: EnrollButtonProps) {
+export function EnrollButton({ courseId, token, lang: _lang }: EnrollButtonProps) {
   const router = useRouter()
+  const { t } = useTranslation()
   const [state, setState] = useState<'idle' | 'loading' | 'enrolled' | 'error'>('idle')
   const [errorMessage, setErrorMessage] = useState<string>('')
 
@@ -40,7 +43,7 @@ export function EnrollButton({ courseId, token }: EnrollButtonProps) {
       router.refresh()
     } catch (err) {
       setState('error')
-      setErrorMessage(err instanceof Error ? err.message : 'Something went wrong')
+      setErrorMessage(err instanceof Error ? err.message : t('profile.errorDefault'))
     }
   }
 
@@ -48,7 +51,7 @@ export function EnrollButton({ courseId, token }: EnrollButtonProps) {
     return (
       <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-sm font-medium text-emerald-700">
         <CheckIcon />
-        Enrolled!
+        {t('courses.enrolledSuccess')}
       </span>
     )
   }
@@ -64,10 +67,10 @@ export function EnrollButton({ courseId, token }: EnrollButtonProps) {
         {state === 'loading' ? (
           <>
             <SpinnerIcon />
-            Enrolling…
+            {t('courses.enrollingBtn')}
           </>
         ) : (
-          'Enroll now'
+          t('courses.enrollBtn')
         )}
       </button>
       {state === 'error' && (
@@ -101,3 +104,4 @@ function SpinnerIcon() {
     </svg>
   )
 }
+

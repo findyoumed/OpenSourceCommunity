@@ -3,12 +3,14 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { apiPost } from '@/lib/api'
+import { useTranslation } from '@/lib/i18n-context'
 
 interface IdeaVoteButtonProps {
   ideaId: string
   voteCount: number
   hasVoted: boolean
   token: string
+  lang?: string | null
 }
 
 export function IdeaVoteButton({
@@ -16,8 +18,10 @@ export function IdeaVoteButton({
   voteCount: initialCount,
   hasVoted: initialVoted,
   token,
+  lang: _lang,
 }: IdeaVoteButtonProps) {
   const router = useRouter()
+  const { t } = useTranslation()
   const [voted, setVoted] = useState(initialVoted)
   const [count, setCount] = useState(initialCount)
   const [loading, setLoading] = useState(false)
@@ -78,7 +82,8 @@ export function IdeaVoteButton({
           d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"
         />
       </svg>
-      {voted ? 'Voted' : 'Vote'} &middot; {count.toLocaleString()}
+      {voted ? t('ideas.detail.votedBtn') : t('ideas.detail.voteBtn')} &middot; {count.toLocaleString()}
     </button>
   )
 }
+

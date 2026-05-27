@@ -8,8 +8,18 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { EmptyState } from '@/components/ui/empty-state'
 import { cn } from '@/lib/utils'
+import { t } from '@/lib/i18n'
 
-export const metadata: Metadata = { title: 'Events' }
+export async function generateMetadata(): Promise<Metadata> {
+  const supabase = await createClient()
+  const token = (await supabase.auth.getSession()).data.session?.access_token
+  let lang = 'en'
+  try {
+    const profile = await apiGet<{ language: string | null }>('/api/me', token, 60)
+    lang = profile?.language ?? 'en'
+  } catch {}
+  return { title: t('events.title', lang) }
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -34,8 +44,8 @@ interface EventListRow {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function formatEventDate(iso: string, timezone: string): string {
-  return new Intl.DateTimeFormat('en', {
+function formatEventDate(iso: string, timezone: string, lang: string = 'en'): string {
+  return new Intl.DateTimeFormat(lang === 'ko' ? 'ko-KR' : 'en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
@@ -46,17 +56,17 @@ function formatEventDate(iso: string, timezone: string): string {
   }).format(new Date(iso))
 }
 
-function getMonthYear(iso: string): string {
-  return new Intl.DateTimeFormat('en', {
+function getMonthYear(iso: string, lang: string = 'en'): string {
+  return new Intl.DateTimeFormat(lang === 'ko' ? 'ko-KR' : 'en-US', {
     month: 'long',
     year: 'numeric',
   }).format(new Date(iso))
 }
 
-function groupByMonth(rows: EventListRow[]): Map<string, EventListRow[]> {
+function groupByMonth(rows: EventListRow[], lang: string = 'en'): Map<string, EventListRow[]> {
   const map = new Map<string, EventListRow[]>()
   for (const row of rows) {
-    const key = getMonthYear(row.event.startsAt)
+    const key = getMonthYear(row.event.startsAt, lang)
     const existing = map.get(key) ?? []
     existing.push(row)
     map.set(key, existing)
@@ -100,20 +110,26 @@ export default async function EventsPage({
 
   let rows: EventListRow[] = []
   let fetchError = false
+  let userLanguage = 'en'
 
   try {
-    rows = await apiGet<EventListRow[]>('/api/events', token)
+    const [rowsData, profile] = await Promise.all([
+      apiGet<EventListRow[]>('/api/events', token),
+      apiGet<{ language: string | null }>('/api/me', token, 60),
+    ])
+    rows = rowsData
+    userLanguage = profile?.language ?? 'en'
   } catch {
     fetchError = true
   }
 
-  const grouped = groupByMonth(rows)
+  const grouped = groupByMonth(rows, userLanguage)
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Events"
-        description="Upcoming events in your community"
+        title={t('events.title', userLanguage)}
+        description={t('events.description', userLanguage)}
         action={
           <div className="flex items-center gap-2">
             {/* View toggle */}
@@ -126,7 +142,7 @@ export default async function EventsPage({
                 )}
               >
                 <LayoutGrid className="h-3.5 w-3.5" />
-                Grid
+                {t('events.viewGrid', userLanguage)}
               </Link>
               <Link
                 href="/events?view=calendar"
@@ -136,13 +152,13 @@ export default async function EventsPage({
                 )}
               >
                 <Calendar className="h-3.5 w-3.5" />
-                Calendar
+                {t('events.viewCalendar', userLanguage)}
               </Link>
             </div>
 
             {canCreate && (
               <Button asChild>
-                <Link href="/events/new">Create event</Link>
+                <Link href="/events/new">{t('events.createBtn', userLanguage)}</Link>
               </Button>
             )}
           </div>
@@ -151,23 +167,23 @@ export default async function EventsPage({
 
       {fetchError && (
         <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-          Failed to load events. Please try refreshing the page.
+          {t('events.error', userLanguage)}
         </div>
       )}
 
       {!fetchError && rows.length === 0 && (
         <EmptyState
           icon={<Calendar className="h-6 w-6" />}
-          title="No upcoming events"
+          title={t('events.emptyTitle', userLanguage)}
           description={
             canCreate
-              ? 'Create the first event to get the community together.'
-              : "Check back soon — events will appear here when they're scheduled."
+              ? t('events.emptyDescAdmin', userLanguage)
+              : t('events.emptyDescMember', userLanguage)
           }
           action={
             canCreate ? (
               <Button asChild>
-                <Link href="/events/new">Create event</Link>
+                <Link href="/events/new">{t('events.createBtn', userLanguage)}</Link>
               </Button>
             ) : undefined
           }
@@ -178,7 +194,7 @@ export default async function EventsPage({
       {!fetchError && rows.length > 0 && !calendarView && (
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {rows.map((row) => (
-            <EventCard key={row.event.id} row={row} />
+            <EventCard key={row.event.id} row={row} lang={userLanguage} />
           ))}
         </div>
       )}
@@ -193,7 +209,7 @@ export default async function EventsPage({
               </h2>
               <div className="overflow-hidden rounded-xl border border-border bg-card divide-y divide-border">
                 {monthRows.map((row) => (
-                  <EventRow key={row.event.id} row={row} />
+                  <EventRow key={row.event.id} row={row} lang={userLanguage} />
                 ))}
               </div>
             </section>
@@ -206,7 +222,7 @@ export default async function EventsPage({
 
 // ─── Event Card (Grid view) ────────────────────────────────────────────────────
 
-function EventCard({ row }: { row: EventListRow }) {
+function EventCard({ row, lang = 'en' }: { row: EventListRow; lang?: string | null }) {
   const { event, rsvpCount } = row
   const gradient = gradientForId(event.id)
   const locationType = event.location?.type ?? 'virtual'
@@ -243,22 +259,22 @@ function EventCard({ row }: { row: EventListRow }) {
         </h2>
 
         <p className="mt-2 text-xs text-muted-foreground">
-          {formatEventDate(event.startsAt, event.timezone)}
+          {formatEventDate(event.startsAt, event.timezone, lang ?? 'en')}
         </p>
 
         {/* Footer */}
         <div className="mt-auto flex items-center justify-between pt-3">
           <Badge variant={locationType === 'virtual' ? 'blue' : 'success'}>
             {locationType === 'virtual' ? (
-              <><Globe className="h-3 w-3 mr-1" />Virtual</>
+              <><Globe className="h-3 w-3 mr-1" />{t('events.location.virtual', lang)}</>
             ) : (
-              <><MapPin className="h-3 w-3 mr-1" />In-person</>
+              <><MapPin className="h-3 w-3 mr-1" />{t('events.location.irl', lang)}</>
             )}
           </Badge>
 
           {rsvpCount > 0 && (
             <span className="text-xs text-muted-foreground">
-              {rsvpCount.toLocaleString()} attending
+              {rsvpCount.toLocaleString(lang === 'ko' ? 'ko-KR' : 'en-US')} {t('events.attending', lang)}
             </span>
           )}
         </div>
@@ -269,13 +285,14 @@ function EventCard({ row }: { row: EventListRow }) {
 
 // ─── Event Row (Calendar view) ────────────────────────────────────────────────
 
-function EventRow({ row }: { row: EventListRow }) {
+function EventRow({ row, lang = 'en' }: { row: EventListRow; lang?: string | null }) {
   const { event, rsvpCount } = row
   const d = new Date(event.startsAt)
   const locationType = event.location?.type ?? 'virtual'
-  const day = d.toLocaleDateString('en', { day: 'numeric', timeZone: event.timezone })
-  const weekday = d.toLocaleDateString('en', { weekday: 'short', timeZone: event.timezone })
-  const time = d.toLocaleTimeString('en', {
+  const isKo = lang === 'ko'
+  const day = d.toLocaleDateString(isKo ? 'ko-KR' : 'en-US', { day: 'numeric', timeZone: event.timezone })
+  const weekday = d.toLocaleDateString(isKo ? 'ko-KR' : 'en-US', { weekday: 'short', timeZone: event.timezone })
+  const time = d.toLocaleTimeString(isKo ? 'ko-KR' : 'en-US', {
     hour: 'numeric',
     minute: '2-digit',
     timeZone: event.timezone,
@@ -298,7 +315,7 @@ function EventRow({ row }: { row: EventListRow }) {
         </h3>
         <p className="mt-0.5 text-xs text-muted-foreground">
           {time} · <span className={locationType === 'virtual' ? 'text-brand' : 'text-emerald-600'}>
-            {locationType === 'virtual' ? 'Virtual' : 'In-person'}
+            {locationType === 'virtual' ? t('events.location.virtual', lang) : t('events.location.irl', lang)}
           </span>
         </p>
       </div>
@@ -310,8 +327,9 @@ function EventRow({ row }: { row: EventListRow }) {
       ))}
 
       <span className="text-xs text-muted-foreground flex-shrink-0">
-        {rsvpCount.toLocaleString()} RSVPs
+        {rsvpCount.toLocaleString(isKo ? 'ko-KR' : 'en-US')} {t('events.rsvps', lang)}
       </span>
     </Link>
   )
 }
+

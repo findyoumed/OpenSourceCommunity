@@ -5,16 +5,25 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { RichEditor } from '@/components/editor'
 import { apiClientPost } from '@/lib/api-client'
+import { useTranslation } from '@/lib/i18n-context'
 
 interface NewThreadFormProps {
   categoryId: string
   categoryName: string
   categorySlug: string
   token: string
+  lang?: string | null
 }
 
-export function NewThreadForm({ categoryId, categoryName, categorySlug, token: _token }: NewThreadFormProps) {
+export function NewThreadForm({
+  categoryId,
+  categoryName,
+  categorySlug,
+  token: _token,
+  lang: _lang,
+}: NewThreadFormProps) {
   const router = useRouter()
+  const { t } = useTranslation()
   const [isPending, startTransition] = useTransition()
   const [title, setTitle] = useState('')
   const [body, setBody] = useState('')
@@ -29,7 +38,7 @@ export function NewThreadForm({ categoryId, categoryName, categorySlug, token: _
     const trimmedTitle = title.trim()
     const trimmedBody = body.trim()
     if (!trimmedTitle) {
-      setError('Title is required.')
+      setError(t('forums.thread.new.errorTitleRequired'))
       return
     }
     setError(null)
@@ -43,7 +52,9 @@ export function NewThreadForm({ categoryId, categoryName, categorySlug, token: _
         })
         router.push(`/forums/${categorySlug}/${data.id}`)
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
+        setError(
+          err instanceof Error ? err.message : t('forums.thread.new.errorGeneric')
+        )
       }
     })
   }
@@ -52,21 +63,21 @@ export function NewThreadForm({ categoryId, categoryName, categorySlug, token: _
     <form onSubmit={handleSubmit} className="space-y-5">
       <div className="rounded-xl border border-border bg-card p-6 space-y-5">
         <h2 className="text-sm font-semibold text-surface-foreground">
-          Posting in{' '}
+          {t('forums.thread.new.postingIn')}{' '}
           <span className="text-brand">{categoryName}</span>
         </h2>
 
         {/* Title */}
         <div>
           <label htmlFor="thread-title" className={labelClass}>
-            Title <span className="text-red-500">*</span>
+            {t('forums.thread.new.fieldTitle')} <span className="text-red-500">*</span>
           </label>
           <input
             id="thread-title"
             type="text"
             required
             maxLength={500}
-            placeholder="What's your discussion about?"
+            placeholder={t('forums.thread.new.fieldTitlePlaceholder')}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             className={inputClass}
@@ -75,11 +86,11 @@ export function NewThreadForm({ categoryId, categoryName, categorySlug, token: _
 
         {/* Body */}
         <div>
-          <label className={labelClass}>Body</label>
+          <label className={labelClass}>{t('forums.thread.new.fieldBody')}</label>
           <RichEditor
             value={body}
             onChange={setBody}
-            placeholder="Share your thoughts, questions, or ideas…"
+            placeholder={t('forums.thread.new.fieldBodyPlaceholder')}
             minHeight="300px"
             disabled={isPending}
           />
@@ -98,15 +109,16 @@ export function NewThreadForm({ categoryId, categoryName, categorySlug, token: _
           disabled={isPending || !title.trim()}
           className="rounded-lg bg-brand px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          {isPending ? 'Posting…' : 'Post thread'}
+          {isPending ? t('forums.thread.new.submittingBtn') : t('forums.thread.new.submitBtn')}
         </button>
         <Link
           href={`/forums/${categorySlug}`}
           className="rounded-lg border border-border px-5 py-2.5 text-sm font-medium text-muted-foreground hover:bg-muted transition-colors"
         >
-          Cancel
+          {t('forums.thread.new.cancelBtn')}
         </Link>
       </div>
     </form>
   )
 }
+

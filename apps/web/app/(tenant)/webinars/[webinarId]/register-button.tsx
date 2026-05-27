@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { useTranslation } from '@/lib/i18n-context'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -10,6 +11,7 @@ interface RegisterButtonProps {
   registrationCount: number
   maxAttendees: number | null
   token: string
+  lang?: string | null
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -32,7 +34,9 @@ export function RegisterButton({
   registrationCount,
   maxAttendees,
   token: _token,
+  lang: _lang,
 }: RegisterButtonProps) {
+  const { t } = useTranslation()
   const [isRegistered, setIsRegistered] = useState(initialIsRegistered)
   const [count, setCount] = useState(registrationCount)
   const [error, setError] = useState<string | null>(null)
@@ -61,7 +65,7 @@ export function RegisterButton({
         // Roll back
         setIsRegistered(prevRegistered)
         setCount(prevCount)
-        setError(err instanceof Error ? err.message : 'Something went wrong.')
+        setError(err instanceof Error ? err.message : t('profile.errorDefault'))
       }
     })
   }
@@ -73,19 +77,19 @@ export function RegisterButton({
         <p className="text-sm text-muted-foreground">
           <span className="font-semibold text-surface-foreground">{count.toLocaleString()}</span>
           {' / '}
-          {maxAttendees.toLocaleString()} seats filled
+          {maxAttendees.toLocaleString()} {t('webinars.detail.seatsFilled')}
           {seatsLeft != null && seatsLeft > 0 && (
-            <span className="ml-1 text-emerald-600">({seatsLeft} left)</span>
+            <span className="ml-1 text-emerald-600">({seatsLeft} {t('webinars.detail.seatsLeft')})</span>
           )}
           {seatsLeft === 0 && !isRegistered && (
-            <span className="ml-1 text-rose-600">(Full)</span>
+            <span className="ml-1 text-rose-600">({t('webinars.detail.full')})</span>
           )}
         </p>
       )}
 
       {maxAttendees == null && (
         <p className="text-sm text-muted-foreground">
-          <span className="font-semibold text-surface-foreground">{count.toLocaleString()}</span> registered
+          <span className="font-semibold text-surface-foreground">{count.toLocaleString()}</span> {t('webinars.registered')}
         </p>
       )}
 
@@ -102,16 +106,17 @@ export function RegisterButton({
       >
         {isPending
           ? isRegistered
-            ? 'Cancelling...'
-            : 'Registering...'
+            ? t('webinars.detail.cancellingBtn')
+            : t('webinars.detail.registeringBtn')
           : isRegistered
-            ? 'Cancel registration'
+            ? t('webinars.detail.cancelBtn')
             : isFull
-              ? 'Webinar full'
-              : 'Register now'}
+              ? t('webinars.detail.fullBtn')
+              : t('webinars.detail.registerBtn')}
       </button>
 
       {error && <p className="text-xs text-red-600">{error}</p>}
     </div>
   )
 }
+

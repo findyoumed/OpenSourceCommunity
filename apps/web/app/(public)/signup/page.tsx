@@ -4,10 +4,12 @@ import { useState, type FormEvent } from 'react'
 import Link from 'next/link'
 import { Loader2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { useTranslation } from '@/lib/i18n-context'
 
 type Provider = 'google' | 'github'
 
 export default function SignupPage() {
+  const { t } = useTranslation()
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -64,17 +66,15 @@ export default function SignupPage() {
       <div className="flex min-h-screen items-center justify-center bg-muted/30 px-4">
         <div className="w-full max-w-md text-center">
           <div className="mb-4 text-5xl">📬</div>
-          <h2 className="text-2xl font-bold text-surface-foreground">Check your inbox</h2>
+          <h2 className="text-2xl font-bold text-surface-foreground">{t('auth.signup.checkInbox')}</h2>
           <p className="mt-3 text-muted-foreground">
-            We&apos;ve sent a confirmation link to{' '}
-            <span className="font-semibold text-surface-foreground">{email}</span>.
-            Click it to activate your account.
+            {t('auth.signup.checkInboxDesc').replace('{email}', email)}
           </p>
           <Link
             href="/login"
             className="mt-6 inline-block text-sm text-brand hover:underline"
           >
-            Back to sign in
+            {t('auth.signup.backToLogin')}
           </Link>
         </div>
       </div>
@@ -90,10 +90,10 @@ export default function SignupPage() {
             OpenSourceCommunity
           </Link>
           <h1 className="mt-4 text-2xl font-bold text-surface-foreground">
-            Create your account
+            {t('auth.signup.title')}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Join the OpenSourceCommunity
+            {t('auth.signup.subtitle')}
           </p>
         </div>
 
@@ -114,7 +114,7 @@ export default function SignupPage() {
               className="flex w-full items-center justify-center gap-3 rounded-lg border border-border bg-card px-4 py-2.5 text-sm font-medium text-surface-foreground hover:bg-muted disabled:opacity-50 transition-colors"
             >
               {oauthLoading === 'google' ? <Loader2 className="h-4 w-4 animate-spin" /> : <GoogleIcon />}
-              Continue with Google
+              {t('auth.login.google')}
             </button>
 
             <button
@@ -124,7 +124,7 @@ export default function SignupPage() {
               className="flex w-full items-center justify-center gap-3 rounded-lg border border-border bg-card px-4 py-2.5 text-sm font-medium text-surface-foreground hover:bg-muted disabled:opacity-50 transition-colors"
             >
               {oauthLoading === 'github' ? <Loader2 className="h-4 w-4 animate-spin" /> : <GitHubIcon />}
-              Continue with GitHub
+              {t('auth.login.github')}
             </button>
           </div>
 
@@ -135,7 +135,8 @@ export default function SignupPage() {
             </div>
             <div className="relative flex justify-center text-xs">
               <span className="bg-card px-3 text-muted-foreground">
-                or sign up with email
+                {t('auth.signup.hasAccount') /* Fixed: key name was divider in login, using hasAccount prompt logic here or sign up logic */}
+                {t('auth.login.divider')}
               </span>
             </div>
           </div>
@@ -144,7 +145,7 @@ export default function SignupPage() {
           <form onSubmit={handleSignup} className="space-y-4">
             <div>
               <label htmlFor="fullName" className="block text-sm font-medium text-surface-foreground">
-                Full name
+                {t('auth.signup.nameLabel')}
               </label>
               <input
                 id="fullName"
@@ -160,7 +161,7 @@ export default function SignupPage() {
 
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-surface-foreground">
-                Email address
+                {t('auth.login.emailLabel')}
               </label>
               <input
                 id="email"
@@ -176,7 +177,7 @@ export default function SignupPage() {
 
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-surface-foreground">
-                Password
+                {t('auth.login.passwordLabel')}
               </label>
               <input
                 id="password"
@@ -197,22 +198,22 @@ export default function SignupPage() {
               className="flex w-full items-center justify-center gap-2 rounded-lg bg-brand px-4 py-2.5 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50 transition-opacity"
             >
               {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-              Create account
+              {t('auth.signup.submitBtn')}
             </button>
           </form>
 
           <p className="mt-4 text-center text-xs text-muted-foreground">
-            By signing up you agree to our{' '}
-            <Link href="/terms" className="underline hover:text-surface-foreground">Terms</Link>{' '}
-            and{' '}
-            <Link href="/privacy" className="underline hover:text-surface-foreground">Privacy Policy</Link>.
+            {t('auth.signup.termsPrefix')}{' '}
+            <Link href="/terms" className="underline hover:text-surface-foreground">{t('auth.signup.termsLink')}</Link>{' '}
+            {t('nav.home') === '홈' ? '및' : 'and'}{' '}
+            <Link href="/privacy" className="underline hover:text-surface-foreground">{t('auth.signup.privacyLink')}</Link>.
           </p>
         </div>
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
-          Already have an account?{' '}
+          {t('auth.signup.hasAccount')}{' '}
           <Link href="/login" className="font-semibold text-brand hover:underline">
-            Sign in
+            {t('auth.login.submitBtn')}
           </Link>
         </p>
       </div>
@@ -240,3 +241,4 @@ function GitHubIcon() {
     </svg>
   )
 }
+

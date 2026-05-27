@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { apiGet } from '@/lib/api'
 import type { Metadata } from 'next'
+import { t } from '@/lib/i18n'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -39,18 +40,19 @@ export async function generateMetadata({
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function formatRelativeDate(iso: string): string {
+function formatRelativeDate(iso: string, lang: string = 'en'): string {
   const date = new Date(iso)
   const now = new Date()
   const diffMs = now.getTime() - date.getTime()
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+  const isKo = lang === 'ko'
 
-  if (diffDays === 0) return 'Today'
-  if (diffDays === 1) return 'Yesterday'
-  if (diffDays < 7) return `${diffDays} days ago`
-  if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`
+  if (diffDays === 0) return isKo ? '오늘' : 'Today'
+  if (diffDays === 1) return isKo ? '어제' : 'Yesterday'
+  if (diffDays < 7) return isKo ? `${diffDays}일 전` : `${diffDays} days ago`
+  if (diffDays < 30) return isKo ? `${Math.floor(diffDays / 7)}주일 전` : `${Math.floor(diffDays / 7)} weeks ago`
 
-  return new Intl.DateTimeFormat('en', {
+  return new Intl.DateTimeFormat(isKo ? 'ko-KR' : 'en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
@@ -80,9 +82,15 @@ export default async function KbCategoryPage({
   let categories: KbCategory[] = []
   let articles: KbArticle[] = []
   let fetchError = false
+  let userLanguage = 'en'
 
   try {
-    categories = await apiGet<KbCategory[]>('/api/kb/categories', token)
+    const [cats, profile] = await Promise.all([
+      apiGet<KbCategory[]>('/api/kb/categories', token),
+      apiGet<{ language: string | null }>('/api/me', token, 60),
+    ])
+    categories = cats
+    userLanguage = profile?.language ?? 'en'
   } catch {
     fetchError = true
   }
@@ -109,7 +117,7 @@ export default async function KbCategoryPage({
       {/* ── Breadcrumb ────────────────────────────────────────────────────── */}
       <nav className="flex items-center gap-1.5 text-sm text-muted-foreground" aria-label="Breadcrumb">
         <Link href="/kb" className="hover:text-surface-foreground transition-colors">
-          Knowledge Base
+          {t('kb.title', userLanguage)}
         </Link>
         <span aria-hidden>/</span>
         <span className="text-surface-foreground font-medium">{category?.name ?? categorySlug}</span>
@@ -120,7 +128,7 @@ export default async function KbCategoryPage({
         <h1 className="text-2xl font-bold text-surface-foreground">{category?.name ?? categorySlug}</h1>
         {articles.length > 0 && (
           <p className="mt-1 text-sm text-muted-foreground">
-            {articles.length} article{articles.length !== 1 ? 's' : ''}
+            {articles.length} {t(articles.length === 1 ? 'kb.category.article' : 'kb.category.articles', userLanguage)}
           </p>
         )}
       </div>
@@ -128,16 +136,16 @@ export default async function KbCategoryPage({
       {/* ── Error state ───────────────────────────────────────────────────── */}
       {fetchError && (
         <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          Failed to load articles. Please try refreshing.
+          {t('kb.category.error', userLanguage)}
         </div>
       )}
 
       {/* ── Empty state ───────────────────────────────────────────────────── */}
       {!fetchError && articles.length === 0 && (
         <div className="rounded-xl border border-dashed border-border bg-card px-6 py-16 text-center">
-          <p className="text-base font-medium text-muted-foreground">No articles yet</p>
+          <p className="text-base font-medium text-muted-foreground">{t('kb.category.emptyTitle', userLanguage)}</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            Check back soon — articles will appear here when published.
+            {t('kb.category.emptyDesc', userLanguage)}
           </p>
         </div>
       )}
@@ -157,11 +165,11 @@ export default async function KbCategoryPage({
                 </h2>
                 <div className="mt-1 flex flex-wrap items-center gap-3">
                   <span className="text-xs text-muted-foreground">
-                    Updated {formatRelativeDate(article.updatedAt)}
+                    {t('kb.category.updated', userLanguage)} {formatRelativeDate(article.updatedAt, userLanguage)}
                   </span>
                   {article.viewCount > 0 && (
                     <span className="text-xs text-muted-foreground">
-                      {article.viewCount.toLocaleString()} views
+                      {article.viewCount.toLocaleString(userLanguage === 'ko' ? 'ko-KR' : 'en-US')} {t('kb.category.views', userLanguage)}
                     </span>
                   )}
                   {article.tags.slice(0, 3).map((tag) => (
@@ -191,3 +199,4 @@ export default async function KbCategoryPage({
     </div>
   )
 }
+

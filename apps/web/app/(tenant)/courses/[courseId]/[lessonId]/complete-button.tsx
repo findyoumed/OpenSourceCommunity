@@ -3,16 +3,25 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { apiClientPost } from '@/lib/api-client'
+import { useTranslation } from '@/lib/i18n-context'
 
 interface CompleteButtonProps {
   courseId: string
   lessonId: string
   token: string | undefined
   isComplete: boolean
+  lang?: string | null
 }
 
-export function CompleteButton({ courseId, lessonId, token, isComplete: initialIsComplete }: CompleteButtonProps) {
+export function CompleteButton({
+  courseId,
+  lessonId,
+  token,
+  isComplete: initialIsComplete,
+  lang: _lang,
+}: CompleteButtonProps) {
   const router = useRouter()
+  const { t } = useTranslation()
   const [complete, setComplete] = useState(initialIsComplete)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string>('')
@@ -28,7 +37,7 @@ export function CompleteButton({ courseId, lessonId, token, isComplete: initialI
       setComplete(true)
       router.refresh()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong')
+      setError(err instanceof Error ? err.message : t('profile.errorDefault'))
     } finally {
       setLoading(false)
     }
@@ -38,7 +47,7 @@ export function CompleteButton({ courseId, lessonId, token, isComplete: initialI
     return (
       <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-sm font-medium text-emerald-700">
         <CheckIcon />
-        Completed
+        {t('courses.lesson.completed')}
       </span>
     )
   }
@@ -54,12 +63,12 @@ export function CompleteButton({ courseId, lessonId, token, isComplete: initialI
         {loading ? (
           <>
             <SpinnerIcon />
-            Saving…
+            {t('courses.lesson.saving')}
           </>
         ) : (
           <>
             <CheckIcon />
-            Mark complete
+            {t('courses.lesson.markComplete')}
           </>
         )}
       </button>
@@ -92,3 +101,4 @@ function SpinnerIcon() {
     </svg>
   )
 }
+

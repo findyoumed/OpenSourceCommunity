@@ -5,8 +5,18 @@ import { apiGet } from '@/lib/api'
 import type { Metadata } from 'next'
 import { PageHeader } from '@/components/ui/page-header'
 import { EmptyState } from '@/components/ui/empty-state'
+import { t } from '@/lib/i18n'
 
-export const metadata: Metadata = { title: 'Knowledge Base' }
+export async function generateMetadata(): Promise<Metadata> {
+  const supabase = await createClient()
+  const token = (await supabase.auth.getSession()).data.session?.access_token
+  let lang = 'en'
+  try {
+    const profile = await apiGet<{ language: string | null }>('/api/me', token, 60)
+    lang = profile?.language ?? 'en'
+  } catch {}
+  return { title: t('kb.title', lang) }
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -29,9 +39,15 @@ export default async function KbPage() {
 
   let categories: KbCategory[] = []
   let fetchError = false
+  let userLanguage = 'en'
 
   try {
-    categories = await apiGet<KbCategory[]>('/api/kb/categories', token)
+    const [cats, profile] = await Promise.all([
+      apiGet<KbCategory[]>('/api/kb/categories', token),
+      apiGet<{ language: string | null }>('/api/me', token, 60),
+    ])
+    categories = cats
+    userLanguage = profile?.language ?? 'en'
   } catch {
     fetchError = true
   }
@@ -41,21 +57,21 @@ export default async function KbPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Knowledge Base"
-        description="Browse articles and guides to help you get the most out of your community."
+        title={t('kb.title', userLanguage)}
+        description={t('kb.description', userLanguage)}
       />
 
       {fetchError && (
         <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-          Failed to load knowledge base categories. Please try refreshing.
+          {t('kb.error', userLanguage)}
         </div>
       )}
 
       {!fetchError && rootCategories.length === 0 && (
         <EmptyState
           icon={<BookOpen className="h-6 w-6" />}
-          title="No categories yet"
-          description="Knowledge base content will appear here once published."
+          title={t('kb.emptyTitle', userLanguage)}
+          description={t('kb.emptyDesc', userLanguage)}
         />
       )}
 
@@ -78,11 +94,11 @@ export default async function KbPage() {
                 </h2>
                 <p className="mt-1.5 text-xs text-muted-foreground">
                   {childCount > 0
-                    ? `${childCount} sub-categor${childCount !== 1 ? 'ies' : 'y'}`
-                    : 'Browse articles'}
+                    ? `${childCount}${t(childCount === 1 ? 'kb.subcategory' : 'kb.subcategories', userLanguage)}`
+                    : t('kb.browseArticles', userLanguage)}
                 </p>
                 <span className="mt-auto pt-4 inline-flex items-center gap-1 text-xs font-medium text-brand opacity-0 group-hover:opacity-100 transition-opacity">
-                  View articles
+                  {t('kb.viewArticles', userLanguage)}
                   <ArrowRight className="h-3 w-3" />
                 </span>
               </Link>
@@ -93,3 +109,4 @@ export default async function KbPage() {
     </div>
   )
 }
+

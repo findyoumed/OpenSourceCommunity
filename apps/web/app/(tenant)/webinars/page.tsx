@@ -7,8 +7,18 @@ import { PageHeader } from '@/components/ui/page-header'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { EmptyState } from '@/components/ui/empty-state'
+import { t } from '@/lib/i18n'
 
-export const metadata: Metadata = { title: 'Webinars' }
+export async function generateMetadata(): Promise<Metadata> {
+  const supabase = await createClient()
+  const token = (await supabase.auth.getSession()).data.session?.access_token
+  let lang = 'en'
+  try {
+    const profile = await apiGet<{ language: string | null }>('/api/me', token, 60)
+    lang = profile?.language ?? 'en'
+  } catch {}
+  return { title: t('nav.webinars', lang) }
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -30,8 +40,8 @@ export interface WebinarSummary {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function formatWebinarDate(iso: string): string {
-  return new Intl.DateTimeFormat('en', {
+function formatWebinarDate(iso: string, lang: string = 'en'): string {
+  return new Intl.DateTimeFormat(lang === 'ko' ? 'ko-KR' : 'en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
@@ -41,12 +51,13 @@ function formatWebinarDate(iso: string): string {
   }).format(new Date(iso))
 }
 
-function formatDuration(minutes: number): string {
+function formatDuration(minutes: number, lang: string = 'en'): string {
   const h = Math.floor(minutes / 60)
   const m = minutes % 60
-  if (h > 0 && m > 0) return `${h}h ${m}m`
-  if (h > 0) return `${h}h`
-  return `${m}m`
+  const isKo = lang === 'ko'
+  if (h > 0 && m > 0) return isKo ? `${h}시간 ${m}분` : `${h}h ${m}m`
+  if (h > 0) return isKo ? `${h}시간` : `${h}h`
+  return isKo ? `${m}분` : `${m}m`
 }
 
 const STATUS_BADGE_VARIANT: Record<WebinarStatus, React.ComponentProps<typeof Badge>['variant']> = {
@@ -54,28 +65,6 @@ const STATUS_BADGE_VARIANT: Record<WebinarStatus, React.ComponentProps<typeof Ba
   scheduled: 'default',
   live: 'destructive',
   ended: 'secondary',
-}
-
-const STATUS_LABEL: Record<WebinarStatus, string> = {
-  draft: 'Draft',
-  scheduled: 'Upcoming',
-  live: 'Live',
-  ended: 'Ended',
-}
-
-const COVER_GRADIENTS = [
-  'from-brand/60 to-violet-500/80',
-  'from-rose-400 to-orange-400',
-  'from-emerald-400 to-teal-500',
-  'from-sky-400 to-blue-500',
-  'from-amber-400 to-yellow-500',
-  'from-fuchsia-400 to-pink-500',
-]
-
-function gradientForId(id: string): string {
-  let hash = 0
-  for (let i = 0; i < id.length; i++) hash = id.charCodeAt(i) + ((hash << 5) - hash)
-  return COVER_GRADIENTS[Math.abs(hash) % COVER_GRADIENTS.length] ?? COVER_GRADIENTS[0] ?? ''
 }
 
 async function fetchWebinars(
@@ -101,21 +90,33 @@ export default async function WebinarsPage() {
   const role = (session?.user?.app_metadata?.role as string | undefined) ?? 'member'
   const isAdmin = role === 'org_admin'
 
-  const [upcoming, past, live] = await Promise.all([
-    fetchWebinars('scheduled', token),
-    fetchWebinars('ended', token),
-    fetchWebinars('live', token),
-  ])
+  let upcoming: WebinarSummary[] = []
+  let past: WebinarSummary[] = []
+  let live: WebinarSummary[] = []
+  let userLanguage = 'en'
+
+  try {
+    const [u, p, l, profile] = await Promise.all([
+      fetchWebinars('scheduled', token),
+      fetchWebinars('ended', token),
+      fetchWebinars('live', token),
+      apiGet<{ language: string | null }>('/api/me', token, 60),
+    ])
+    upcoming = u
+    past = p
+    live = l
+    userLanguage = profile?.language ?? 'en'
+  } catch {}
 
   return (
     <div className="space-y-8">
       <PageHeader
-        title="Webinars"
-        description="Live sessions, Q&A, and recordings"
+        title={t('webinars.title', userLanguage)}
+        description={t('webinars.description', userLanguage)}
         action={
           isAdmin ? (
             <Button asChild>
-              <Link href="/webinars/new">Create webinar</Link>
+              <Link href="/webinars/new">{t('webinars.createBtn', userLanguage)}</Link>
             </Button>
           ) : undefined
         }
@@ -126,11 +127,11 @@ export default async function WebinarsPage() {
         <section>
           <h2 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
             <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-destructive" />
-            Live now
+            {t('webinars.liveNow', userLanguage)}
           </h2>
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {live.map((item) => (
-              <WebinarCard key={item.webinar.id} item={item} />
+              <WebinarCard key={item.webinar.id} item={item} lang={userLanguage} />
             ))}
           </div>
         </section>
@@ -139,18 +140,18 @@ export default async function WebinarsPage() {
       {/* Upcoming */}
       <section>
         <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-          Upcoming
+          {t('webinars.upcoming', userLanguage)}
         </h2>
         {upcoming.length === 0 ? (
           <EmptyState
             icon={<Video className="h-6 w-6" />}
-            title="No upcoming webinars"
-            description="Check back soon for scheduled sessions."
+            title={t('webinars.emptyTitle', userLanguage)}
+            description={t('webinars.emptyDesc', userLanguage)}
           />
         ) : (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {upcoming.map((item) => (
-              <WebinarCard key={item.webinar.id} item={item} />
+              <WebinarCard key={item.webinar.id} item={item} lang={userLanguage} />
             ))}
           </div>
         )}
@@ -160,11 +161,11 @@ export default async function WebinarsPage() {
       {past.length > 0 && (
         <section>
           <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-            Past webinars
+            {t('webinars.past', userLanguage)}
           </h2>
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {past.map((item) => (
-              <WebinarCard key={item.webinar.id} item={item} />
+              <WebinarCard key={item.webinar.id} item={item} lang={userLanguage} />
             ))}
           </div>
         </section>
@@ -175,7 +176,7 @@ export default async function WebinarsPage() {
 
 // ─── WebinarCard ──────────────────────────────────────────────────────────────
 
-function WebinarCard({ item }: { item: WebinarSummary }) {
+function WebinarCard({ item, lang = 'en' }: { item: WebinarSummary; lang?: string | null }) {
   const { webinar, registrationCount } = item
   const gradient = gradientForId(webinar.id)
 
@@ -191,7 +192,7 @@ function WebinarCard({ item }: { item: WebinarSummary }) {
             {webinar.status === 'live' && (
               <span className="mr-1.5 inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-current" />
             )}
-            {STATUS_LABEL[webinar.status]}
+            {t(`webinars.status.${webinar.status}` as any, lang)}
           </Badge>
         </span>
       </div>
@@ -203,18 +204,19 @@ function WebinarCard({ item }: { item: WebinarSummary }) {
         </h2>
 
         <p className="mt-2 text-xs text-muted-foreground">
-          {formatWebinarDate(webinar.scheduledAt)}
+          {formatWebinarDate(webinar.scheduledAt, lang ?? 'en')}
         </p>
 
         <div className="mt-auto flex items-center justify-between pt-3">
           {webinar.durationMinutes != null && (
-            <span className="text-xs text-muted-foreground">{formatDuration(webinar.durationMinutes)}</span>
+            <span className="text-xs text-muted-foreground">{formatDuration(webinar.durationMinutes, lang ?? 'en')}</span>
           )}
           <span className="ml-auto text-xs text-muted-foreground">
-            {registrationCount.toLocaleString()} registered
+            {registrationCount.toLocaleString(lang === 'ko' ? 'ko-KR' : 'en-US')} {t('webinars.registered', lang)}
           </span>
         </div>
       </div>
     </Link>
   )
 }
+

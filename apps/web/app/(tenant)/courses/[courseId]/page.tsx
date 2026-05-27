@@ -5,6 +5,7 @@ import { apiGet } from '@/lib/api'
 import { ApiError } from '@/lib/api'
 import type { Metadata } from 'next'
 import { EnrollButton } from './enroll-button'
+import { t } from '@/lib/i18n'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -76,9 +77,15 @@ export default async function CourseDetailPage({
   const token = session?.access_token
 
   let detail: CourseDetailResponse
+  let userLanguage = 'en'
 
   try {
-    detail = await apiGet<CourseDetailResponse>(`/api/courses/${courseId}`, token, 0)
+    const [detailData, profile] = await Promise.all([
+      apiGet<CourseDetailResponse>(`/api/courses/${courseId}`, token, 0),
+      apiGet<{ language: string | null }>('/api/me', token, 60),
+    ])
+    detail = detailData
+    userLanguage = profile?.language ?? 'en'
   } catch (err) {
     if (err instanceof ApiError && err.status === 404) notFound()
     throw err
@@ -120,10 +127,10 @@ export default async function CourseDetailPage({
               {isEnrolled ? (
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-sm font-medium text-emerald-700">
                   <CheckIcon className="h-4 w-4" />
-                  {isCourseComplete ? 'Completed' : 'Enrolled'}
+                  {isCourseComplete ? t('courses.detail.completed', userLanguage) : t('courses.detail.enrolled', userLanguage)}
                 </span>
               ) : (
-                <EnrollButton courseId={courseId} token={token} />
+                <EnrollButton courseId={courseId} token={token} lang={userLanguage} />
               )}
             </div>
           </div>
@@ -132,8 +139,8 @@ export default async function CourseDetailPage({
           {isEnrolled && totalLessons > 0 && (
             <div className="mt-4">
               <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
-                <span>Progress</span>
-                <span>{completedCount}/{totalLessons} lessons</span>
+                <span>{t('courses.detail.progress', userLanguage)}</span>
+                <span>{completedCount}/{totalLessons} {t(totalLessons === 1 ? 'courses.lesson' : 'courses.lessons', userLanguage)}</span>
               </div>
               <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
                 <div
@@ -147,7 +154,7 @@ export default async function CourseDetailPage({
           <div className="mt-4 flex items-center gap-4 text-xs text-muted-foreground">
             <span className="flex items-center gap-1">
               <BookOpenIcon className="h-3.5 w-3.5" />
-              {totalLessons} {totalLessons === 1 ? 'lesson' : 'lessons'}
+              {totalLessons} {t(totalLessons === 1 ? 'courses.lesson' : 'courses.lessons', userLanguage)}
             </span>
           </div>
         </div>
@@ -157,7 +164,7 @@ export default async function CourseDetailPage({
       {lessons.length > 0 && (
         <div className="overflow-hidden rounded-xl border border-border bg-card">
           <div className="border-b border-border px-6 py-4">
-            <h2 className="text-sm font-semibold text-surface-foreground">Lessons</h2>
+            <h2 className="text-sm font-semibold text-surface-foreground">{t('courses.detail.lessonsTitle', userLanguage)}</h2>
           </div>
 
           <ol className="divide-y divide-border">
@@ -177,7 +184,7 @@ export default async function CourseDetailPage({
                         {lesson.title}
                       </span>
                       {lesson.videoUrl && (
-                        <span className="flex-shrink-0 text-xs text-muted-foreground">Video</span>
+                        <span className="flex-shrink-0 text-xs text-muted-foreground">{t('courses.detail.videoLabel', userLanguage)}</span>
                       )}
                       {isComplete && (
                         <CheckIcon className="h-4 w-4 flex-shrink-0 text-emerald-500" />
@@ -202,13 +209,59 @@ export default async function CourseDetailPage({
       {/* ── Enroll CTA at bottom ──────────────────────────────────────────── */}
       {!isEnrolled && lessons.length > 0 && (
         <div className="rounded-xl border border-brand/20 bg-brand/5 px-6 py-5 text-center">
-          <p className="mb-3 text-sm text-surface-foreground">Enroll to start learning</p>
-          <EnrollButton courseId={courseId} token={token} />
+          <p className="mb-3 text-sm text-surface-foreground">{t('courses.detail.enrollToStart', userLanguage)}</p>
+          <EnrollButton courseId={courseId} token={token} lang={userLanguage} />
         </div>
       )}
     </div>
   )
 }
+
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
+function LessonNumber({ index, isComplete }: { index: number; isComplete: boolean }) {
+  return (
+    <span
+      className={[
+        'flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-xs font-semibold',
+        isComplete
+          ? 'bg-emerald-100 text-emerald-700'
+          : 'bg-muted text-muted-foreground',
+      ].join(' ')}
+    >
+      {isComplete ? <CheckIcon className="h-3.5 w-3.5" /> : index + 1}
+    </span>
+  )
+}
+
+// ─── Icons ────────────────────────────────────────────────────────────────────
+
+function BookOpenIcon({ className = 'h-5 w-5' }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} aria-hidden>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+    </svg>
+  )
+}
+
+function CheckIcon({ className = 'h-5 w-5' }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} aria-hidden>
+      <polyline strokeLinecap="round" strokeLinejoin="round" points="20 6 9 17 4 12" />
+    </svg>
+  )
+}
+
+function LockIcon({ className = 'h-5 w-5' }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} aria-hidden>
+      <rect strokeLinecap="round" strokeLinejoin="round" x="3" y="11" width="18" height="11" rx="2" ry="2" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M7 11V7a5 5 0 0 1 10 0v4" />
+    </svg>
+  )
+}
+
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 

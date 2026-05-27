@@ -9,7 +9,16 @@ import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
 import { t } from '@/lib/i18n'
 
-export const metadata: Metadata = { title: 'Forums' }
+export async function generateMetadata(): Promise<Metadata> {
+  const supabase = await createClient()
+  const token = (await supabase.auth.getSession()).data.session?.access_token
+  let lang = 'en'
+  try {
+    const profile = await apiGet<{ language: string | null }>('/api/me', token, 60)
+    lang = profile?.language ?? 'en'
+  } catch {}
+  return { title: t('nav.forums', lang) }
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -30,9 +39,9 @@ interface ForumCategory {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function formatDate(iso: string | null): string {
+function formatDate(iso: string | null, lang: string = 'en'): string {
   if (!iso) return '—'
-  return new Intl.DateTimeFormat('en', {
+  return new Intl.DateTimeFormat(lang === 'ko' ? 'ko-KR' : 'en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
@@ -127,20 +136,20 @@ export default async function ForumsPage() {
                     <div className="flex gap-4 text-xs text-muted-foreground">
                       <div>
                         <p className="text-base font-bold text-surface-foreground">
-                          {cat.threadCount.toLocaleString()}
+                          {cat.threadCount.toLocaleString(userLanguage === 'ko' ? 'ko-KR' : 'en-US')}
                         </p>
                         {t('forums.threads', userLanguage)}
                       </div>
                       <div>
                         <p className="text-base font-bold text-surface-foreground">
-                          {cat.postCount.toLocaleString()}
+                          {cat.postCount.toLocaleString(userLanguage === 'ko' ? 'ko-KR' : 'en-US')}
                         </p>
                         {t('forums.posts', userLanguage)}
                       </div>
                     </div>
                     {cat.lastActivityAt && (
                       <p className="mt-1 text-xs text-muted-foreground">
-                        {formatDate(cat.lastActivityAt)}
+                        {formatDate(cat.lastActivityAt, userLanguage)}
                       </p>
                     )}
                   </div>
@@ -153,4 +162,5 @@ export default async function ForumsPage() {
     </div>
   )
 }
+
 

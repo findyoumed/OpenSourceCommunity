@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import type { RsvpStatus } from './page'
+import { useTranslation } from '@/lib/i18n-context'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -11,6 +12,7 @@ interface RsvpButtonProps {
   goingCount: number
   interestedCount: number
   token: string | undefined
+  lang?: string | null
 }
 
 type RsvpOption = 'going' | 'interested' | 'not_going'
@@ -35,7 +37,9 @@ export function RsvpButton({
   goingCount,
   interestedCount,
   token,
+  lang: _lang,
 }: RsvpButtonProps) {
+  const { t } = useTranslation()
   const [status, setStatus] = useState<RsvpStatus>(initialStatus)
   const [going, setGoing] = useState(goingCount)
   const [interested, setInterested] = useState(interestedCount)
@@ -82,7 +86,7 @@ export function RsvpButton({
         setStatus(prevStatus)
         setGoing(prevGoing)
         setInterested(prevInterested)
-        setError(err instanceof Error ? err.message : 'Something went wrong.')
+        setError(err instanceof Error ? err.message : t('profile.errorDefault'))
       }
     })
   }
@@ -90,19 +94,19 @@ export function RsvpButton({
   const options: { key: RsvpOption; label: string; activeClass: string; icon: React.ReactNode }[] = [
     {
       key: 'going',
-      label: `Going${going > 0 ? ` (${going})` : ''}`,
+      label: `${t('events.detail.rsvp.going')}${going > 0 ? ` (${going})` : ''}`,
       activeClass: 'bg-brand text-white border-brand',
       icon: <CheckIcon />,
     },
     {
       key: 'interested',
-      label: `Interested${interested > 0 ? ` (${interested})` : ''}`,
+      label: `${t('events.detail.rsvp.interested')}${interested > 0 ? ` (${interested})` : ''}`,
       activeClass: 'bg-amber-500 text-white border-amber-500',
       icon: <StarIcon />,
     },
     {
       key: 'not_going',
-      label: 'Not going',
+      label: t('events.detail.rsvp.not_going'),
       activeClass: 'bg-surface-foreground text-card border-surface-foreground',
       icon: <XIcon />,
     },
@@ -135,11 +139,38 @@ export function RsvpButton({
       )}
 
       {isPending && (
-        <p className="text-xs text-muted-foreground">Saving&hellip;</p>
+        <p className="text-xs text-muted-foreground">{t('events.detail.rsvp.saving')}</p>
       )}
     </div>
   )
 }
+
+// ─── Icons ────────────────────────────────────────────────────────────────────
+
+function CheckIcon() {
+  return (
+    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} aria-hidden>
+      <path strokeLinecap="round" strokeLinejoin="round" d="m5 13 4 4L19 7" />
+    </svg>
+  )
+}
+
+function StarIcon() {
+  return (
+    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
+      <polygon strokeLinecap="round" strokeLinejoin="round" points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+    </svg>
+  )
+}
+
+function XIcon() {
+  return (
+    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} aria-hidden>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M18 6 6 18M6 6l12 12" />
+    </svg>
+  )
+}
+
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 

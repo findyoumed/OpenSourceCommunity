@@ -7,8 +7,18 @@ import { PageHeader } from '@/components/ui/page-header'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { EmptyState } from '@/components/ui/empty-state'
+import { t } from '@/lib/i18n'
 
-export const metadata: Metadata = { title: 'Courses' }
+export async function generateMetadata(): Promise<Metadata> {
+  const supabase = await createClient()
+  const token = (await supabase.auth.getSession()).data.session?.access_token
+  let lang = 'en'
+  try {
+    const profile = await apiGet<{ language: string | null }>('/api/me', token, 60)
+    lang = profile?.language ?? 'en'
+  } catch {}
+  return { title: t('courses.title', lang) }
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -56,9 +66,15 @@ export default async function CoursesPage() {
   let items: CourseListItem[] = []
   let fetchError = false
   let moduleDisabled = false
+  let userLanguage = 'en'
 
   try {
-    items = await apiGet<CourseListItem[]>('/api/courses', token)
+    const [courses, profile] = await Promise.all([
+      apiGet<CourseListItem[]>('/api/courses', token),
+      apiGet<{ language: string | null }>('/api/me', token, 60),
+    ])
+    items = courses
+    userLanguage = profile?.language ?? 'en'
   } catch (err) {
     if (err instanceof ApiError && (err.status === 403 || err.status === 404)) {
       moduleDisabled = true
@@ -71,8 +87,8 @@ export default async function CoursesPage() {
     return (
       <EmptyState
         icon={<BookOpen className="h-6 w-6" />}
-        title="Courses not enabled"
-        description="The Courses module is not enabled for this community."
+        title={t('courses.disabledTitle', userLanguage)}
+        description={t('courses.disabledDesc', userLanguage)}
       />
     )
   }
@@ -80,12 +96,12 @@ export default async function CoursesPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Courses"
-        description="Self-paced learning for your community"
+        title={t('courses.title', userLanguage)}
+        description={t('courses.description', userLanguage)}
         action={
           canManage ? (
             <Button asChild>
-              <Link href="/courses/new">Create course</Link>
+              <Link href="/courses/new">{t('courses.createBtn', userLanguage)}</Link>
             </Button>
           ) : undefined
         }
@@ -93,23 +109,23 @@ export default async function CoursesPage() {
 
       {fetchError && (
         <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-          Failed to load courses. Please try refreshing the page.
+          {t('courses.error', userLanguage)}
         </div>
       )}
 
       {!fetchError && items.length === 0 && (
         <EmptyState
           icon={<BookOpen className="h-6 w-6" />}
-          title="No courses yet"
+          title={t('courses.emptyTitle', userLanguage)}
           description={
             canManage
-              ? 'Create the first course to start teaching your community.'
-              : 'Courses will appear here once they are published.'
+              ? t('courses.emptyDescAdmin', userLanguage)
+              : t('courses.emptyDescMember', userLanguage)
           }
           action={
             canManage ? (
               <Button asChild>
-                <Link href="/courses/new">Create course</Link>
+                <Link href="/courses/new">{t('courses.createBtn', userLanguage)}</Link>
               </Button>
             ) : undefined
           }
@@ -119,7 +135,7 @@ export default async function CoursesPage() {
       {!fetchError && items.length > 0 && (
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((item) => (
-            <CourseCard key={item.course.id} item={item} />
+            <CourseCard key={item.course.id} item={item} lang={userLanguage} />
           ))}
         </div>
       )}
@@ -129,7 +145,7 @@ export default async function CoursesPage() {
 
 // ─── Course Card ──────────────────────────────────────────────────────────────
 
-function CourseCard({ item }: { item: CourseListItem }) {
+function CourseCard({ item, lang = 'en' }: { item: CourseListItem; lang?: string | null }) {
   const { course, lessonCount, enrollmentCount } = item
   const gradient = gradientForId(course.id)
 
@@ -154,10 +170,10 @@ function CourseCard({ item }: { item: CourseListItem }) {
       {/* Body */}
       <div className="flex flex-1 flex-col p-4">
         {course.status === 'draft' && (
-          <Badge variant="warning" className="mb-2 w-fit">Draft</Badge>
+          <Badge variant="warning" className="mb-2 w-fit">{t('courses.status.draft', lang)}</Badge>
         )}
         {course.status === 'archived' && (
-          <Badge variant="secondary" className="mb-2 w-fit">Archived</Badge>
+          <Badge variant="secondary" className="mb-2 w-fit">{t('courses.status.archived', lang)}</Badge>
         )}
 
         <h2 className="text-sm font-semibold text-surface-foreground line-clamp-2 group-hover:text-brand transition-colors">
@@ -174,12 +190,12 @@ function CourseCard({ item }: { item: CourseListItem }) {
         <div className="mt-auto flex items-center justify-between pt-3">
           <span className="flex items-center gap-1 text-xs text-muted-foreground">
             <BookOpen className="h-3.5 w-3.5" />
-            {lessonCount} {lessonCount === 1 ? 'lesson' : 'lessons'}
+            {lessonCount} {t(lessonCount === 1 ? 'courses.lesson' : 'courses.lessons', lang)}
           </span>
 
           {enrollmentCount > 0 && (
             <span className="text-xs text-muted-foreground">
-              {enrollmentCount.toLocaleString()} enrolled
+              {enrollmentCount.toLocaleString(lang === 'ko' ? 'ko-KR' : 'en-US')} {t('courses.enrolled', lang)}
             </span>
           )}
         </div>
@@ -187,3 +203,4 @@ function CourseCard({ item }: { item: CourseListItem }) {
     </Link>
   )
 }
+

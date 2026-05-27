@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { apiGet } from '@/lib/api'
 import type { Metadata } from 'next'
 import { RsvpButton } from './rsvp-button'
+import { t } from '@/lib/i18n'
 
 export async function generateMetadata({
   params,
@@ -89,8 +90,8 @@ function renderBody(body: Record<string, unknown>): string {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function formatLongDate(iso: string, timezone: string): string {
-  return new Intl.DateTimeFormat('en', {
+function formatLongDate(iso: string, timezone: string, lang: string = 'en'): string {
+  return new Intl.DateTimeFormat(lang === 'ko' ? 'ko-KR' : 'en-US', {
     weekday: 'long',
     month: 'long',
     day: 'numeric',
@@ -99,8 +100,8 @@ function formatLongDate(iso: string, timezone: string): string {
   }).format(new Date(iso))
 }
 
-function formatTime(iso: string, timezone: string): string {
-  return new Intl.DateTimeFormat('en', {
+function formatTime(iso: string, timezone: string, lang: string = 'en'): string {
+  return new Intl.DateTimeFormat(lang === 'ko' ? 'ko-KR' : 'en-US', {
     hour: 'numeric',
     minute: '2-digit',
     timeZone: timezone,
@@ -108,12 +109,13 @@ function formatTime(iso: string, timezone: string): string {
   }).format(new Date(iso))
 }
 
-function formatDuration(seconds: number): string {
+function formatDuration(seconds: number, lang: string = 'en'): string {
   const h = Math.floor(seconds / 3600)
   const m = Math.floor((seconds % 3600) / 60)
-  if (h > 0 && m > 0) return `${h}h ${m}m`
-  if (h > 0) return `${h}h`
-  return `${m}m`
+  const isKo = lang === 'ko'
+  if (h > 0 && m > 0) return isKo ? `${h}시간 ${m}분` : `${h}h ${m}m`
+  if (h > 0) return isKo ? `${h}시간` : `${h}h`
+  return isKo ? `${m}분` : `${m}m`
 }
 
 const COVER_GRADIENTS = [
@@ -147,10 +149,16 @@ export default async function EventDetailPage({
   const token = session?.access_token
 
   let detail: EventDetailResponse | null = null
+  let userLanguage = 'en'
   let fetchError = false
 
   try {
-    detail = await apiGet<EventDetailResponse>(`/api/events/${eventId}`, token)
+    const [detailData, profile] = await Promise.all([
+      apiGet<EventDetailResponse>(`/api/events/${eventId}`, token),
+      apiGet<{ language: string | null }>('/api/me', token, 60),
+    ])
+    detail = detailData
+    userLanguage = profile?.language ?? 'en'
   } catch (err: unknown) {
     if ((err as { status?: number }).status === 404) notFound()
     fetchError = true
@@ -159,7 +167,7 @@ export default async function EventDetailPage({
   if (fetchError || !detail) {
     return (
       <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-        Failed to load this event. Please try refreshing.
+        {t('events.error', userLanguage)}
       </div>
     )
   }
@@ -179,7 +187,7 @@ export default async function EventDetailPage({
         <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
           <path strokeLinecap="round" strokeLinejoin="round" d="m15 18-6-6 6-6" />
         </svg>
-        Back to events
+        {t('events.detail.backBtn', userLanguage)}
       </Link>
 
       {/* ── Cover ─────────────────────────────────────────────────────────── */}
@@ -216,7 +224,7 @@ export default async function EventDetailPage({
           {/* Description */}
           {bodyHtml && (
             <div className="rounded-xl border border-border bg-card p-6">
-              <h2 className="mb-3 text-sm font-semibold text-surface-foreground">About this event</h2>
+              <h2 className="mb-3 text-sm font-semibold text-surface-foreground">{t('events.detail.about', userLanguage)}</h2>
               <div
                 className="prose prose-slate prose-sm max-w-none"
                 dangerouslySetInnerHTML={{ __html: bodyHtml }}
@@ -227,7 +235,7 @@ export default async function EventDetailPage({
           {/* Past recordings */}
           {recordings.length > 0 && (
             <div className="rounded-xl border border-border bg-card p-6">
-              <h2 className="mb-4 text-sm font-semibold text-surface-foreground">Recordings</h2>
+              <h2 className="mb-4 text-sm font-semibold text-surface-foreground">{t('events.detail.recordings', userLanguage)}</h2>
               <ul className="space-y-3">
                 {recordings.map((rec) => (
                   <li key={rec.id}>
@@ -243,7 +251,7 @@ export default async function EventDetailPage({
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium text-surface-foreground line-clamp-1">{rec.title}</p>
                         {rec.durationSeconds && (
-                          <p className="text-xs text-muted-foreground">{formatDuration(rec.durationSeconds)}</p>
+                          <p className="text-xs text-muted-foreground">{formatDuration(rec.durationSeconds, userLanguage)}</p>
                         )}
                       </div>
                     </a>
@@ -263,14 +271,14 @@ export default async function EventDetailPage({
                 <DateIcon />
               </div>
               <div>
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Date</p>
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t('events.detail.dateLabel', userLanguage)}</p>
                 <p className="mt-0.5 text-sm font-semibold text-surface-foreground">
-                  {formatLongDate(event.startsAt, event.timezone)}
+                  {formatLongDate(event.startsAt, event.timezone, userLanguage)}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  {formatTime(event.startsAt, event.timezone)}
+                  {formatTime(event.startsAt, event.timezone, userLanguage)}
                   {' → '}
-                  {formatTime(event.endsAt, event.timezone)}
+                  {formatTime(event.endsAt, event.timezone, userLanguage)}
                 </p>
               </div>
             </div>
@@ -282,7 +290,7 @@ export default async function EventDetailPage({
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                  {locationType === 'virtual' ? 'Virtual event' : 'In-person'}
+                  {locationType === 'virtual' ? t('events.detail.locationVirtual', userLanguage) : t('events.location.irl', userLanguage)}
                 </p>
                 {locationType === 'virtual' && event.location?.url ? (
                   <a
@@ -291,11 +299,11 @@ export default async function EventDetailPage({
                     rel="noopener noreferrer"
                     className="mt-0.5 inline-flex items-center gap-1 rounded-md bg-brand px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90 transition-colors"
                   >
-                    Join event
+                    {t('events.detail.joinBtn', userLanguage)}
                   </a>
                 ) : (
                   <p className="mt-0.5 text-sm text-muted-foreground break-words">
-                    {event.location?.address ?? 'Address TBA'}
+                    {event.location?.address ?? t('events.detail.locationTba', userLanguage)}
                   </p>
                 )}
               </div>
@@ -308,9 +316,9 @@ export default async function EventDetailPage({
                   <UsersIcon />
                 </div>
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Capacity</p>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t('events.detail.capacityLabel', userLanguage)}</p>
                   <p className="mt-0.5 text-sm text-surface-foreground">
-                    {rsvpGoing} / {event.capacity} spots filled
+                    {rsvpGoing} / {event.capacity} {t('events.detail.spotsFilled', userLanguage)}
                   </p>
                 </div>
               </div>
@@ -319,22 +327,23 @@ export default async function EventDetailPage({
             {/* RSVP counts */}
             {(rsvpGoing > 0 || rsvpInterested > 0) && (
               <p className="text-xs text-muted-foreground">
-                {rsvpGoing > 0 && <span>{rsvpGoing} going</span>}
+                {rsvpGoing > 0 && <span>{rsvpGoing}{t('events.detail.rsvpGoing', userLanguage)}</span>}
                 {rsvpGoing > 0 && rsvpInterested > 0 && <span className="mx-1">·</span>}
-                {rsvpInterested > 0 && <span>{rsvpInterested} interested</span>}
+                {rsvpInterested > 0 && <span>{rsvpInterested}{t('events.detail.rsvpInterested', userLanguage)}</span>}
               </p>
             )}
           </div>
 
           {/* RSVP */}
           <div className="rounded-xl border border-border bg-card p-5">
-            <p className="mb-3 text-sm font-semibold text-surface-foreground">Your RSVP</p>
+            <p className="mb-3 text-sm font-semibold text-surface-foreground">{t('events.detail.yourRsvp', userLanguage)}</p>
             <RsvpButton
               eventId={event.id}
               initialStatus={myRsvpStatus}
               goingCount={rsvpGoing}
               interestedCount={rsvpInterested}
               token={token}
+              lang={userLanguage}
             />
           </div>
         </div>
@@ -342,6 +351,58 @@ export default async function EventDetailPage({
     </div>
   )
 }
+
+// ─── Icons ────────────────────────────────────────────────────────────────────
+
+function DateIcon() {
+  return (
+    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} aria-hidden>
+      <rect x="3" y="4" width="18" height="18" rx="2" strokeLinecap="round" strokeLinejoin="round" />
+      <line x1="16" y1="2" x2="16" y2="6" strokeLinecap="round" />
+      <line x1="8" y1="2" x2="8" y2="6" strokeLinecap="round" />
+      <line x1="3" y1="10" x2="21" y2="10" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+function GlobeIcon() {
+  return (
+    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} aria-hidden>
+      <circle cx="12" cy="12" r="10" />
+      <path strokeLinecap="round" d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
+      <line x1="2" y1="12" x2="22" y2="12" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+function MapPinIcon() {
+  return (
+    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} aria-hidden>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z" />
+      <circle cx="12" cy="10" r="3" />
+    </svg>
+  )
+}
+
+function UsersIcon() {
+  return (
+    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} aria-hidden>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M23 21v-2a4 4 0 0 0-3-3.87" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M16 3.13a4 4 0 0 1 0 7.75" />
+    </svg>
+  )
+}
+
+function PlayIcon() {
+  return (
+    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <polygon points="5 3 19 12 5 21 5 3" />
+    </svg>
+  )
+}
+
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 

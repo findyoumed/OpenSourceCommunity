@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Loader2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { useTranslation } from '@/lib/i18n-context'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -24,6 +25,7 @@ function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const next = searchParams.get('next') ?? '/home'
+  const { t } = useTranslation()
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -76,10 +78,10 @@ function LoginForm() {
             OpenSourceCommunity
           </Link>
           <h1 className="mt-4 text-2xl font-bold text-surface-foreground">
-            Welcome back
+            {t('auth.login.title')}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Sign in to your community
+            {t('auth.login.subtitle')}
           </p>
         </div>
 
@@ -104,7 +106,7 @@ function LoginForm() {
               ) : (
                 <GoogleIcon />
               )}
-              Continue with Google
+              {t('auth.login.google')}
             </button>
 
             <button
@@ -118,7 +120,7 @@ function LoginForm() {
               ) : (
                 <GitHubIcon />
               )}
-              Continue with GitHub
+              {t('auth.login.github')}
             </button>
           </div>
 
@@ -129,7 +131,7 @@ function LoginForm() {
             </div>
             <div className="relative flex justify-center text-xs">
               <span className="bg-card px-3 text-muted-foreground">
-                or continue with email
+                {t('auth.login.divider')}
               </span>
             </div>
           </div>
@@ -138,7 +140,7 @@ function LoginForm() {
           <form onSubmit={handleEmailLogin} className="space-y-4">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-surface-foreground">
-                Email address
+                {t('auth.login.emailLabel')}
               </label>
               <input
                 id="email"
@@ -155,10 +157,10 @@ function LoginForm() {
             <div>
               <div className="flex items-center justify-between">
                 <label htmlFor="password" className="block text-sm font-medium text-surface-foreground">
-                  Password
+                  {t('auth.login.passwordLabel')}
                 </label>
                 <Link href="/forgot-password" className="text-xs text-brand hover:underline">
-                  Forgot password?
+                  {t('auth.login.forgotPassword')}
                 </Link>
               </div>
               <input
@@ -179,15 +181,15 @@ function LoginForm() {
               className="flex w-full items-center justify-center gap-2 rounded-lg bg-brand px-4 py-2.5 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50 transition-opacity"
             >
               {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-              Sign in
+              {t('auth.login.submitBtn')}
             </button>
           </form>
         </div>
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
-          Don&apos;t have an account?{' '}
+          {t('auth.login.noAccount')}{' '}
           <Link href="/signup" className="font-semibold text-brand hover:underline">
-            Create one free
+            {t('auth.login.createAccount')}
           </Link>
         </p>
       </div>
@@ -215,3 +217,4 @@ function GitHubIcon() {
     </svg>
   )
 }
+

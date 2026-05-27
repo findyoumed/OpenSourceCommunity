@@ -9,7 +9,16 @@ import { ProfileForm } from '../profile/profile-form'
 import { LanguageSelect } from './language-select'
 import { t } from '@/lib/i18n'
 
-export const metadata: Metadata = { title: 'Settings' }
+export async function generateMetadata(): Promise<Metadata> {
+  const supabase = await createClient()
+  const token = (await supabase.auth.getSession()).data.session?.access_token
+  let lang = 'en'
+  try {
+    const profile = await apiGet<{ language: string | null }>('/api/me', token, 60)
+    lang = profile?.language ?? 'en'
+  } catch {}
+  return { title: t('settings.title', lang) }
+}
 
 interface MemberProfile {
   id: string
@@ -36,7 +45,7 @@ export default async function SettingsPage() {
   if (!profile) {
     return (
       <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-        Failed to load settings. Please try refreshing.
+        Something went wrong. Please try refreshing.
       </div>
     )
   }
@@ -71,6 +80,7 @@ export default async function SettingsPage() {
             avatarUrl: profile.avatarUrl,
             ...(profile.socialHandles ? { socialHandles: profile.socialHandles } : {}),
           }}
+          lang={userLanguage}
         />
       </section>
 
@@ -124,5 +134,6 @@ export default async function SettingsPage() {
     </div>
   )
 }
+
 
 
