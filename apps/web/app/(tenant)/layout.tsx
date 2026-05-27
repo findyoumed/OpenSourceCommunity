@@ -1,5 +1,4 @@
 // [LOG: 20260527_1013]
-import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { apiGet } from '@/lib/api'
 import { Sidebar, type ModuleKey } from '@/components/layout/sidebar'
@@ -38,10 +37,6 @@ export default async function TenantLayout({
   const {
     data: { user },
   } = await supabase.auth.getUser()
-
-  if (!user) {
-    redirect('/login')
-  }
 
   const token = (await supabase.auth.getSession()).data.session?.access_token
 
@@ -89,7 +84,7 @@ export default async function TenantLayout({
           tenantLogoUrl={tenantConfig.logoUrl ?? null}
           userName={memberProfile?.displayName}
           userAvatarUrl={memberProfile?.avatarUrl}
-          userEmail={user.email}
+          userEmail={user?.email}
           userLanguage={memberProfile?.language ?? null}
           token={token}
         />

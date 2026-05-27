@@ -163,77 +163,86 @@ export function Header({
 
           {/* User avatar dropdown (Radix) */}
           {/* [LOG: 20260527_1633] Added stable id to prevent Radix dynamic ID SSR/CSR hydration mismatch */}
-          <DropdownMenu.Root>
-            <DropdownMenu.Trigger asChild>
-              <button
-                type="button"
-                id="user-menu-trigger"
-                className="flex items-center rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                aria-label="User menu"
-              >
-                <Avatar
-                  src={userAvatarUrl ?? null}
-                  name={userName ?? null}
-                  size="sm"
-                />
-              </button>
-            </DropdownMenu.Trigger>
+          {userEmail ? (
+            <DropdownMenu.Root>
+              <DropdownMenu.Trigger asChild>
+                <button
+                  type="button"
+                  id="user-menu-trigger"
+                  className="flex items-center rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  aria-label="User menu"
+                >
+                  <Avatar
+                    src={userAvatarUrl ?? null}
+                    name={userName ?? null}
+                    size="sm"
+                  />
+                </button>
+              </DropdownMenu.Trigger>
 
-            <DropdownMenu.Portal>
-              <DropdownMenu.Content
-                align="end"
-                sideOffset={8}
-                className="z-50 w-56 rounded-xl border border-border bg-card shadow-lg animate-in fade-in-0 zoom-in-95"
-              >
-                {/* User info */}
-                <div className="border-b border-border px-4 py-3">
-                  <p className="truncate text-sm font-semibold text-surface-foreground">
-                    {userName ?? 'My Account'}
-                  </p>
-                  {userEmail && (
-                    <p className="truncate text-xs text-muted-foreground">{userEmail}</p>
-                  )}
-                </div>
+              <DropdownMenu.Portal>
+                <DropdownMenu.Content
+                  align="end"
+                  sideOffset={8}
+                  className="z-50 w-56 rounded-xl border border-border bg-card shadow-lg animate-in fade-in-0 zoom-in-95"
+                >
+                  {/* User info */}
+                  <div className="border-b border-border px-4 py-3">
+                    <p className="truncate text-sm font-semibold text-surface-foreground">
+                      {userName ?? 'My Account'}
+                    </p>
+                    {userEmail && (
+                      <p className="truncate text-xs text-muted-foreground">{userEmail}</p>
+                    )}
+                  </div>
 
-                {/* Menu items */}
-                <DropdownMenu.Group className="py-1">
-                  <DropdownMenu.Item asChild>
-                    <Link
-                      href="/profile"
-                      className={cn(dropdownItemCls)}
-                    >
-                      <User className="h-4 w-4" />
-                      {t('header.profile')}
-                    </Link>
-                  </DropdownMenu.Item>
-                  <DropdownMenu.Item asChild>
-                    <Link
-                      href="/settings"
-                      className={cn(dropdownItemCls)}
-                    >
-                      <Settings className="h-4 w-4" />
-                      {t('header.settings')}
-                    </Link>
-                  </DropdownMenu.Item>
-                </DropdownMenu.Group>
+                  {/* Menu items */}
+                  <DropdownMenu.Group className="py-1">
+                    <DropdownMenu.Item asChild>
+                      <Link
+                        href="/profile"
+                        className={cn(dropdownItemCls)}
+                      >
+                        <User className="h-4 w-4" />
+                        {t('header.profile')}
+                      </Link>
+                    </DropdownMenu.Item>
+                    <DropdownMenu.Item asChild>
+                      <Link
+                        href="/settings"
+                        className={cn(dropdownItemCls)}
+                      >
+                        <Settings className="h-4 w-4" />
+                        {t('header.settings')}
+                      </Link>
+                    </DropdownMenu.Item>
+                  </DropdownMenu.Group>
 
-                <DropdownMenu.Separator className="my-1 h-px bg-border" />
+                  <DropdownMenu.Separator className="my-1 h-px bg-border" />
 
-                <DropdownMenu.Group className="py-1">
-                  <DropdownMenu.Item asChild>
-                    <button
-                      type="button"
-                      onClick={handleSignOut}
-                      className="flex w-full cursor-pointer items-center gap-2 px-4 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors outline-none"
-                    >
-                      <LogOut className="h-4 w-4" />
-                      {t('header.signout')}
-                    </button>
-                  </DropdownMenu.Item>
-                </DropdownMenu.Group>
-              </DropdownMenu.Content>
-            </DropdownMenu.Portal>
-          </DropdownMenu.Root>
+                  <DropdownMenu.Group className="py-1">
+                    <DropdownMenu.Item asChild>
+                      <button
+                        type="button"
+                        onClick={handleSignOut}
+                        className="flex w-full cursor-pointer items-center gap-2 px-4 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors outline-none"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        {t('header.signout')}
+                      </button>
+                    </DropdownMenu.Item>
+                  </DropdownMenu.Group>
+                </DropdownMenu.Content>
+              </DropdownMenu.Portal>
+            </DropdownMenu.Root>
+          ) : (
+            <Link
+              href="/login"
+              className="rounded-lg bg-brand px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-brand/90 transition-colors"
+            >
+              {currentLang === 'ko' ? '로그인' : 'Sign In'}
+            </Link>
+          )}
         </div>
       </header>
 
