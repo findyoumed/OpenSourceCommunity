@@ -38,7 +38,13 @@ function gradientForId(id: string) {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default async function FeaturedCourses({ token }: { token: string | undefined }) {
+export default async function FeaturedCourses({
+  token,
+  lang,
+}: {
+  token: string | undefined
+  lang?: string | null | undefined
+}) {
   let rows: CourseRow[] = []
 
   try {
@@ -50,12 +56,14 @@ export default async function FeaturedCourses({ token }: { token: string | undef
   const courses = rows.filter(r => r.course.status === 'published').slice(0, 3)
   if (courses.length === 0) return null
 
+  const isKo = lang === 'ko'
+
   return (
     <WidgetShell
-      title="Courses"
+      title={isKo ? '추천 온라인 강좌' : 'Courses'}
       icon={<GraduationCap className="h-4 w-4" />}
       href="/courses"
-      hrefLabel="All courses"
+      hrefLabel={isKo ? '모든 강좌 보기' : 'All courses'}
       size="lg"
     >
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -86,11 +94,14 @@ export default async function FeaturedCourses({ token }: { token: string | undef
               <p className="text-sm font-semibold text-surface-foreground line-clamp-2 group-hover:text-brand transition-colors leading-snug">
                 {course.title}
               </p>
+              {/* [LOG: 20260527_1201] */}
               <div className="mt-auto flex items-center justify-between pt-1">
                 <div className="flex items-center gap-1">
                   <BookOpen className="h-3 w-3 text-muted-foreground" />
                   <span className="text-[11px] text-muted-foreground">
-                    {lessonCount} {lessonCount === 1 ? 'lesson' : 'lessons'}
+                    {isKo
+                      ? `${lessonCount}개 단원`
+                      : `${lessonCount} ${lessonCount === 1 ? 'lesson' : 'lessons'}`}
                   </span>
                 </div>
                 <Badge variant="secondary" className="text-[10px] gap-1 py-0 px-1.5">

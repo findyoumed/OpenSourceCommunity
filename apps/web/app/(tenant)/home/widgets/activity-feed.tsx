@@ -21,14 +21,14 @@ interface ActivityItem {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function timeAgo(iso: string): string {
+function timeAgo(iso: string, isKo: boolean): string {
   const diff = Date.now() - new Date(iso).getTime()
   const mins = Math.floor(diff / 60_000)
-  if (mins < 1) return 'just now'
-  if (mins < 60) return `${mins}m ago`
+  if (mins < 1) return isKo ? '방금 전' : 'just now'
+  if (mins < 60) return isKo ? `${mins}분 전` : `${mins}m ago`
   const hrs = Math.floor(mins / 60)
-  if (hrs < 24) return `${hrs}h ago`
-  return `${Math.floor(hrs / 24)}d ago`
+  if (hrs < 24) return isKo ? `${hrs}시간 전` : `${hrs}h ago`
+  return isKo ? `${Math.floor(hrs / 24)}일 전` : `${Math.floor(hrs / 24)}d ago`
 }
 
 const BADGE_VARIANT: Record<ActivityItem['type'], BadgeProps['variant']> = {
@@ -38,16 +38,26 @@ const BADGE_VARIANT: Record<ActivityItem['type'], BadgeProps['variant']> = {
   comment: 'secondary',
 }
 
-const BADGE_LABEL: Record<ActivityItem['type'], string> = {
-  post:    'Post',
-  idea:    'Idea',
-  event:   'Event',
-  comment: 'Reply',
+const getBadgeLabel = (type: ActivityItem['type'], lang?: string | null) => {
+  const isKo = lang === 'ko'
+  const labels: Record<ActivityItem['type'], { en: string; ko: string }> = {
+    post:    { en: 'Post',  ko: '게시글' },
+    idea:    { en: 'Idea',  ko: '건의' },
+    event:   { en: 'Event', ko: '이벤트' },
+    comment: { en: 'Reply', ko: '댓글' },
+  }
+  return isKo ? labels[type].ko : labels[type].en
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default async function ActivityFeed({ token }: { token: string | undefined }) {
+export default async function ActivityFeed({
+  token,
+  lang,
+}: {
+  token: string | undefined
+  lang?: string | null | undefined
+}) {
   let activity: ActivityItem[] = []
 
   try {
@@ -56,12 +66,14 @@ export default async function ActivityFeed({ token }: { token: string | undefine
     return null
   }
 
+  const isKo = lang === 'ko'
+
   return (
     <WidgetShell
-      title="Recent Activity"
+      title={isKo ? '실시간 활동 피드' : 'Recent Activity'}
       icon={<Activity className="h-4 w-4" />}
       href="/forums"
-      hrefLabel="View all"
+      hrefLabel={isKo ? '전체 보기' : 'View all'}
       size="sm"
       contentClassName="p-0"
     >
@@ -70,13 +82,17 @@ export default async function ActivityFeed({ token }: { token: string | undefine
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-brand/10">
             <Plus className="h-4 w-4 text-brand" />
           </div>
-          <p className="mt-3 text-sm font-medium text-surface-foreground">No activity yet</p>
-          <p className="mt-1 text-xs text-muted-foreground">Be the first to post!</p>
+          <p className="mt-3 text-sm font-medium text-surface-foreground">
+            {isKo ? '아직 활동 기록이 없습니다' : 'No activity yet'}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {isKo ? '첫 번째 게시글의 주인공이 되어보세요!' : 'Be the first to post!'}
+          </p>
           <Link
             href="/forums/new"
             className="mt-4 rounded-lg bg-brand px-4 py-2 text-xs font-semibold text-white hover:opacity-90 transition-opacity"
           >
-            Start a discussion
+            {isKo ? '토론 시작하기' : 'Start a discussion'}
           </Link>
         </div>
       ) : (
@@ -92,12 +108,13 @@ export default async function ActivityFeed({ token }: { token: string | undefine
                   <p className="text-xs font-medium text-surface-foreground line-clamp-1 group-hover:text-brand transition-colors">
                     {item.title}
                   </p>
+                  {/* [LOG: 20260527_1210] */}
                   <p className="mt-0.5 text-[11px] text-muted-foreground">
-                    {item.authorName} · {timeAgo(item.createdAt)}
+                    {item.authorName} · {timeAgo(item.createdAt, isKo)}
                   </p>
                 </div>
                 <Badge variant={BADGE_VARIANT[item.type]} className="flex-shrink-0 text-[10px]">
-                  {BADGE_LABEL[item.type]}
+                  {getBadgeLabel(item.type, lang)}
                 </Badge>
               </Link>
             </li>

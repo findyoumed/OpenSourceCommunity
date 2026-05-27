@@ -16,7 +16,13 @@ interface MemberRow {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default async function MemberSpotlight({ token }: { token: string | undefined }) {
+export default async function MemberSpotlight({
+  token,
+  lang,
+}: {
+  token: string | undefined
+  lang?: string | null | undefined
+}) {
   let members: MemberRow[] = []
 
   try {
@@ -27,12 +33,14 @@ export default async function MemberSpotlight({ token }: { token: string | undef
 
   if (members.length === 0) return null
 
+  const isKo = lang === 'ko'
+
   return (
     <WidgetShell
-      title="New Members"
+      title={isKo ? '신규 가입 회원' : 'New Members'}
       icon={<Users className="h-4 w-4" />}
       href="/members"
-      hrefLabel="View all"
+      hrefLabel={isKo ? '전체 보기' : 'View all'}
       size="sm"
     >
       <div className="grid grid-cols-4 gap-3">
@@ -43,6 +51,7 @@ export default async function MemberSpotlight({ token }: { token: string | undef
             className="group flex flex-col items-center gap-1.5 text-center"
             title={member.displayName}
           >
+            {/* [LOG: 20260527_1205] */}
             <div className="ring-2 ring-transparent group-hover:ring-brand/30 rounded-full transition-all">
               <Avatar
                 src={member.avatarUrl ?? null}

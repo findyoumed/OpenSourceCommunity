@@ -38,8 +38,15 @@ function gradientForId(id: string) {
   return GRADIENTS[hash % GRADIENTS.length]
 }
 
-function formatEventDate(iso: string, tz: string): string {
+function formatEventDate(iso: string, tz: string, isKo: boolean): string {
   try {
+    if (isKo) {
+      return new Date(iso).toLocaleDateString('ko-KR', {
+        weekday: 'short', month: 'short', day: 'numeric',
+        hour: 'numeric', minute: '2-digit',
+        timeZone: tz,
+      })
+    }
     return new Date(iso).toLocaleDateString('en-US', {
       weekday: 'short', month: 'short', day: 'numeric',
       hour: 'numeric', minute: '2-digit',
@@ -52,7 +59,13 @@ function formatEventDate(iso: string, tz: string): string {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default async function UpcomingEvents({ token }: { token: string | undefined }) {
+export default async function UpcomingEvents({
+  token,
+  lang,
+}: {
+  token: string | undefined
+  lang?: string | null | undefined
+}) {
   let rows: EventRow[] = []
 
   try {
@@ -64,13 +77,14 @@ export default async function UpcomingEvents({ token }: { token: string | undefi
   if (rows.length === 0) return null
 
   const events = rows.slice(0, 3)
+  const isKo = lang === 'ko'
 
   return (
     <WidgetShell
-      title="Upcoming Events"
+      title={isKo ? '다가오는 이벤트' : 'Upcoming Events'}
       icon={<Calendar className="h-4 w-4" />}
       href="/events"
-      hrefLabel="All events"
+      hrefLabel={isKo ? '모든 이벤트 보기' : 'All events'}
       size="lg"
     >
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -100,8 +114,8 @@ export default async function UpcomingEvents({ token }: { token: string | undefi
                     className="text-[10px] gap-1"
                   >
                     {event.location.type === 'virtual'
-                      ? <><Video className="h-2.5 w-2.5" />Virtual</>
-                      : <><MapPin className="h-2.5 w-2.5" />In-Person</>
+                      ? <><Video className="h-2.5 w-2.5" />{isKo ? '온라인' : 'Virtual'}</>
+                      : <><MapPin className="h-2.5 w-2.5" />{isKo ? '오프라인' : 'In-Person'}</>
                     }
                   </Badge>
                 </div>
@@ -110,8 +124,9 @@ export default async function UpcomingEvents({ token }: { token: string | undefi
 
             {/* Content */}
             <div className="flex flex-1 flex-col gap-1 p-3">
+              {/* [LOG: 20260527_1150] */}
               <p className="text-xs text-muted-foreground">
-                {formatEventDate(event.startsAt, event.timezone)}
+                {formatEventDate(event.startsAt, event.timezone, isKo)}
               </p>
               <p className="text-sm font-semibold text-surface-foreground line-clamp-2 group-hover:text-brand transition-colors leading-snug">
                 {event.title}
@@ -119,7 +134,9 @@ export default async function UpcomingEvents({ token }: { token: string | undefi
               <div className="mt-auto flex items-center gap-1 pt-1">
                 <Users className="h-3 w-3 text-muted-foreground" />
                 <span className="text-[11px] text-muted-foreground">
-                  {rsvpCount} {rsvpCount === 1 ? 'RSVP' : 'RSVPs'}
+                  {isKo
+                    ? `${rsvpCount}명 신청`
+                    : `${rsvpCount} ${rsvpCount === 1 ? 'RSVP' : 'RSVPs'}`}
                 </span>
               </div>
             </div>

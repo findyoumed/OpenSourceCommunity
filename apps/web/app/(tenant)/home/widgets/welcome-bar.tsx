@@ -39,9 +39,11 @@ function greetingFor(hour: number): string {
 export default async function WelcomeBar({
   token,
   tenantName,
+  lang,
 }: {
   token: string | undefined
   tenantName: string
+  lang?: string | null | undefined
 }) {
   let stats: CommunityStats = { memberCount: 0, postsThisWeek: 0, activeThreads: 0, upcomingEvents: 0 }
   let displayName = ''
@@ -57,13 +59,17 @@ export default async function WelcomeBar({
     // graceful fallback
   }
 
-  const greeting = greetingFor(new Date().getHours())
+  const isKo = lang === 'ko'
+
+  const greeting = isKo
+    ? (new Date().getHours() < 12 ? '좋은 아침입니다' : new Date().getHours() < 17 ? '즐거운 오후입니다' : '행복한 저녁입니다')
+    : greetingFor(new Date().getHours())
 
   const statItems = [
-    { icon: Users,         value: stats.memberCount.toLocaleString(),   label: 'Members' },
-    { icon: MessageSquare, value: stats.activeThreads.toLocaleString(),  label: 'Active threads' },
-    { icon: PenLine,       value: stats.postsThisWeek.toLocaleString(),  label: 'Posts this week' },
-    { icon: Calendar,      value: stats.upcomingEvents.toLocaleString(), label: 'Upcoming events' },
+    { icon: Users,         value: stats.memberCount.toLocaleString(),   label: isKo ? '회원 수' : 'Members' },
+    { icon: MessageSquare, value: stats.activeThreads.toLocaleString(),  label: isKo ? '활성 토론' : 'Active threads' },
+    { icon: PenLine,       value: stats.postsThisWeek.toLocaleString(),  label: isKo ? '이번 주 게시글' : 'Posts this week' },
+    { icon: Calendar,      value: stats.upcomingEvents.toLocaleString(), label: isKo ? '예정된 이벤트' : 'Upcoming events' },
   ].filter(s => {
     const n = parseInt(s.value.replace(/,/g, ''))
     return isNaN(n) || n > 0
@@ -89,6 +95,7 @@ export default async function WelcomeBar({
         <div className="relative px-8 py-12">
           {/* Greeting */}
           <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-white/55">
+            {/* [LOG: 20260527_1130] */}
             {greeting}{displayName ? ` · ${displayName}` : ''}
           </p>
 
@@ -106,7 +113,7 @@ export default async function WelcomeBar({
 
           {/* Tagline */}
           <p className="mt-3 max-w-md text-sm leading-relaxed text-white/55">
-            Connect, collaborate, and grow with your community.
+            {isKo ? '커뮤니티와 함께 소통하고 협업하며 성장해 보세요.' : 'Connect, collaborate, and grow with your community.'}
           </p>
 
           {/* Search + CTA */}
@@ -116,13 +123,13 @@ export default async function WelcomeBar({
               className="flex flex-1 items-center gap-3 rounded-xl border border-white/20 bg-white/10 px-5 py-3.5 text-sm text-white/50 backdrop-blur-sm transition-colors hover:bg-white/15"
             >
               <Search className="h-4 w-4 shrink-0 text-white/40" />
-              <span>Search discussions, ideas, members…</span>
+              <span>{isKo ? '토론, 건의사항, 멤버 검색...' : 'Search discussions, ideas, members…'}</span>
             </Link>
             <Link
               href="/forums/new"
               className="flex items-center justify-center gap-2 rounded-xl bg-white px-6 py-3.5 text-sm font-bold text-brand shadow-sm transition-opacity hover:opacity-90 sm:shrink-0"
             >
-              Start a discussion
+              {isKo ? '토론 시작하기' : 'Start a discussion'}
               <ArrowUpRight className="h-4 w-4" />
             </Link>
           </div>

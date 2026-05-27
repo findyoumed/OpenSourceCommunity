@@ -30,10 +30,57 @@ const MODULE_DEFS: Record<string, ModuleDef> = {
 
 const ADMIN_ONLY_MODULES = new Set(['social-intel', 'intelligence'])
 
-export default function CategoriesGrid({ enabledModules, isAdmin = false }: { enabledModules: string[]; isAdmin?: boolean }) {
+export default function CategoriesGrid({
+  enabledModules,
+  isAdmin = false,
+  lang,
+}: {
+  enabledModules: string[]
+  isAdmin?: boolean
+  lang?: string | null | undefined
+}) {
+  const isKo = lang === 'ko'
+
   const categories = enabledModules
     .filter((m) => isAdmin || !ADMIN_ONLY_MODULES.has(m))
-    .map((m) => MODULE_DEFS[m])
+    .map((m) => {
+      const def = MODULE_DEFS[m]
+      if (!def) return null
+
+      // [LOG: 20260527_1135]
+      let label = def.label
+      let desc = def.desc
+
+      if (isKo) {
+        if (m === 'forums') {
+          label = '포럼 게시판'
+          desc = '질문하고 토론 나누기'
+        } else if (m === 'ideas') {
+          label = '아이디어 건의'
+          desc = '커뮤니티 건의 및 투표'
+        } else if (m === 'events') {
+          label = '이벤트/모임'
+          desc = '온라인 세션 및 오프라인 모임'
+        } else if (m === 'kb') {
+          label = '지식 베이스'
+          desc = '유용한 가이드 및 기사'
+        } else if (m === 'courses') {
+          label = '온라인 강좌'
+          desc = '체계적이고 검증된 학습 강좌'
+        } else if (m === 'webinars') {
+          label = '웨비나'
+          desc = '라이브 방송 및 녹화 영상'
+        } else if (m === 'chat') {
+          label = '실시간 채팅'
+          desc = '실시간 다중 소통 채널'
+        } else if (m === 'intelligence' || m === 'social-intel') {
+          label = '인텔리전스'
+          desc = '소셜 네트워크 모니터링'
+        }
+      }
+
+      return { ...def, label, desc }
+    })
     .filter((c): c is ModuleDef => Boolean(c))
 
   if (categories.length === 0) return null
@@ -43,7 +90,7 @@ export default function CategoriesGrid({ enabledModules, isAdmin = false }: { en
       {/* Section label */}
       <div className="mb-4 flex items-center gap-3">
         <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground">
-          Explore
+          {isKo ? '둘러보기' : 'Explore'}
         </p>
         <div className="h-px flex-1 bg-border" />
       </div>

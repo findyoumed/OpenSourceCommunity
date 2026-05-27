@@ -33,7 +33,13 @@ const STATUS_CONFIG: Record<IdeaStatus, { label: string; variant: BadgeProps['va
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default async function TrendingIdeas({ token }: { token: string | undefined }) {
+export default async function TrendingIdeas({
+  token,
+  lang,
+}: {
+  token: string | undefined
+  lang?: string | null | undefined
+}) {
   let ideas: IdeaRow[] = []
 
   try {
@@ -44,12 +50,26 @@ export default async function TrendingIdeas({ token }: { token: string | undefin
 
   if (ideas.length === 0) return null
 
+  const isKo = lang === 'ko'
+
+  const getStatusLabel = (status: IdeaStatus) => {
+    const labels: Record<IdeaStatus, string> = {
+      open:         isKo ? '제안됨' : 'Open',
+      under_review: isKo ? '검토 중' : 'Under Review',
+      planned:      isKo ? '계획됨' : 'Planned',
+      in_progress:  isKo ? '진행 중' : 'In Progress',
+      completed:    isKo ? '완료됨' : 'Completed',
+      declined:     isKo ? '반려됨' : 'Declined',
+    }
+    return labels[status] || status
+  }
+
   return (
     <WidgetShell
-      title="Trending Ideas"
+      title={isKo ? '추천 건의사항' : 'Trending Ideas'}
       icon={<Lightbulb className="h-4 w-4" />}
       href="/ideas"
-      hrefLabel="All ideas"
+      hrefLabel={isKo ? '모든 건의 보기' : 'All ideas'}
       size="md"
       contentClassName="p-0"
     >
@@ -76,18 +96,21 @@ export default async function TrendingIdeas({ token }: { token: string | undefin
                     {idea.title}
                   </p>
                   <div className="mt-1 flex items-center gap-2">
+                    {/* [LOG: 20260527_1145] */}
                     {idea.category && (
                       <span className="text-[11px] text-muted-foreground">{idea.category}</span>
                     )}
                     <span className="text-[11px] text-muted-foreground">
-                      {idea.commentCount} comment{idea.commentCount !== 1 ? 's' : ''}
+                      {isKo
+                        ? `${idea.commentCount}개 의견`
+                        : `${idea.commentCount} comment${idea.commentCount !== 1 ? 's' : ''}`}
                     </span>
                   </div>
                 </div>
 
                 {/* Status badge */}
                 <Badge variant={status.variant} className="flex-shrink-0 text-[10px] py-0 px-1.5">
-                  {status.label}
+                  {getStatusLabel(idea.status)}
                 </Badge>
               </Link>
             </li>

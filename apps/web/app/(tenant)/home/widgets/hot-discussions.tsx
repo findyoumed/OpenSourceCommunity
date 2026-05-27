@@ -23,14 +23,14 @@ interface ThreadRow {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function timeAgo(iso: string): string {
+function timeAgo(iso: string, isKo: boolean): string {
   const diff = Date.now() - new Date(iso).getTime()
   const mins = Math.floor(diff / 60_000)
-  if (mins < 1) return 'just now'
-  if (mins < 60) return `${mins}m ago`
+  if (mins < 1) return isKo ? '방금 전' : 'just now'
+  if (mins < 60) return isKo ? `${mins}분 전` : `${mins}m ago`
   const hrs = Math.floor(mins / 60)
-  if (hrs < 24) return `${hrs}h ago`
-  return `${Math.floor(hrs / 24)}d ago`
+  if (hrs < 24) return isKo ? `${hrs}시간 전` : `${hrs}h ago`
+  return isKo ? `${Math.floor(hrs / 24)}일 전` : `${Math.floor(hrs / 24)}d ago`
 }
 
 function stripHtml(html: string): string {
@@ -45,7 +45,13 @@ function excerpt(body: string | undefined, maxLen = 90): string {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default async function HotDiscussions({ token }: { token: string | undefined }) {
+export default async function HotDiscussions({
+  token,
+  lang,
+}: {
+  token: string | undefined
+  lang?: string | null | undefined
+}) {
   let threads: ThreadRow[] = []
 
   try {
@@ -56,12 +62,14 @@ export default async function HotDiscussions({ token }: { token: string | undefi
 
   if (threads.length === 0) return null
 
+  const isKo = lang === 'ko'
+
   return (
     <WidgetShell
-      title="Hot Discussions"
+      title={isKo ? '인기 토론' : 'Hot Discussions'}
       icon={<MessageSquare className="h-4 w-4" />}
       href="/forums"
-      hrefLabel="All discussions"
+      hrefLabel={isKo ? '모든 토론 보기' : 'All discussions'}
       size="md"
       contentClassName="p-0"
     >
@@ -90,7 +98,9 @@ export default async function HotDiscussions({ token }: { token: string | undefi
                       {thread.title}
                     </p>
                     {thread.isAnswered && (
-                      <Badge variant="success" className="shrink-0 text-[10px] py-0 px-1.5">✓ Solved</Badge>
+                      <Badge variant="success" className="shrink-0 text-[10px] py-0 px-1.5">
+                        {isKo ? '✓ 해결됨' : '✓ Solved'}
+                      </Badge>
                     )}
                   </div>
 
@@ -101,9 +111,10 @@ export default async function HotDiscussions({ token }: { token: string | undefi
                   )}
 
                   <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
+                    {/* [LOG: 20260527_1140] */}
                     <span className="text-[11px] text-muted-foreground">{thread.authorName}</span>
                     <span className="text-[11px] text-muted-foreground/50">·</span>
-                    <span className="text-[11px] text-muted-foreground">{timeAgo(thread.createdAt)}</span>
+                    <span className="text-[11px] text-muted-foreground">{timeAgo(thread.createdAt, isKo)}</span>
                     {thread.categoryName && (
                       <>
                         <span className="text-[11px] text-muted-foreground/50">·</span>

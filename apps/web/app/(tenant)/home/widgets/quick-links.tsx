@@ -21,20 +21,67 @@ const MODULE_LINKS: Record<ModuleKey, { href: string; label: string; desc: strin
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default function QuickLinks({ enabledModules }: { enabledModules: string[] }) {
+export default function QuickLinks({
+  enabledModules,
+  lang,
+}: {
+  enabledModules: string[]
+  lang?: string | null | undefined
+}) {
+  const isKo = lang === 'ko'
+
   const links = (enabledModules as ModuleKey[])
     .filter((m) => MODULE_LINKS[m])
-    .map((m) => MODULE_LINKS[m])
+    .map((m) => {
+      const def = MODULE_LINKS[m]
+      let label = def.label
+      let desc = def.desc
+
+      if (isKo) {
+        if (m === 'forums') {
+          label = '포럼 게시판'
+          desc = '토론 및 답변 나누기'
+        } else if (m === 'ideas') {
+          label = '아이디어 건의'
+          desc = '커뮤니티 건의 및 투표'
+        } else if (m === 'events') {
+          label = '이벤트/모임'
+          desc = '온라인/오프라인 모임'
+        } else if (m === 'kb') {
+          label = '지식 베이스'
+          desc = '유용한 가이드 및 기사'
+        } else if (m === 'courses') {
+          label = '온라인 강좌'
+          desc = '체계적이고 검증된 학습'
+        } else if (m === 'webinars') {
+          label = '웨비나'
+          desc = '라이브 방송 및 녹화 영상'
+        } else if (m === 'chat') {
+          label = '실시간 채팅'
+          desc = '실시간 소통 채널'
+        } else if (m === 'intelligence') {
+          label = '인텔리전스'
+          desc = '소셜 네트워크 모니터링'
+        }
+      }
+
+      return { ...def, label, desc }
+    })
 
   // Always append Members
   const allLinks = [
     ...links,
-    { href: '/members', label: 'Members', desc: 'Connect with others', icon: Users },
+    {
+      href: '/members',
+      label: isKo ? '회원 목록' : 'Members',
+      desc: isKo ? '커뮤니티 멤버들과 소통하기' : 'Connect with others',
+      icon: Users,
+    },
   ]
 
   return (
     <WidgetShell
-      title="Explore"
+      title={isKo ? '탐색' : 'Explore'}
       icon={<Compass className="h-4 w-4" />}
       size="sm"
       contentClassName="p-0"
@@ -50,6 +97,7 @@ export default function QuickLinks({ enabledModules }: { enabledModules: string[
                 <link.icon className="h-3.5 w-3.5" />
               </div>
               <div className="min-w-0 flex-1">
+                {/* [LOG: 20260527_1215] */}
                 <p className="text-xs font-semibold text-surface-foreground group-hover:text-brand transition-colors">
                   {link.label}
                 </p>

@@ -32,23 +32,31 @@ interface TenantConfig {
 
 interface MemberProfile {
   role: 'member' | 'moderator' | 'org_admin'
+  language?: string | null
 }
 
 // ─── Widget renderer ──────────────────────────────────────────────────────────
 
-function renderWidget(id: string, token: string | undefined, tenantName: string, enabledModules: string[], isAdmin: boolean) {
+function renderWidget(
+  id: string,
+  token: string | undefined,
+  tenantName: string,
+  enabledModules: string[],
+  isAdmin: boolean,
+  lang: string | null | undefined
+) {
   switch (id) {
-    case 'welcome':           return <WelcomeBar key={id} token={token} tenantName={tenantName} />
-    case 'categories-grid':  return <CategoriesGrid key={id} enabledModules={enabledModules} isAdmin={isAdmin} />
-    case 'hot-discussions':   return <HotDiscussions key={id} token={token} />
-    case 'trending-ideas':    return <TrendingIdeas key={id} token={token} />
-    case 'upcoming-events':   return <UpcomingEvents key={id} token={token} />
-    case 'recent-articles':   return <RecentArticles key={id} token={token} />
-    case 'featured-courses':  return <FeaturedCourses key={id} token={token} />
-    case 'upcoming-webinars': return <UpcomingWebinars key={id} token={token} />
-    case 'member-spotlight':  return <MemberSpotlight key={id} token={token} />
-    case 'activity-feed':     return <ActivityFeed key={id} token={token} />
-    case 'quick-links':       return <QuickLinks key={id} enabledModules={enabledModules} />
+    case 'welcome':           return <WelcomeBar key={id} token={token} tenantName={tenantName} lang={lang} />
+    case 'categories-grid':  return <CategoriesGrid key={id} enabledModules={enabledModules} isAdmin={isAdmin} lang={lang} />
+    case 'hot-discussions':   return <HotDiscussions key={id} token={token} lang={lang} />
+    case 'trending-ideas':    return <TrendingIdeas key={id} token={token} lang={lang} />
+    case 'upcoming-events':   return <UpcomingEvents key={id} token={token} lang={lang} />
+    case 'recent-articles':   return <RecentArticles key={id} token={token} lang={lang} />
+    case 'featured-courses':  return <FeaturedCourses key={id} token={token} lang={lang} />
+    case 'upcoming-webinars': return <UpcomingWebinars key={id} token={token} lang={lang} />
+    case 'member-spotlight':  return <MemberSpotlight key={id} token={token} lang={lang} />
+    case 'activity-feed':     return <ActivityFeed key={id} token={token} lang={lang} />
+    case 'quick-links':       return <QuickLinks key={id} enabledModules={enabledModules} lang={lang} />
     default:                  return null
   }
 }
@@ -66,6 +74,7 @@ export default async function CommunityHomePage() {
     enabledModules: ['forums', 'ideas'],
   }
   let isAdmin = false
+  let userLang: string | null | undefined = 'en'
 
   try {
     const [data, profile] = await Promise.all([
@@ -74,6 +83,7 @@ export default async function CommunityHomePage() {
     ])
     if (data) tenantConfig = data
     isAdmin = profile?.role === 'org_admin'
+    userLang = profile?.language
   } catch {
     // fall back to defaults — page still renders
   }
@@ -88,8 +98,9 @@ export default async function CommunityHomePage() {
       className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
       style={{ gridAutoFlow: 'dense' }}
     >
+      {/* [LOG: 20260527_1127] */}
       {widgets.map((w) =>
-        renderWidget(w.id, token, tenantConfig.name, tenantConfig.enabledModules, isAdmin)
+        renderWidget(w.id, token, tenantConfig.name, tenantConfig.enabledModules, isAdmin, userLang)
       )}
     </div>
   )

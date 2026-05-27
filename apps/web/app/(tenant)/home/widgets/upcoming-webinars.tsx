@@ -21,7 +21,13 @@ interface WebinarRow {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default async function UpcomingWebinars({ token }: { token: string | undefined }) {
+export default async function UpcomingWebinars({
+  token,
+  lang,
+}: {
+  token: string | undefined
+  lang?: string | null | undefined
+}) {
   let rows: WebinarRow[] = []
 
   try {
@@ -33,12 +39,14 @@ export default async function UpcomingWebinars({ token }: { token: string | unde
   const webinars = rows.slice(0, 3)
   if (webinars.length === 0) return null
 
+  const isKo = lang === 'ko'
+
   return (
     <WidgetShell
-      title="Webinars"
+      title={isKo ? '예정된 웨비나' : 'Webinars'}
       icon={<Video className="h-4 w-4" />}
       href="/webinars"
-      hrefLabel="All webinars"
+      hrefLabel={isKo ? '모든 웨비나 보기' : 'All webinars'}
       size="md"
       contentClassName="p-0"
     >
@@ -52,7 +60,7 @@ export default async function UpcomingWebinars({ token }: { token: string | unde
               {/* Date block */}
               <div className="flex-shrink-0 flex flex-col items-center justify-center rounded-lg bg-brand/10 px-2.5 py-2 min-w-[44px] text-center">
                 <span className="text-[10px] font-semibold uppercase text-brand">
-                  {new Date(webinar.scheduledAt).toLocaleDateString('en-US', { month: 'short' })}
+                  {new Date(webinar.scheduledAt).toLocaleDateString(isKo ? 'ko-KR' : 'en-US', { month: 'short' })}
                 </span>
                 <span className="text-lg font-black text-brand leading-none">
                   {new Date(webinar.scheduledAt).getDate()}
@@ -65,13 +73,14 @@ export default async function UpcomingWebinars({ token }: { token: string | unde
                   {webinar.title}
                 </p>
                 <div className="mt-1 flex flex-wrap items-center gap-2">
+                  {/* [LOG: 20260527_1203] */}
                   <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
                     <Clock className="h-2.5 w-2.5" />
-                    {webinar.durationMinutes}m
+                    {webinar.durationMinutes}{isKo ? '분' : 'm'}
                   </span>
                   <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
                     <Users className="h-2.5 w-2.5" />
-                    {registrationCount} registered
+                    {isKo ? `${registrationCount}명 등록함` : `${registrationCount} registered`}
                   </span>
                 </div>
               </div>
@@ -79,7 +88,7 @@ export default async function UpcomingWebinars({ token }: { token: string | unde
               {webinar.status === 'live' && (
                 <Badge variant="destructive" className="flex-shrink-0 gap-1 text-[10px]">
                   <span className="h-1.5 w-1.5 rounded-full bg-current animate-pulse" />
-                  Live
+                  {isKo ? '라이브' : 'Live'}
                 </Badge>
               )}
             </Link>
