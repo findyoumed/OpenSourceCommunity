@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 
 import { apiClientPatch } from '@/lib/api-client'
+import { useTranslation } from '@/lib/i18n-context'
 
 interface ProfileFormProps {
   token: string
@@ -17,6 +18,7 @@ interface ProfileFormProps {
 }
 
 export function ProfileForm({ token: _token, initialValues }: ProfileFormProps) {
+  const { t } = useTranslation()
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [displayName, setDisplayName] = useState(initialValues.displayName)
@@ -58,16 +60,17 @@ export function ProfileForm({ token: _token, initialValues }: ProfileFormProps) 
         setSuccess(true)
         router.refresh()
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Something went wrong.')
+        setError(err instanceof Error ? err.message : t('profile.errorDefault'))
       }
     })
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
+      {/* [LOG: 20260527_1120] */}
       <div className="grid gap-5 sm:grid-cols-2">
         <div>
-          <label className={labelClass}>Display name</label>
+          <label className={labelClass}>{t('profile.displayName')}</label>
           <input
             type="text"
             required
@@ -75,12 +78,12 @@ export function ProfileForm({ token: _token, initialValues }: ProfileFormProps) 
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
             className={inputClass}
-            placeholder="Your name"
+            placeholder={t('profile.displayNamePlaceholder')}
           />
         </div>
 
         <div>
-          <label className={labelClass}>Username</label>
+          <label className={labelClass}>{t('profile.username')}</label>
           <div className="relative">
             <span className="absolute inset-y-0 left-3 flex items-center text-sm text-muted-foreground">@</span>
             <input
@@ -90,28 +93,28 @@ export function ProfileForm({ token: _token, initialValues }: ProfileFormProps) 
               value={username}
               onChange={(e) => setUsername(e.target.value.toLowerCase())}
               className={`${inputClass} pl-7`}
-              placeholder="username"
+              placeholder={t('profile.usernamePlaceholder')}
             />
           </div>
-          <p className="mt-1 text-xs text-muted-foreground">Lowercase letters, numbers, _ and - only</p>
+          <p className="mt-1 text-xs text-muted-foreground">{t('profile.usernameHint')}</p>
         </div>
       </div>
 
       <div>
-        <label className={labelClass}>Bio</label>
+        <label className={labelClass}>{t('profile.bio')}</label>
         <textarea
           rows={3}
           maxLength={500}
           value={bio}
           onChange={(e) => setBio(e.target.value)}
           className={`${inputClass} resize-y`}
-          placeholder="Tell the community about yourself…"
+          placeholder={t('profile.bioPlaceholder')}
         />
         <p className="mt-1 text-xs text-muted-foreground">{bio.length}/500</p>
       </div>
 
       <div>
-        <label className={labelClass}>Avatar URL</label>
+        <label className={labelClass}>{t('profile.avatarUrl')}</label>
         <input
           type="url"
           value={avatarUrl}
@@ -123,35 +126,35 @@ export function ProfileForm({ token: _token, initialValues }: ProfileFormProps) 
 
       {/* Social Profiles */}
       <div className="border-t border-border pt-6">
-        <h3 className="mb-4 text-sm font-semibold text-surface-foreground">Social Profiles</h3>
+        <h3 className="mb-4 text-sm font-semibold text-surface-foreground">{t('profile.socialTitle')}</h3>
         <div className="space-y-4">
           <div>
-            <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Twitter / X</label>
+            <label className="mb-1.5 block text-xs font-medium text-muted-foreground">{t('profile.twitter')}</label>
             <input
               type="text"
               value={twitterHandle}
               onChange={(e) => setTwitterHandle(e.target.value)}
-              placeholder="@yourhandle"
+              placeholder={t('profile.twitterPlaceholder')}
               className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-surface-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
           <div>
-            <label className="mb-1.5 block text-xs font-medium text-muted-foreground">LinkedIn</label>
+            <label className="mb-1.5 block text-xs font-medium text-muted-foreground">{t('profile.linkedin')}</label>
             <input
               type="text"
               value={linkedinUrl}
               onChange={(e) => setLinkedinUrl(e.target.value)}
-              placeholder="linkedin.com/in/yourname"
+              placeholder={t('profile.linkedinPlaceholder')}
               className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-surface-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
           <div>
-            <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Reddit</label>
+            <label className="mb-1.5 block text-xs font-medium text-muted-foreground">{t('profile.reddit')}</label>
             <input
               type="text"
               value={redditUsername}
               onChange={(e) => setRedditUsername(e.target.value)}
-              placeholder="u/yourname"
+              placeholder={t('profile.redditPlaceholder')}
               className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-surface-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
@@ -166,7 +169,7 @@ export function ProfileForm({ token: _token, initialValues }: ProfileFormProps) 
 
       {success && (
         <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
-          Profile updated!
+          {t('profile.success')}
         </div>
       )}
 
@@ -175,7 +178,7 @@ export function ProfileForm({ token: _token, initialValues }: ProfileFormProps) 
         disabled={isPending || !displayName.trim()}
         className="rounded-lg bg-brand px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
       >
-        {isPending ? 'Saving…' : 'Save changes'}
+        {isPending ? t('profile.saving') : t('profile.saveBtn')}
       </button>
     </form>
   )

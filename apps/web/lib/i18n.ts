@@ -48,6 +48,40 @@ export const dictionary = {
     'settings.account.title': 'Account',
     'settings.account.desc': 'Email and password are managed through your identity provider.',
     'settings.account.signedIn': 'Signed in as',
+
+    // Profile Form
+    'profile.displayName': 'Display name',
+    'profile.displayNamePlaceholder': 'Your name',
+    'profile.username': 'Username',
+    'profile.usernamePlaceholder': 'username',
+    'profile.usernameHint': 'Lowercase letters, numbers, _ and - only',
+    'profile.bio': 'Bio',
+    'profile.bioPlaceholder': 'Tell the community about yourself…',
+    'profile.avatarUrl': 'Avatar URL',
+    'profile.socialTitle': 'Social Profiles',
+    'profile.twitter': 'Twitter / X',
+    'profile.twitterPlaceholder': '@yourhandle',
+    'profile.linkedin': 'LinkedIn',
+    'profile.linkedinPlaceholder': 'linkedin.com/in/yourname',
+    'profile.reddit': 'Reddit',
+    'profile.redditPlaceholder': 'u/yourname',
+    'profile.errorDefault': 'Something went wrong.',
+    'profile.success': 'Profile updated!',
+    'profile.saving': 'Saving…',
+    'profile.saveBtn': 'Save changes',
+
+    // Search Modal
+    'search.placeholder': 'Search forums, ideas, members, events…',
+    'search.start': 'Start typing to search',
+    'search.loading': 'Searching…',
+    'search.noResults': 'No results for',
+
+    // Intelligence Subnav
+    'intelligence.inbox': 'Inbox',
+    'intelligence.sentiment': 'Sentiment',
+    'intelligence.competitors': 'Competitors',
+    'intelligence.advocates': 'Advocates',
+    'intelligence.alerts': 'Alerts',
   },
   ko: {
     // Sidebar
@@ -95,6 +129,40 @@ export const dictionary = {
     'settings.account.title': '내 계정 정보',
     'settings.account.desc': '이메일 주소 및 패스워드는 인증 공급업체를 통해 안전하게 관리됩니다.',
     'settings.account.signedIn': '로그인된 계정',
+
+    // Profile Form
+    'profile.displayName': '표시 이름',
+    'profile.displayNamePlaceholder': '이름을 입력해 주세요',
+    'profile.username': '사용자 아이디',
+    'profile.usernamePlaceholder': '사용자이름',
+    'profile.usernameHint': '영문 소문자, 숫자, _ 및 - 기호만 사용 가능합니다',
+    'profile.bio': '소개글',
+    'profile.bioPlaceholder': '나에 대한 소개글을 자유롭게 작성해 보세요…',
+    'profile.avatarUrl': '프로필 이미지 URL',
+    'profile.socialTitle': '소셜 네트워크 연동',
+    'profile.twitter': 'Twitter / X',
+    'profile.twitterPlaceholder': '@트위터아이디',
+    'profile.linkedin': 'LinkedIn',
+    'profile.linkedinPlaceholder': 'linkedin.com/in/이름',
+    'profile.reddit': 'Reddit',
+    'profile.redditPlaceholder': 'u/사용자이름',
+    'profile.errorDefault': '오류가 발생했습니다.',
+    'profile.success': '프로필 정보가 정상적으로 업데이트되었습니다!',
+    'profile.saving': '저장 중…',
+    'profile.saveBtn': '변경 사항 저장',
+
+    // Search Modal
+    'search.placeholder': '포럼, 건의사항, 멤버, 이벤트 등을 검색해 보세요…',
+    'search.start': '검색어를 입력해 주세요',
+    'search.loading': '검색 중…',
+    'search.noResults': '에 대한 검색 결과가 없습니다',
+
+    // Intelligence Subnav
+    'intelligence.inbox': '수신함',
+    'intelligence.sentiment': '긍부정 분석',
+    'intelligence.competitors': '경쟁사 분석',
+    'intelligence.advocates': '활동 회원',
+    'intelligence.alerts': '모니터링 알림',
   },
 } as const
 

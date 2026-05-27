@@ -63,11 +63,11 @@ const ALL_NAV_ITEMS: NavItem[] = [
 ]
 
 const INTELLIGENCE_SUBNAV = [
-  { label: 'Inbox', href: '/intelligence/inbox' },
-  { label: 'Sentiment', href: '/intelligence/sentiment' },
-  { label: 'Competitors', href: '/intelligence/competitors' },
-  { label: 'Advocates', href: '/intelligence/advocates' },
-  { label: 'Alerts', href: '/intelligence/alerts' },
+  { labelKey: 'intelligence.inbox', href: '/intelligence/inbox' },
+  { labelKey: 'intelligence.sentiment', href: '/intelligence/sentiment' },
+  { labelKey: 'intelligence.competitors', href: '/intelligence/competitors' },
+  { labelKey: 'intelligence.advocates', href: '/intelligence/advocates' },
+  { labelKey: 'intelligence.alerts', href: '/intelligence/alerts' },
 ]
 
 // ─── NavLink helper ───────────────────────────────────────────────────────────
@@ -158,6 +158,7 @@ export function Sidebar({
                   onClick={() => setMobileOpen(false)}
                 />
                 <div className="ml-7 mt-0.5 space-y-0.5">
+                  {/* [LOG: 20260527_1124] */}
                   {INTELLIGENCE_SUBNAV.map((sub) => (
                     <Link
                       key={sub.href}
@@ -170,7 +171,7 @@ export function Sidebar({
                           : 'text-muted-foreground hover:bg-muted hover:text-surface-foreground',
                       )}
                     >
-                      {sub.label}
+                      {t(sub.labelKey as DictionaryKey)}
                     </Link>
                   ))}
                 </div>

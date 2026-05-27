@@ -286,6 +286,7 @@ function SearchModal({
   onClose: () => void
   token?: string | undefined
 }) {
+  const { t, lang: currentLang } = useTranslation()
   const inputRef = useRef<HTMLInputElement>(null)
   const [results, setResults] = useState<SearchResults | null>(null)
   const [loading, setLoading] = useState(false)
@@ -329,13 +330,14 @@ function SearchModal({
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
     >
       <div className="w-full max-w-xl rounded-2xl border border-border bg-card shadow-2xl">
+        {/* [LOG: 20260527_1122] */}
         {/* Input */}
         <div className="flex items-center gap-3 border-b border-border px-4 py-3">
           <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
           <input
             ref={inputRef}
             type="search"
-            placeholder="Search forums, ideas, members, events…"
+            placeholder={t('search.placeholder')}
             value={query}
             onChange={(e) => onQueryChange(e.target.value)}
             className="flex-1 bg-transparent text-sm text-surface-foreground placeholder:text-muted-foreground outline-none"
@@ -356,13 +358,13 @@ function SearchModal({
         <div className="max-h-[400px] overflow-y-auto">
           {!query || query.trim().length < 2 ? (
             <div className="px-4 py-6 text-center text-sm text-muted-foreground">
-              Start typing to search
+              {t('search.start')}
             </div>
           ) : loading && !results ? (
-            <div className="px-4 py-6 text-center text-sm text-muted-foreground">Searching…</div>
+            <div className="px-4 py-6 text-center text-sm text-muted-foreground">{t('search.loading')}</div>
           ) : !hasResults ? (
             <div className="px-4 py-6 text-center text-sm text-muted-foreground">
-              No results for &quot;{query}&quot;
+              {currentLang === 'ko' ? `"${query}"${t('search.noResults')}` : `${t('search.noResults')} "${query}"`}
             </div>
           ) : (
             <div className="py-2">
