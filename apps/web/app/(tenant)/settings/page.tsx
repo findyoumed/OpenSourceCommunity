@@ -1,3 +1,4 @@
+// [LOG: 20260527_1033]
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { apiGet } from '@/lib/api'
@@ -6,6 +7,7 @@ import Link from 'next/link'
 import { Bell } from 'lucide-react'
 import { ProfileForm } from '../profile/profile-form'
 import { LanguageSelect } from './language-select'
+import { t } from '@/lib/i18n'
 
 export const metadata: Metadata = { title: 'Settings' }
 
@@ -19,7 +21,6 @@ interface MemberProfile {
   language: string | null
   socialHandles?: Record<string, string>
 }
-
 
 export default async function SettingsPage() {
   const supabase = await createClient()
@@ -40,17 +41,27 @@ export default async function SettingsPage() {
     )
   }
 
+  const userLanguage = profile.language ?? 'en'
+
   return (
     <div className="space-y-8 max-w-2xl">
       <div>
-        <h1 className="text-2xl font-bold text-surface-foreground">Settings</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Manage your profile, language, and account preferences</p>
+        <h1 className="text-2xl font-bold text-surface-foreground">
+          {t('settings.title', userLanguage)}
+        </h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {t('settings.subtitle', userLanguage)}
+        </p>
       </div>
 
       {/* ── Edit Profile ───────────────────────────────────────────────────── */}
       <section className="rounded-xl border border-border bg-card p-6">
-        <h2 className="mb-1 text-base font-semibold text-surface-foreground">Edit Profile</h2>
-        <p className="mb-5 text-sm text-muted-foreground">This is what other members see when they view your profile.</p>
+        <h2 className="mb-1 text-base font-semibold text-surface-foreground">
+          {t('settings.profile.title', userLanguage)}
+        </h2>
+        <p className="mb-5 text-sm text-muted-foreground">
+          {t('settings.profile.desc', userLanguage)}
+        </p>
         <ProfileForm
           token={token}
           initialValues={{
@@ -65,10 +76,11 @@ export default async function SettingsPage() {
 
       {/* ── Language ───────────────────────────────────────────────────────── */}
       <section className="rounded-xl border border-border bg-card p-6">
-        <h2 className="mb-1 text-base font-semibold text-surface-foreground">Language</h2>
+        <h2 className="mb-1 text-base font-semibold text-surface-foreground">
+          {t('settings.language.title', userLanguage)}
+        </h2>
         <p className="mb-5 text-sm text-muted-foreground">
-          Content in forums and other modules will be translated to your chosen language on demand.
-          You can also change this any time using the globe icon in the top bar.
+          {t('settings.language.desc', userLanguage)}
         </p>
         <LanguageSelect current={profile.language} token={token} />
       </section>
@@ -77,31 +89,40 @@ export default async function SettingsPage() {
       <section className="rounded-xl border border-border bg-card p-6">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h2 className="mb-1 text-base font-semibold text-surface-foreground">Notifications</h2>
-            <p className="text-sm text-muted-foreground">Control which emails and in-app alerts you receive.</p>
+            <h2 className="mb-1 text-base font-semibold text-surface-foreground">
+              {t('settings.notifications.title', userLanguage)}
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              {t('settings.notifications.desc', userLanguage)}
+            </p>
           </div>
           <Link
             href="/settings/notifications"
             className="flex shrink-0 items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-medium text-surface-foreground hover:bg-muted transition-colors"
           >
             <Bell className="h-4 w-4" />
-            Manage
+            {t('settings.notifications.manage', userLanguage)}
           </Link>
         </div>
       </section>
 
       {/* ── Account ────────────────────────────────────────────────────────── */}
       <section className="rounded-xl border border-border bg-card p-6">
-        <h2 className="mb-1 text-base font-semibold text-surface-foreground">Account</h2>
+        <h2 className="mb-1 text-base font-semibold text-surface-foreground">
+          {t('settings.account.title', userLanguage)}
+        </h2>
         <p className="mb-4 text-sm text-muted-foreground">
-          Email and password are managed through your identity provider.
+          {t('settings.account.desc', userLanguage)}
         </p>
         <div className="rounded-lg bg-muted border border-border px-4 py-3">
-          <p className="text-xs text-muted-foreground">Signed in as</p>
+          <p className="text-xs text-muted-foreground">
+            {t('settings.account.signedIn', userLanguage)}
+          </p>
           <p className="text-sm font-medium text-surface-foreground">{session.user.email}</p>
         </div>
       </section>
     </div>
   )
 }
+
 

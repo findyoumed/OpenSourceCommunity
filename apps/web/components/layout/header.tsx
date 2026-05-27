@@ -1,14 +1,16 @@
 'use client'
 
+// [LOG: 20260527_1025]
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Search, Bell, LogOut, User, Settings, Languages, Check } from 'lucide-react'
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
 import { createClient } from '@/lib/supabase/client'
-import { apiClientGet, apiClientPatch } from '@/lib/api-client'
+import { apiClientGet } from '@/lib/api-client'
 import { cn } from '@/lib/utils'
 import { Avatar } from '@/components/ui/avatar'
+import { useTranslation, type Locale } from '@/lib/i18n-context'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -27,20 +29,7 @@ export interface HeaderProps {
 
 const LANGUAGES = [
   { code: 'en', label: 'English' },
-  { code: 'es', label: 'Español' },
-  { code: 'fr', label: 'Français' },
-  { code: 'de', label: 'Deutsch' },
-  { code: 'pt', label: 'Português' },
-  { code: 'it', label: 'Italiano' },
-  { code: 'ja', label: '日本語' },
   { code: 'ko', label: '한국어' },
-  { code: 'zh', label: '中文' },
-  { code: 'ar', label: 'العربية' },
-  { code: 'nl', label: 'Nederlands' },
-  { code: 'pl', label: 'Polski' },
-  { code: 'ru', label: 'Русский' },
-  { code: 'tr', label: 'Türkçe' },
-  { code: 'sv', label: 'Svenska' },
 ]
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -51,17 +40,16 @@ export function Header({
   userName,
   userAvatarUrl,
   userEmail,
-  userLanguage,
   unreadCount = 0,
   token,
 }: HeaderProps) {
   const router = useRouter()
   const supabase = createClient()
+  const { lang: currentLang, t, changeLanguage } = useTranslation()
 
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [langMenuOpen, setLangMenuOpen] = useState(false)
-  const [currentLang, setCurrentLang] = useState<string | null>(userLanguage ?? null)
 
   // Close lang menu on outside click (capture=false so the button toggle fires first)
   useEffect(() => {
@@ -77,15 +65,9 @@ export function Header({
   }, [langMenuOpen])
 
   async function handleLanguageChange(code: string) {
-    const newLang = code === 'en' ? null : code
-    setCurrentLang(newLang)
     setLangMenuOpen(false)
-    try {
-      await apiClientPatch('/api/me', { language: newLang })
-      router.refresh()
-    } catch {
-      // silent — preference still updated locally
-    }
+    await changeLanguage(code as Locale)
+    router.refresh()
   }
 
   async function handleSignOut() {
@@ -126,7 +108,7 @@ export function Header({
             aria-label="Search"
           >
             <Search className="h-4 w-4 shrink-0" />
-            <span className="hidden sm:inline">Search…</span>
+            <span className="hidden sm:inline">{t('header.search')}</span>
             <kbd className="hidden sm:inline rounded border border-border px-1 text-xs text-muted-foreground">
               ⌘K
             </kbd>
@@ -137,18 +119,18 @@ export function Header({
             <button
               type="button"
               onClick={() => setLangMenuOpen((v) => !v)}
-              className="flex items-center gap-1 rounded-lg p-2 text-muted-foreground hover:bg-muted transition-colors"
+              className="flex items-center gap-1 rounded-lg p-2 text-muted-foreground hover:bg-muted transition-colors animate-pulse"
               aria-label="Change language"
             >
-              <Languages className="h-5 w-5" />
+              <Languages className="h-5 w-5 text-brand" />
               {currentLang && currentLang !== 'en' && (
-                <span className="hidden sm:inline text-xs font-medium text-brand uppercase">{currentLang}</span>
+                <span className="hidden sm:inline text-xs font-semibold text-brand uppercase">{currentLang}</span>
               )}
             </button>
             {langMenuOpen && (
               <div className="absolute right-0 top-full mt-1 z-50 w-48 rounded-xl border border-border bg-card shadow-lg py-1">
                 {LANGUAGES.map((lang) => {
-                  const active = lang.code === 'en' ? !currentLang || currentLang === 'en' : currentLang === lang.code
+                  const active = lang.code === currentLang
                   return (
                     <button
                       key={lang.code}
@@ -219,7 +201,7 @@ export function Header({
                       className={cn(dropdownItemCls)}
                     >
                       <User className="h-4 w-4" />
-                      Profile
+                      {t('header.profile')}
                     </Link>
                   </DropdownMenu.Item>
                   <DropdownMenu.Item asChild>
@@ -228,7 +210,7 @@ export function Header({
                       className={cn(dropdownItemCls)}
                     >
                       <Settings className="h-4 w-4" />
-                      Settings
+                      {t('header.settings')}
                     </Link>
                   </DropdownMenu.Item>
                 </DropdownMenu.Group>
@@ -243,7 +225,7 @@ export function Header({
                       className="flex w-full cursor-pointer items-center gap-2 px-4 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors outline-none"
                     >
                       <LogOut className="h-4 w-4" />
-                      Sign out
+                      {t('header.signout')}
                     </button>
                   </DropdownMenu.Item>
                 </DropdownMenu.Group>
@@ -252,6 +234,7 @@ export function Header({
           </DropdownMenu.Root>
         </div>
       </header>
+
 
       {/* ── Search modal ──────────────────────────────────────────────────── */}
       {searchOpen && (

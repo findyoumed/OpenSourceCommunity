@@ -1,3 +1,4 @@
+// [LOG: 20260527_1034]
 import Link from 'next/link'
 import { MessageSquare } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
@@ -6,6 +7,7 @@ import type { Metadata } from 'next'
 import { PageHeader } from '@/components/ui/page-header'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
+import { t } from '@/lib/i18n'
 
 export const metadata: Metadata = { title: 'Forums' }
 
@@ -45,9 +47,15 @@ export default async function ForumsPage() {
 
   let categories: ForumCategory[] = []
   let fetchError = false
+  let userLanguage = 'en'
 
   try {
-    categories = await apiGet<ForumCategory[]>('/api/forums/categories', token)
+    const [cats, profile] = await Promise.all([
+      apiGet<ForumCategory[]>('/api/forums/categories', token),
+      apiGet<{ language: string | null }>('/api/me', token, 60)
+    ])
+    categories = cats
+    userLanguage = profile?.language ?? 'en'
   } catch {
     fetchError = true
   }
@@ -55,29 +63,29 @@ export default async function ForumsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Forums"
-        description="Browse discussions by category"
+        title={t('forums.title', userLanguage)}
+        description={t('forums.description', userLanguage)}
         action={
           <Button asChild>
-            <Link href="/forums/new">New discussion</Link>
+            <Link href="/forums/new">{t('forums.newBtn', userLanguage)}</Link>
           </Button>
         }
       />
 
       {fetchError && (
         <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-          Failed to load forum categories. Please try refreshing the page.
+          {t('forums.error', userLanguage)}
         </div>
       )}
 
       {!fetchError && categories.length === 0 && (
         <EmptyState
           icon={<MessageSquare className="h-6 w-6" />}
-          title="No discussions yet"
-          description="Be the first to start a discussion in your community."
+          title={t('forums.emptyTitle', userLanguage)}
+          description={t('forums.emptyDesc', userLanguage)}
           action={
             <Button asChild>
-              <Link href="/forums/new">Start the first discussion →</Link>
+              <Link href="/forums/new">{t('forums.emptyAction', userLanguage)}</Link>
             </Button>
           }
         />
@@ -106,11 +114,11 @@ export default async function ForumsPage() {
 
                     {cat.lastThread && (
                       <p className="mt-1.5 text-xs text-muted-foreground">
-                        Latest:{' '}
+                        {t('forums.latest', userLanguage)}:{' '}
                         <span className="text-surface-foreground font-medium">
                           {cat.lastThread.title}
                         </span>{' '}
-                        by {cat.lastThread.authorName}
+                        {t('forums.by', userLanguage)} {cat.lastThread.authorName}
                       </p>
                     )}
                   </div>
@@ -121,13 +129,13 @@ export default async function ForumsPage() {
                         <p className="text-base font-bold text-surface-foreground">
                           {cat.threadCount.toLocaleString()}
                         </p>
-                        threads
+                        {t('forums.threads', userLanguage)}
                       </div>
                       <div>
                         <p className="text-base font-bold text-surface-foreground">
                           {cat.postCount.toLocaleString()}
                         </p>
-                        posts
+                        {t('forums.posts', userLanguage)}
                       </div>
                     </div>
                     {cat.lastActivityAt && (
@@ -145,3 +153,4 @@ export default async function ForumsPage() {
     </div>
   )
 }
+

@@ -1,5 +1,6 @@
 'use client'
 
+// [LOG: 20260527_1015]
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
@@ -19,6 +20,7 @@ import {
   X,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useTranslation, type DictionaryKey } from '@/lib/i18n-context'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -42,22 +44,22 @@ export interface SidebarProps {
 // ─── Navigation items ─────────────────────────────────────────────────────────
 
 interface NavItem {
-  label: string
+  labelKey: DictionaryKey
   href: string
   icon: React.ElementType
   module?: ModuleKey
 }
 
 const ALL_NAV_ITEMS: NavItem[] = [
-  { label: 'Home', href: '/home', icon: Home },
-  { label: 'Forums', href: '/forums', icon: MessageSquare, module: 'forums' },
-  { label: 'Ideas', href: '/ideas', icon: Lightbulb, module: 'ideas' },
-  { label: 'Events', href: '/events', icon: Calendar, module: 'events' },
-  { label: 'Knowledge Base', href: '/kb', icon: BookOpen, module: 'kb' },
-  { label: 'Courses', href: '/courses', icon: GraduationCap, module: 'courses' },
-  { label: 'Webinars', href: '/webinars', icon: Video, module: 'webinars' },
-  { label: 'Chat', href: '/chat', icon: MessageCircle, module: 'chat' },
-  { label: 'Intelligence', href: '/intelligence', icon: Brain, module: 'intelligence' },
+  { labelKey: 'nav.home', href: '/home', icon: Home },
+  { labelKey: 'nav.forums', href: '/forums', icon: MessageSquare, module: 'forums' },
+  { labelKey: 'nav.ideas', href: '/ideas', icon: Lightbulb, module: 'ideas' },
+  { labelKey: 'nav.events', href: '/events', icon: Calendar, module: 'events' },
+  { labelKey: 'nav.kb', href: '/kb', icon: BookOpen, module: 'kb' },
+  { labelKey: 'nav.courses', href: '/courses', icon: GraduationCap, module: 'courses' },
+  { labelKey: 'nav.webinars', href: '/webinars', icon: Video, module: 'webinars' },
+  { labelKey: 'nav.chat', href: '/chat', icon: MessageCircle, module: 'chat' },
+  { labelKey: 'nav.intelligence', href: '/intelligence', icon: Brain, module: 'intelligence' },
 ]
 
 const INTELLIGENCE_SUBNAV = [
@@ -109,6 +111,7 @@ export function Sidebar({
   tenantLogoUrl,
 }: SidebarProps) {
   const pathname = usePathname()
+  const { t } = useTranslation()
   const [mobileOpen, setMobileOpen] = useState(false)
 
   const visibleItems = ALL_NAV_ITEMS.filter(
@@ -149,7 +152,7 @@ export function Sidebar({
               <div key={item.href}>
                 <NavLink
                   href={item.href}
-                  label={item.label}
+                  label={t(item.labelKey)}
                   icon={item.icon}
                   active={active}
                   onClick={() => setMobileOpen(false)}
@@ -179,7 +182,7 @@ export function Sidebar({
             <NavLink
               key={item.href}
               href={item.href}
-              label={item.label}
+              label={t(item.labelKey)}
               icon={item.icon}
               active={isActive(item.href)}
               onClick={() => setMobileOpen(false)}
@@ -192,7 +195,7 @@ export function Sidebar({
       <div className="space-y-0.5 border-t border-border px-2 py-4">
         <NavLink
           href="/members"
-          label="Members"
+          label={t('nav.members')}
           icon={Users}
           active={isActive('/members')}
           onClick={() => setMobileOpen(false)}
@@ -200,7 +203,7 @@ export function Sidebar({
         {isAdmin && (
           <NavLink
             href="/admin"
-            label="Admin"
+            label={t('nav.admin')}
             icon={Settings}
             active={isActive('/admin')}
             onClick={() => setMobileOpen(false)}
@@ -209,6 +212,7 @@ export function Sidebar({
       </div>
     </nav>
   )
+
 
   return (
     <>

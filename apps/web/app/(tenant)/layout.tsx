@@ -1,8 +1,10 @@
+// [LOG: 20260527_1013]
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { apiGet } from '@/lib/api'
 import { Sidebar, type ModuleKey } from '@/components/layout/sidebar'
 import { Header } from '@/components/layout/header'
+import { TranslationProvider } from '@/lib/i18n-context'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -71,30 +73,33 @@ export default async function TenantLayout({
     : undefined
 
   return (
-    <div className="min-h-screen bg-muted/30" style={brandStyle}>
-      {/* Sidebar */}
-      <Sidebar
-        enabledModules={tenantConfig.enabledModules}
-        isAdmin={isAdmin}
-        tenantName={tenantConfig.name}
-        tenantLogoUrl={tenantConfig.logoUrl ?? null}
-      />
+    <TranslationProvider initialLang={memberProfile?.language ?? 'en'}>
+      <div className="min-h-screen bg-muted/30" style={brandStyle}>
+        {/* Sidebar */}
+        <Sidebar
+          enabledModules={tenantConfig.enabledModules}
+          isAdmin={isAdmin}
+          tenantName={tenantConfig.name}
+          tenantLogoUrl={tenantConfig.logoUrl ?? null}
+        />
 
-      {/* Header */}
-      <Header
-        tenantName={tenantConfig.name}
-        tenantLogoUrl={tenantConfig.logoUrl ?? null}
-        userName={memberProfile?.displayName}
-        userAvatarUrl={memberProfile?.avatarUrl}
-        userEmail={user.email}
-        userLanguage={memberProfile?.language ?? null}
-        token={token}
-      />
+        {/* Header */}
+        <Header
+          tenantName={tenantConfig.name}
+          tenantLogoUrl={tenantConfig.logoUrl ?? null}
+          userName={memberProfile?.displayName}
+          userAvatarUrl={memberProfile?.avatarUrl}
+          userEmail={user.email}
+          userLanguage={memberProfile?.language ?? null}
+          token={token}
+        />
 
-      {/* Main content — offset by sidebar width on desktop, header height on all viewports */}
-      <main className="lg:pl-64 pt-16">
-        <div className="mx-auto max-w-5xl px-4 py-6 lg:px-8">{children}</div>
-      </main>
-    </div>
+        {/* Main content — offset by sidebar width on desktop, header height on all viewports */}
+        <main className="lg:pl-64 pt-16">
+          <div className="mx-auto max-w-5xl px-4 py-6 lg:px-8">{children}</div>
+        </main>
+      </div>
+    </TranslationProvider>
   )
 }
+
