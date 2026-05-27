@@ -119,12 +119,17 @@ export default async function WebinarDetailPage({
   let userLanguage = 'en'
 
   try {
-    const [detail, profile] = await Promise.all([
-      apiGet<WebinarDetail>(`/api/webinars/${webinarId}`, token),
-      apiGet<{ language: string | null }>('/api/me', token, 60),
-    ])
-    webinar = detail
-    userLanguage = profile?.language ?? 'en'
+    // [LOG: 20260527_1730]
+    if (token) {
+      const [detail, profile] = await Promise.all([
+        apiGet<WebinarDetail>(`/api/webinars/${webinarId}`, token),
+        apiGet<{ language: string | null }>('/api/me', token, 60),
+      ])
+      webinar = detail
+      userLanguage = profile?.language ?? 'en'
+    } else {
+      webinar = await apiGet<WebinarDetail>(`/api/webinars/${webinarId}`, undefined)
+    }
   } catch (err: unknown) {
     if ((err as { status?: number }).status === 404) notFound()
     fetchError = true
@@ -308,8 +313,8 @@ export default async function WebinarDetailPage({
                 href="/login"
                 className="inline-flex items-center rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white hover:opacity-90 transition-colors"
               >
-                {t('header.signout') /* Temporary fix: use signout key to mean login? No, let's use a proper key if available. Oh wait, I don't have a 'signin' key in ko. */}
-                {userLanguage === 'ko' ? '로그인' : 'Sign in'}
+                {/* [LOG: 20260527_1740] Fixed label to use correct header.signin translation */}
+                {t('header.signin', userLanguage)}
               </Link>
             </div>
           )}

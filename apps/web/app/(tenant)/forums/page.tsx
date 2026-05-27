@@ -13,10 +13,12 @@ export async function generateMetadata(): Promise<Metadata> {
   const supabase = await createClient()
   const token = (await supabase.auth.getSession()).data.session?.access_token
   let lang = 'en'
-  try {
-    const profile = await apiGet<{ language: string | null }>('/api/me', token, 60)
-    lang = profile?.language ?? 'en'
-  } catch {}
+  if (token) {
+    try {
+      const profile = await apiGet<{ language: string | null }>('/api/me', token, 60)
+      lang = profile?.language ?? 'en'
+    } catch {}
+  }
   return { title: t('nav.forums', lang) }
 }
 
@@ -59,12 +61,17 @@ export default async function ForumsPage() {
   let userLanguage = 'en'
 
   try {
-    const [cats, profile] = await Promise.all([
-      apiGet<ForumCategory[]>('/api/forums/categories', token),
-      apiGet<{ language: string | null }>('/api/me', token, 60)
-    ])
-    categories = cats
-    userLanguage = profile?.language ?? 'en'
+    // [LOG: 20260527_1701]
+    if (token) {
+      const [cats, profile] = await Promise.all([
+        apiGet<ForumCategory[]>('/api/forums/categories', token),
+        apiGet<{ language: string | null }>('/api/me', token, 60)
+      ])
+      categories = cats
+      userLanguage = profile?.language ?? 'en'
+    } else {
+      categories = await apiGet<ForumCategory[]>('/api/forums/categories', undefined)
+    }
   } catch {
     fetchError = true
   }

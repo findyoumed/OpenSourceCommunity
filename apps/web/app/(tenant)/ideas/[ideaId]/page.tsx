@@ -128,12 +128,17 @@ export default async function IdeaDetailPage({
   let userLanguage = 'en'
 
   try {
-    const [detailData, profile] = await Promise.all([
-      apiGet<IdeaDetailResponse>(`/api/ideas/${ideaId}`, token),
-      apiGet<{ language: string | null }>('/api/me', token, 60),
-    ])
-    detail = detailData
-    userLanguage = profile?.language ?? 'en'
+    // [LOG: 20260527_1723]
+    if (token) {
+      const [detailData, profile] = await Promise.all([
+        apiGet<IdeaDetailResponse>(`/api/ideas/${ideaId}`, token),
+        apiGet<{ language: string | null }>('/api/me', token, 60),
+      ])
+      detail = detailData
+      userLanguage = profile?.language ?? 'en'
+    } else {
+      detail = await apiGet<IdeaDetailResponse>(`/api/ideas/${ideaId}`, undefined)
+    }
   } catch {
     notFound()
   }

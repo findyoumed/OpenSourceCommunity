@@ -13,10 +13,12 @@ export async function generateMetadata(): Promise<Metadata> {
   const supabase = await createClient()
   const token = (await supabase.auth.getSession()).data.session?.access_token
   let lang = 'en'
-  try {
-    const profile = await apiGet<{ language: string | null }>('/api/me', token, 60)
-    lang = profile?.language ?? 'en'
-  } catch {}
+  if (token) {
+    try {
+      const profile = await apiGet<{ language: string | null }>('/api/me', token, 60)
+      lang = profile?.language ?? 'en'
+    } catch {}
+  }
   return { title: t('nav.webinars', lang) }
 }
 
@@ -111,16 +113,28 @@ export default async function WebinarsPage() {
   let userLanguage = 'en'
 
   try {
-    const [u, p, l, profile] = await Promise.all([
-      fetchWebinars('scheduled', token),
-      fetchWebinars('ended', token),
-      fetchWebinars('live', token),
-      apiGet<{ language: string | null }>('/api/me', token, 60),
-    ])
-    upcoming = u
-    past = p
-    live = l
-    userLanguage = profile?.language ?? 'en'
+    // [LOG: 20260527_1717]
+    if (token) {
+      const [u, p, l, profile] = await Promise.all([
+        fetchWebinars('scheduled', token),
+        fetchWebinars('ended', token),
+        fetchWebinars('live', token),
+        apiGet<{ language: string | null }>('/api/me', token, 60),
+      ])
+      upcoming = u
+      past = p
+      live = l
+      userLanguage = profile?.language ?? 'en'
+    } else {
+      const [u, p, l] = await Promise.all([
+        fetchWebinars('scheduled', undefined),
+        fetchWebinars('ended', undefined),
+        fetchWebinars('live', undefined),
+      ])
+      upcoming = u
+      past = p
+      live = l
+    }
   } catch {}
 
   return (

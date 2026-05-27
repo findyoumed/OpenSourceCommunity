@@ -13,10 +13,12 @@ export async function generateMetadata(): Promise<Metadata> {
   const supabase = await createClient()
   const token = (await supabase.auth.getSession()).data.session?.access_token
   let lang = 'en'
-  try {
-    const profile = await apiGet<{ language: string | null }>('/api/me', token, 60)
-    lang = profile?.language ?? 'en'
-  } catch {}
+  if (token) {
+    try {
+      const profile = await apiGet<{ language: string | null }>('/api/me', token, 60)
+      lang = profile?.language ?? 'en'
+    } catch {}
+  }
   return { title: t('courses.title', lang) }
 }
 
@@ -69,12 +71,17 @@ export default async function CoursesPage() {
   let userLanguage = 'en'
 
   try {
-    const [courses, profile] = await Promise.all([
-      apiGet<CourseListItem[]>('/api/courses', token),
-      apiGet<{ language: string | null }>('/api/me', token, 60),
-    ])
-    items = courses
-    userLanguage = profile?.language ?? 'en'
+    // [LOG: 20260527_1715]
+    if (token) {
+      const [courses, profile] = await Promise.all([
+        apiGet<CourseListItem[]>('/api/courses', token),
+        apiGet<{ language: string | null }>('/api/me', token, 60),
+      ])
+      items = courses
+      userLanguage = profile?.language ?? 'en'
+    } else {
+      items = await apiGet<CourseListItem[]>('/api/courses', undefined)
+    }
   } catch (err) {
     if (err instanceof ApiError && (err.status === 403 || err.status === 404)) {
       moduleDisabled = true

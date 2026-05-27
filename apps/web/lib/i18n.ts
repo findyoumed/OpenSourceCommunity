@@ -21,6 +21,7 @@ export const dictionary = {
     'header.profile': 'Profile',
     'header.settings': 'Settings',
     'header.signout': 'Sign out',
+    'header.signin': 'Sign in',
 
     // Forums Page
     'forums.title': 'Forums',
@@ -693,6 +694,7 @@ export const dictionary = {
     'header.profile': '내 프로필',
     'header.settings': '개인 설정',
     'header.signout': '로그아웃',
+    'header.signin': '로그인',
 
     // Forums Page
     'forums.title': '포럼 게시판',

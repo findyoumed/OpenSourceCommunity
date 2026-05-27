@@ -11,10 +11,12 @@ export async function generateMetadata(): Promise<Metadata> {
   const supabase = await createClient()
   const token = (await supabase.auth.getSession()).data.session?.access_token
   let lang = 'en'
-  try {
-    const profile = await apiGet<{ language: string | null }>('/api/me', token, 60)
-    lang = profile?.language ?? 'en'
-  } catch {}
+  if (token) {
+    try {
+      const profile = await apiGet<{ language: string | null }>('/api/me', token, 60)
+      lang = profile?.language ?? 'en'
+    } catch {}
+  }
   return { title: t('kb.title', lang) }
 }
 
@@ -42,12 +44,17 @@ export default async function KbPage() {
   let userLanguage = 'en'
 
   try {
-    const [cats, profile] = await Promise.all([
-      apiGet<KbCategory[]>('/api/kb/categories', token),
-      apiGet<{ language: string | null }>('/api/me', token, 60),
-    ])
-    categories = cats
-    userLanguage = profile?.language ?? 'en'
+    // [LOG: 20260527_1707]
+    if (token) {
+      const [cats, profile] = await Promise.all([
+        apiGet<KbCategory[]>('/api/kb/categories', token),
+        apiGet<{ language: string | null }>('/api/me', token, 60),
+      ])
+      categories = cats
+      userLanguage = profile?.language ?? 'en'
+    } else {
+      categories = await apiGet<KbCategory[]>('/api/kb/categories', undefined)
+    }
   } catch {
     fetchError = true
   }

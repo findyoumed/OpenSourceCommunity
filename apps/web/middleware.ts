@@ -13,7 +13,21 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // ── Paths that never require authentication ────────────────────────────────
-  const publicPrefixes = ['/', '/login', '/signup', '/auth', '/setup', '/home']
+  const publicPrefixes = [
+    '/',
+    '/login',
+    '/signup',
+    '/auth',
+    '/setup',
+    '/home',
+    '/forums',
+    '/ideas',
+    '/events',
+    '/kb',
+    '/courses',
+    '/webinars',
+    '/chat',
+  ]
   const isPublic =
     pathname === '/' ||
     publicPrefixes.some((p) => p !== '/' && pathname.startsWith(p)) ||

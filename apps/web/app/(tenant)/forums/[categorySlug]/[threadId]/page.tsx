@@ -143,11 +143,13 @@ export default async function ThreadPage({
 
   // Fetch member language preference (non-fatal)
   let memberLanguage: string | null = null
-  try {
-    const me = await apiGet<{ language?: string | null }>('/api/me', token, 60)
-    memberLanguage = me.language ?? null
-  } catch {
-    // not logged in or fetch failed — no translation
+  if (token) {
+    try {
+      const me = await apiGet<{ language?: string | null }>('/api/me', token, 60)
+      memberLanguage = me.language ?? null
+    } catch {
+      // not logged in or fetch failed — no translation
+    }
   }
 
   const { thread, posts } = detail

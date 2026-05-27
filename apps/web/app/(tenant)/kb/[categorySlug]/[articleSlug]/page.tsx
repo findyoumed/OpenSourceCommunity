@@ -129,12 +129,13 @@ export default async function KbArticlePage({
   let fetchError = false
   let userLanguage = 'en'
 
-  try {
-    const [profile] = await Promise.all([
-      apiGet<{ language: string | null }>('/api/me', token, 60),
-    ])
-    userLanguage = profile?.language ?? 'en'
-  } catch {}
+  // [LOG: 20260527_1727]
+  if (token) {
+    try {
+      const profile = await apiGet<{ language: string | null }>('/api/me', token, 60)
+      userLanguage = profile?.language ?? 'en'
+    } catch {}
+  }
 
   // First try by ID (UUID shape)
   const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i

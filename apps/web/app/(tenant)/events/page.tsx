@@ -14,10 +14,12 @@ export async function generateMetadata(): Promise<Metadata> {
   const supabase = await createClient()
   const token = (await supabase.auth.getSession()).data.session?.access_token
   let lang = 'en'
-  try {
-    const profile = await apiGet<{ language: string | null }>('/api/me', token, 60)
-    lang = profile?.language ?? 'en'
-  } catch {}
+  if (token) {
+    try {
+      const profile = await apiGet<{ language: string | null }>('/api/me', token, 60)
+      lang = profile?.language ?? 'en'
+    } catch {}
+  }
   return { title: t('events.title', lang) }
 }
 
@@ -113,12 +115,17 @@ export default async function EventsPage({
   let userLanguage = 'en'
 
   try {
-    const [rowsData, profile] = await Promise.all([
-      apiGet<EventListRow[]>('/api/events', token),
-      apiGet<{ language: string | null }>('/api/me', token, 60),
-    ])
-    rows = rowsData
-    userLanguage = profile?.language ?? 'en'
+    // [LOG: 20260527_1705]
+    if (token) {
+      const [rowsData, profile] = await Promise.all([
+        apiGet<EventListRow[]>('/api/events', token),
+        apiGet<{ language: string | null }>('/api/me', token, 60),
+      ])
+      rows = rowsData
+      userLanguage = profile?.language ?? 'en'
+    } else {
+      rows = await apiGet<EventListRow[]>('/api/events', undefined)
+    }
   } catch {
     fetchError = true
   }

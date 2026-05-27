@@ -9,10 +9,12 @@ export async function generateMetadata(): Promise<Metadata> {
   const supabase = await createClient()
   const token = (await supabase.auth.getSession()).data.session?.access_token
   let lang = 'en'
-  try {
-    const profile = await apiGet<{ language: string | null }>('/api/me', token, 60)
-    lang = profile?.language ?? 'en'
-  } catch {}
+  if (token) {
+    try {
+      const profile = await apiGet<{ language: string | null }>('/api/me', token, 60)
+      lang = profile?.language ?? 'en'
+    } catch {}
+  }
   return { title: t('chat.title', lang) }
 }
 
@@ -32,12 +34,17 @@ export default async function ChatPage() {
   let channels: Channel[] = []
   let userLanguage = 'en'
   try {
-    const [channelsData, profile] = await Promise.all([
-      apiGet<Channel[]>('/api/chat/channels', token, 0),
-      apiGet<{ language: string | null }>('/api/me', token, 60),
-    ])
-    channels = channelsData
-    userLanguage = profile?.language ?? 'en'
+    // [LOG: 20260527_1720]
+    if (token) {
+      const [channelsData, profile] = await Promise.all([
+        apiGet<Channel[]>('/api/chat/channels', token, 0),
+        apiGet<{ language: string | null }>('/api/me', token, 60),
+      ])
+      channels = channelsData
+      userLanguage = profile?.language ?? 'en'
+    } else {
+      channels = await apiGet<Channel[]>('/api/chat/channels', undefined, 0)
+    }
   } catch { /* show empty */ }
 
   return (

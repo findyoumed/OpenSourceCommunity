@@ -80,12 +80,17 @@ export default async function CourseDetailPage({
   let userLanguage = 'en'
 
   try {
-    const [detailData, profile] = await Promise.all([
-      apiGet<CourseDetailResponse>(`/api/courses/${courseId}`, token, 0),
-      apiGet<{ language: string | null }>('/api/me', token, 60),
-    ])
-    detail = detailData
-    userLanguage = profile?.language ?? 'en'
+    // [LOG: 20260527_1729]
+    if (token) {
+      const [detailData, profile] = await Promise.all([
+        apiGet<CourseDetailResponse>(`/api/courses/${courseId}`, token, 0),
+        apiGet<{ language: string | null }>('/api/me', token, 60),
+      ])
+      detail = detailData
+      userLanguage = profile?.language ?? 'en'
+    } else {
+      detail = await apiGet<CourseDetailResponse>(`/api/courses/${courseId}`, undefined, 0)
+    }
   } catch (err) {
     if (err instanceof ApiError && err.status === 404) notFound()
     throw err

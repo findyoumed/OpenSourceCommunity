@@ -50,12 +50,17 @@ export default async function TenantLayout({
   let memberProfile: MemberProfile | null = null
 
   try {
-    const [config, profile] = await Promise.all([
-      apiGet<TenantConfig>('/api/tenant', token, 300),
-      apiGet<MemberProfile>('/api/me', token, 60),
-    ])
-    tenantConfig = config
-    memberProfile = profile
+    // [LOG: 20260527_1657]
+    if (token) {
+      const [config, profile] = await Promise.all([
+        apiGet<TenantConfig>('/api/tenant', token, 300),
+        apiGet<MemberProfile>('/api/me', token, 60),
+      ])
+      tenantConfig = config
+      memberProfile = profile
+    } else {
+      tenantConfig = await apiGet<TenantConfig>('/api/tenant', undefined, 300)
+    }
   } catch (err) {
     // Non-fatal — fall back to defaults so the shell still renders.
     console.error('[TenantLayout] Failed to fetch tenant config or profile:', err)

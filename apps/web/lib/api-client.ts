@@ -10,7 +10,8 @@
 import { createClient } from '@/lib/supabase/client'
 import { ApiError } from './api'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8787'
+// [LOG: 20260527_1711] Use 127.0.0.1 loopback for reliable IPv4 resolution on Windows dev environments
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://127.0.0.1:8787'
 const TENANT_SLUG = process.env.NEXT_PUBLIC_TENANT_SLUG
 
 interface ApiEnvelope<T> {

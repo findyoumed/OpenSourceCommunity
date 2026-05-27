@@ -77,13 +77,19 @@ export default async function CommunityHomePage() {
   let userLang: string | null | undefined = 'en'
 
   try {
-    const [data, profile] = await Promise.all([
-      apiGet<TenantConfig>('/api/tenant', token, 300),
-      apiGet<MemberProfile>('/api/me', token, 60),
-    ])
-    if (data) tenantConfig = data
-    isAdmin = profile?.role === 'org_admin'
-    userLang = profile?.language
+    // [LOG: 20260527_1658]
+    if (token) {
+      const [data, profile] = await Promise.all([
+        apiGet<TenantConfig>('/api/tenant', token, 300),
+        apiGet<MemberProfile>('/api/me', token, 60),
+      ])
+      if (data) tenantConfig = data
+      isAdmin = profile?.role === 'org_admin'
+      userLang = profile?.language
+    } else {
+      const data = await apiGet<TenantConfig>('/api/tenant', undefined, 300)
+      if (data) tenantConfig = data
+    }
   } catch {
     // fall back to defaults — page still renders
   }

@@ -85,12 +85,17 @@ export default async function KbCategoryPage({
   let userLanguage = 'en'
 
   try {
-    const [cats, profile] = await Promise.all([
-      apiGet<KbCategory[]>('/api/kb/categories', token),
-      apiGet<{ language: string | null }>('/api/me', token, 60),
-    ])
-    categories = cats
-    userLanguage = profile?.language ?? 'en'
+    // [LOG: 20260527_1728]
+    if (token) {
+      const [cats, profile] = await Promise.all([
+        apiGet<KbCategory[]>('/api/kb/categories', token),
+        apiGet<{ language: string | null }>('/api/me', token, 60),
+      ])
+      categories = cats
+      userLanguage = profile?.language ?? 'en'
+    } else {
+      categories = await apiGet<KbCategory[]>('/api/kb/categories', undefined)
+    }
   } catch {
     fetchError = true
   }

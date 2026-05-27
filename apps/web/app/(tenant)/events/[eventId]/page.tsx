@@ -153,12 +153,17 @@ export default async function EventDetailPage({
   let fetchError = false
 
   try {
-    const [detailData, profile] = await Promise.all([
-      apiGet<EventDetailResponse>(`/api/events/${eventId}`, token),
-      apiGet<{ language: string | null }>('/api/me', token, 60),
-    ])
-    detail = detailData
-    userLanguage = profile?.language ?? 'en'
+    // [LOG: 20260527_1725]
+    if (token) {
+      const [detailData, profile] = await Promise.all([
+        apiGet<EventDetailResponse>(`/api/events/${eventId}`, token),
+        apiGet<{ language: string | null }>('/api/me', token, 60),
+      ])
+      detail = detailData
+      userLanguage = profile?.language ?? 'en'
+    } else {
+      detail = await apiGet<EventDetailResponse>(`/api/events/${eventId}`, undefined)
+    }
   } catch (err: unknown) {
     if ((err as { status?: number }).status === 404) notFound()
     fetchError = true

@@ -15,10 +15,12 @@ export async function generateMetadata(): Promise<Metadata> {
   const supabase = await createClient()
   const token = (await supabase.auth.getSession()).data.session?.access_token
   let lang = 'en'
-  try {
-    const profile = await apiGet<{ language: string | null }>('/api/me', token, 60)
-    lang = profile?.language ?? 'en'
-  } catch {}
+  if (token) {
+    try {
+      const profile = await apiGet<{ language: string | null }>('/api/me', token, 60)
+      lang = profile?.language ?? 'en'
+    } catch {}
+  }
   return { title: t('ideas.title', lang) }
 }
 
@@ -80,14 +82,24 @@ export default async function IdeasPage({
   if (category) qs.set('categoryId', category)
 
   try {
-    const [ideasData, catsData, profile] = await Promise.all([
-      apiGet<Idea[]>(`/api/ideas?${qs}`, token),
-      apiGet<IdeaCategory[]>('/api/ideas/categories', token, 600),
-      apiGet<{ language: string | null }>('/api/me', token, 60),
-    ])
-    ideas = ideasData
-    categories = catsData
-    userLanguage = profile?.language ?? 'en'
+    // [LOG: 20260527_1703]
+    if (token) {
+      const [ideasData, catsData, profile] = await Promise.all([
+        apiGet<Idea[]>(`/api/ideas?${qs}`, token),
+        apiGet<IdeaCategory[]>('/api/ideas/categories', token, 600),
+        apiGet<{ language: string | null }>('/api/me', token, 60),
+      ])
+      ideas = ideasData
+      categories = catsData
+      userLanguage = profile?.language ?? 'en'
+    } else {
+      const [ideasData, catsData] = await Promise.all([
+        apiGet<Idea[]>(`/api/ideas?${qs}`, undefined),
+        apiGet<IdeaCategory[]>('/api/ideas/categories', undefined, 600),
+      ])
+      ideas = ideasData
+      categories = catsData
+    }
   } catch {
     fetchError = true
   }

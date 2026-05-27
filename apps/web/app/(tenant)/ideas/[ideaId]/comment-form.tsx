@@ -45,7 +45,7 @@ export function CommentForm({ ideaId, token, lang: _lang }: CommentFormProps) {
     return (
       <p className="text-sm text-muted-foreground">
         <a href="/login" className="text-brand hover:underline">
-          {t('header.signout') /* Temporary fix: use signout key to mean login? No, let's use signinToComment */}
+          {/* [LOG: 20260527_1742] Removed incorrect header.signout translation */}
           {t('ideas.detail.signinToComment')}
         </a>
       </p>
