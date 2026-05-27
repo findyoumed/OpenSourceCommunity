@@ -8,6 +8,7 @@ import { useTranslation } from '@/lib/i18n-context'
 
 interface ProfileFormProps {
   token: string
+  lang?: string | null | undefined
   initialValues: {
     displayName: string
     username: string | null
@@ -17,7 +18,7 @@ interface ProfileFormProps {
   }
 }
 
-export function ProfileForm({ token: _token, initialValues }: ProfileFormProps) {
+export function ProfileForm({ token: _token, lang: _lang, initialValues }: ProfileFormProps) {
   const { t } = useTranslation()
   const router = useRouter()
   const [isPending, startTransition] = useTransition()

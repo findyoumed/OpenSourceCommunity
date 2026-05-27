@@ -256,48 +256,5 @@ function ChevronRightIcon() {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function extractBodyText(body: Record<string, unknown>): string {
-  if (typeof body.text === 'string') return body.text
-  if (typeof body.content === 'string') return body.content
-
-  // ProseMirror / TipTap document — walk the node tree
-  function walkNodes(node: unknown): string {
-    if (!node || typeof node !== 'object') return ''
-    const n = node as Record<string, unknown>
-    if (typeof n.text === 'string') return n.text
-    if (Array.isArray(n.content)) {
-      return (n.content as unknown[]).map(walkNodes).join('\n')
-    }
-    return ''
-  }
-
-  return walkNodes(body)
-}
-
-function isYouTubeUrl(url: string): boolean {
-  return /youtube\.com|youtu\.be/.test(url)
-}
-
-function toYouTubeEmbed(url: string): string {
-  const match = url.match(/(?:v=|youtu\.be\/)([A-Za-z0-9_-]{11})/)
-  if (!match) return url
-  return `https://www.youtube.com/embed/${match[1]}`
-}
-
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
-function ChevronLeftIcon() {
-  return (
-    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
-      <polyline strokeLinecap="round" strokeLinejoin="round" points="15 18 9 12 15 6" />
-    </svg>
-  )
-}
-
-function ChevronRightIcon() {
-  return (
-    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
-      <polyline strokeLinecap="round" strokeLinejoin="round" points="9 18 15 12 9 6" />
-    </svg>
-  )
-}

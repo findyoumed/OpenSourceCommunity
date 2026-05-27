@@ -67,6 +67,21 @@ const STATUS_BADGE_VARIANT: Record<WebinarStatus, React.ComponentProps<typeof Ba
   ended: 'secondary',
 }
 
+const COVER_GRADIENTS = [
+  'from-indigo-400 to-violet-500',
+  'from-rose-400 to-orange-400',
+  'from-emerald-400 to-teal-500',
+  'from-sky-400 to-blue-500',
+  'from-amber-400 to-yellow-500',
+  'from-fuchsia-400 to-pink-500',
+]
+
+function gradientForId(id: string): string {
+  let hash = 0
+  for (let i = 0; i < id.length; i++) hash = id.charCodeAt(i) + ((hash << 5) - hash)
+  return COVER_GRADIENTS[Math.abs(hash) % COVER_GRADIENTS.length] ?? COVER_GRADIENTS[0] ?? ''
+}
+
 async function fetchWebinars(
   status: string,
   token: string | undefined,

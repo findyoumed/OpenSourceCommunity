@@ -29,7 +29,6 @@ interface SetupResult {
 
 // ─── Module definitions ───────────────────────────────────────────────────────
 
-import { apiClientPost } from '@/lib/api-client'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 

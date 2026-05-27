@@ -84,6 +84,7 @@ export function RichEditor({
       Underline,
       CodeBlockLowlight.configure({ lowlight }),
     ],
+    immediatelyRender: false, // [LOG: 20260527_1427]
     content: value ?? '',
     editable: !disabled,
     onUpdate({ editor }) {
