@@ -222,7 +222,7 @@ export default async function EventsPage({
 
 // ─── Event Card (Grid view) ────────────────────────────────────────────────────
 
-function EventCard({ row, lang = 'en' }: { row: EventListRow; lang?: string | null }) {
+function EventCard({ row, lang = 'en' }: { row: EventListRow; lang?: string | null | undefined }) {
   const { event, rsvpCount } = row
   const gradient = gradientForId(event.id)
   const locationType = event.location?.type ?? 'virtual'
@@ -285,7 +285,7 @@ function EventCard({ row, lang = 'en' }: { row: EventListRow; lang?: string | nu
 
 // ─── Event Row (Calendar view) ────────────────────────────────────────────────
 
-function EventRow({ row, lang = 'en' }: { row: EventListRow; lang?: string | null }) {
+function EventRow({ row, lang = 'en' }: { row: EventListRow; lang?: string | null | undefined }) {
   const { event, rsvpCount } = row
   const d = new Date(event.startsAt)
   const locationType = event.location?.type ?? 'virtual'

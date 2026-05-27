@@ -276,7 +276,7 @@ function CommentCard({
   lang = 'en',
 }: {
   comment: IdeaComment
-  lang?: string | null
+  lang?: string | null | undefined
 }) {
   const bodyHtml = renderBody(comment.body)
 

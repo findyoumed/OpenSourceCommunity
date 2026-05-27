@@ -4,8 +4,12 @@ import { createClient } from '@/lib/supabase/server'
 import { apiGet } from '@/lib/api'
 import type { Metadata } from 'next'
 import { ModerationActions } from './moderation-actions'
+import { t, type DictionaryKey } from '@/lib/i18n'
 
-export const metadata: Metadata = { title: 'Moderation Queue' }
+export async function generateMetadata(): Promise<Metadata> {
+  const { userLanguage } = await getModeratorContext()
+  return { title: `${t('admin.moderation.title', userLanguage)} - ${t('admin.title', userLanguage)}` }
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -27,13 +31,13 @@ interface ContentReport {
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
-const REASON_LABELS: Record<string, string> = {
-  spam: 'Spam',
-  harassment: 'Harassment',
-  hate_speech: 'Hate speech',
-  misinformation: 'Misinformation',
-  off_topic: 'Off topic',
-  other: 'Other',
+const REASON_LABELS: Record<string, DictionaryKey> = {
+  spam: 'admin.moderation.reason.spam',
+  harassment: 'admin.moderation.reason.harassment',
+  hate_speech: 'admin.moderation.reason.hate_speech',
+  misinformation: 'admin.moderation.reason.misinformation',
+  off_topic: 'admin.moderation.reason.off_topic',
+  other: 'admin.moderation.reason.other',
 }
 
 const TYPE_BADGE: Record<string, string> = {
@@ -44,16 +48,22 @@ const TYPE_BADGE: Record<string, string> = {
   chat_message: 'bg-emerald-50 text-emerald-700',
 }
 
-const AI_FLAG_CONFIG: Record<string, { label: string; badge: string }> = {
-  unsafe: { label: 'AI: Unsafe', badge: 'bg-red-50 text-red-700 border border-red-200' },
-  uncertain: { label: 'AI: Uncertain', badge: 'bg-amber-50 text-amber-700 border border-amber-200' },
-  safe: { label: 'AI: Safe', badge: 'bg-emerald-50 text-emerald-700 border border-emerald-200' },
+const AI_FLAG_CONFIG: Record<string, { labelKey: DictionaryKey; badge: string }> = {
+  unsafe: { labelKey: 'admin.moderation.ai.unsafe', badge: 'bg-red-50 text-red-700 border border-red-200' },
+  uncertain: { labelKey: 'admin.moderation.ai.uncertain', badge: 'bg-amber-50 text-amber-700 border border-amber-200' },
+  safe: { labelKey: 'admin.moderation.ai.safe', badge: 'bg-emerald-50 text-emerald-700 border border-emerald-200' },
 }
 
-function timeAgo(iso: string): string {
+function timeAgo(iso: string, lang: string): string {
   const diff = Date.now() - new Date(iso).getTime()
   const h = Math.floor(diff / 3600000)
-  if (h < 1) return `${Math.floor(diff / 60000)}m ago`
+  const minutes = Math.max(Math.floor(diff / 60000), 0)
+  if (lang === 'ko') {
+    if (h < 1) return `${minutes}분 전`
+    if (h < 24) return `${h}시간 전`
+    return `${Math.floor(h / 24)}일 전`
+  }
+  if (h < 1) return `${minutes}m ago`
   if (h < 24) return `${h}h ago`
   return `${Math.floor(h / 24)}d ago`
 }
@@ -64,15 +74,22 @@ interface PageProps {
   searchParams: Promise<{ status?: string }>
 }
 
-export default async function ModerationPage({ searchParams }: PageProps) {
+async function getModeratorContext() {
   const supabase = await createClient()
   const token = (await supabase.auth.getSession()).data.session?.access_token
 
   let isAdmin = false
+  let userLanguage = 'en'
   try {
-    const profile = await apiGet<{ role: string }>('/api/me', token, 60)
+    const profile = await apiGet<{ role: string; language: string | null }>('/api/me', token, 60)
     isAdmin = profile.role === 'org_admin' || profile.role === 'moderator'
+    userLanguage = profile.language ?? 'en'
   } catch {}
+  return { token, isAdmin, userLanguage }
+}
+
+export default async function ModerationPage({ searchParams }: PageProps) {
+  const { token, isAdmin, userLanguage } = await getModeratorContext()
   if (!isAdmin) redirect('/home')
 
   const { status = 'pending' } = await searchParams
@@ -88,11 +105,11 @@ export default async function ModerationPage({ searchParams }: PageProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-surface-foreground">Moderation Queue</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Review flagged content reported by community members</p>
+          <h1 className="text-2xl font-bold text-surface-foreground">{t('admin.moderation.title', userLanguage)}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">{t('admin.moderation.description', userLanguage)}</p>
         </div>
         <Link href="/admin" className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-muted transition-colors">
-          ← Back to Admin
+          {t('admin.moderation.back', userLanguage)}
         </Link>
       </div>
 
@@ -109,7 +126,7 @@ export default async function ModerationPage({ searchParams }: PageProps) {
                 : 'text-muted-foreground hover:bg-muted',
             ].join(' ')}
           >
-            {s}
+            {t(`admin.moderation.status.${s}` as DictionaryKey, userLanguage)}
           </Link>
         ))}
       </div>
@@ -119,12 +136,14 @@ export default async function ModerationPage({ searchParams }: PageProps) {
         <div className="rounded-xl border border-dashed border-border bg-card px-6 py-16 text-center">
           <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-muted text-2xl">✅</div>
           <p className="text-sm font-medium text-muted-foreground">
-            {validStatus === 'pending' ? 'Queue is clear' : `No ${validStatus} items`}
+            {validStatus === 'pending'
+              ? t('admin.moderation.empty.pendingTitle', userLanguage)
+              : t('admin.moderation.empty.statusTitle', userLanguage).replace('{status}', t(`admin.moderation.status.${validStatus}` as DictionaryKey, userLanguage))}
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
             {validStatus === 'pending'
-              ? 'No content currently awaiting review.'
-              : `${validStatus.charAt(0).toUpperCase() + validStatus.slice(1)} reports will appear here.`}
+              ? t('admin.moderation.empty.pendingDesc', userLanguage)
+              : t('admin.moderation.empty.statusDesc', userLanguage).replace('{status}', t(`admin.moderation.status.${validStatus}` as DictionaryKey, userLanguage))}
           </p>
         </div>
       ) : (
@@ -132,6 +151,7 @@ export default async function ModerationPage({ searchParams }: PageProps) {
           {reports.map((report) => {
             const typeBadge = TYPE_BADGE[report.contentType] ?? 'bg-muted text-muted-foreground'
             const aiFlagCfg = report.aiFlag ? AI_FLAG_CONFIG[report.aiFlag] : null
+            const reasonKey = REASON_LABELS[report.reason]
             return (
               <div key={report.id} className="rounded-xl border border-border bg-card p-5">
                 <div className="flex items-start gap-4">
@@ -142,11 +162,11 @@ export default async function ModerationPage({ searchParams }: PageProps) {
                         {report.contentType.replace('_', ' ')}
                       </span>
                       <span className="text-xs text-muted-foreground">
-                        {REASON_LABELS[report.reason] ?? report.reason}
+                        {reasonKey ? t(reasonKey, userLanguage) : report.reason}
                       </span>
                       {aiFlagCfg && (
                         <span className={['inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium', aiFlagCfg.badge].join(' ')}>
-                          {aiFlagCfg.label}
+                          {t(aiFlagCfg.labelKey, userLanguage)}
                         </span>
                       )}
                     </div>
@@ -160,12 +180,12 @@ export default async function ModerationPage({ searchParams }: PageProps) {
 
                     {/* Meta */}
                     <p className="text-xs text-muted-foreground">
-                      {report.contentAuthorName && <>By {report.contentAuthorName} · </>}
-                      Reported {timeAgo(report.createdAt)}
+                      {report.contentAuthorName && <>{t('admin.moderation.by', userLanguage)} {report.contentAuthorName} · </>}
+                      {t('admin.moderation.reported', userLanguage)} {timeAgo(report.createdAt, userLanguage)}
                     </p>
                     {report.notes && (
                       <p className="mt-1 text-xs text-muted-foreground italic">
-                        Reporter note: &ldquo;{report.notes}&rdquo;
+                        {t('admin.moderation.reporterNote', userLanguage)} &ldquo;{report.notes}&rdquo;
                       </p>
                     )}
                     {report.aiReasoning && (
@@ -188,14 +208,14 @@ export default async function ModerationPage({ searchParams }: PageProps) {
 
       {/* Guidelines */}
       <div className="rounded-xl border border-border bg-card p-6">
-        <h2 className="mb-3 text-sm font-semibold text-surface-foreground">Moderation guidelines</h2>
+        <h2 className="mb-3 text-sm font-semibold text-surface-foreground">{t('admin.moderation.guidelines.title', userLanguage)}</h2>
         <ul className="space-y-1.5 text-xs text-muted-foreground">
           {[
-            'Review flagged content within 24 hours to maintain community trust.',
-            'Remove content that violates community guidelines: spam, harassment, or off-topic promotion.',
-            'Dismiss false reports — consider reaching out to the reporter.',
-            'Repeat violations may warrant role changes in the Members admin page.',
-            'AI flags are advisory only — always apply human judgement before removing content.',
+            t('admin.moderation.guidelines.1', userLanguage),
+            t('admin.moderation.guidelines.2', userLanguage),
+            t('admin.moderation.guidelines.3', userLanguage),
+            t('admin.moderation.guidelines.4', userLanguage),
+            t('admin.moderation.guidelines.5', userLanguage),
           ].map((g) => (
             <li key={g} className="flex items-start gap-2">
               <span className="mt-0.5">•</span>

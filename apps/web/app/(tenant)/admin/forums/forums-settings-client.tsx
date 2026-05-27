@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, Fragment } from 'react'
 import { apiClientPost, apiClientPatch, apiClientDelete } from '@/lib/api-client'
 import { Badge } from '@/components/ui/badge'
 
@@ -265,8 +265,8 @@ export function ForumsSettingsClient({ initialCategories }: { initialCategories:
             </thead>
             <tbody className="divide-y divide-border">
               {categories.map((cat, idx) => (
-                <>
-                  <tr key={cat.id} className="hover:bg-muted/30 transition-colors">
+                <Fragment key={cat.id}>
+                  <tr className="hover:bg-muted/30 transition-colors">
                     <td className="px-4 py-3">
                       {editingId === cat.id ? null : (
                         <div>
@@ -341,7 +341,7 @@ export function ForumsSettingsClient({ initialCategories }: { initialCategories:
                       </td>
                     </tr>
                   )}
-                </>
+                </Fragment>
               ))}
             </tbody>
           </table>

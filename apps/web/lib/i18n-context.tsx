@@ -9,7 +9,7 @@ export { dictionary }
 export type { Locale, DictionaryKey }
 
 // ─── 1. Pure Synchronous Translation Function (Re-exported for compatibility) ──
-export function t(key: DictionaryKey, lang?: string | null): string {
+export function t(key: DictionaryKey, lang?: string | null | undefined): string {
   const currentLang = (lang === 'ko' ? 'ko' : 'en') as Locale
   return dictionary[currentLang][key] || dictionary['en'][key] || String(key)
 }

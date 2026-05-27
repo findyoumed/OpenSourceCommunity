@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, Fragment } from 'react'
 import { apiClientPost, apiClientPatch, apiClientDelete } from '@/lib/api-client'
 
 interface KbCategory {
@@ -170,8 +170,8 @@ export function KbSettingsClient({ initialCategories }: { initialCategories: KbC
             </thead>
             <tbody className="divide-y divide-border">
               {categories.map((cat) => (
-                <>
-                  <tr key={cat.id} className="hover:bg-muted/30 transition-colors">
+                <Fragment key={cat.id}>
+                  <tr className="hover:bg-muted/30 transition-colors">
                     <td className="px-4 py-3">
                       <p className="font-medium text-surface-foreground">{cat.name}</p>
                       <p className="text-xs text-muted-foreground font-mono">{cat.slug}</p>
@@ -207,7 +207,7 @@ export function KbSettingsClient({ initialCategories }: { initialCategories: KbC
                       </td>
                     </tr>
                   )}
-                </>
+                </Fragment>
               ))}
             </tbody>
           </table>

@@ -17,7 +17,7 @@ interface IdeasFiltersProps {
   status: string | undefined
   category: string | undefined
   categories: IdeaCategory[]
-  lang?: string | null
+  lang?: string | null | undefined
 }
 
 function buildHref({

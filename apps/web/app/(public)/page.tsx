@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { apiGet } from '@/lib/api'
 import { t } from '@/lib/i18n'
@@ -162,7 +163,7 @@ function GlobeIcon({ className }: { className?: string }) {
    MOCK DASHBOARD COMPONENT (Hero visual)
    ═══════════════════════════════════════════════════════════════════════════ */
 
-function HeroDashboardMockup({ lang = 'en' }: { lang?: string | null }) {
+function HeroDashboardMockup({ lang = 'en' }: { lang?: string | null | undefined }) {
   const isKo = lang === 'ko'
 
   const NAV_ITEMS = isKo 
@@ -275,7 +276,7 @@ function HeroDashboardMockup({ lang = 'en' }: { lang?: string | null }) {
    MOCK INTELLIGENCE DASHBOARD
    ═══════════════════════════════════════════════════════════════════════════ */
 
-function IntelligenceMockup({ lang = 'en' }: { lang?: string | null }) {
+function IntelligenceMockup({ lang = 'en' }: { lang?: string | null | undefined }) {
   const isKo = lang === 'ko'
 
   const MENTIONS = [
@@ -376,6 +377,8 @@ function IntelligenceMockup({ lang = 'en' }: { lang?: string | null }) {
    ═══════════════════════════════════════════════════════════════════════════ */
 
 export default async function LandingPage() {
+  redirect('/home')
+
   const supabase = await createClient()
   const { data: { session } } = await supabase.auth.getSession()
   const token = session?.access_token

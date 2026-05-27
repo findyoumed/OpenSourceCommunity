@@ -8,7 +8,7 @@ import { useTranslation } from '@/lib/i18n-context'
 interface EnrollButtonProps {
   courseId: string
   token: string | undefined
-  lang?: string | null
+  lang?: string | null | undefined
 }
 
 export function EnrollButton({ courseId, token, lang: _lang }: EnrollButtonProps) {

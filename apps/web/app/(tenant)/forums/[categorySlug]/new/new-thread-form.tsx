@@ -12,7 +12,7 @@ interface NewThreadFormProps {
   categoryName: string
   categorySlug: string
   token: string
-  lang?: string | null
+  lang?: string | null | undefined
 }
 
 export function NewThreadForm({

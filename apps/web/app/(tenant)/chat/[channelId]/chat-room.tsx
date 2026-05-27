@@ -1,9 +1,11 @@
+// [LOG: 20260527_1530]
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { apiClientGet, apiClientPost, apiClientPatch, apiClientDelete } from '@/lib/api-client'
+import { useTranslation } from '@/lib/i18n-context'
 
 interface Channel {
   id: string
@@ -37,20 +39,20 @@ interface ChatRoomProps {
   currentMemberAvatarUrl?: string | null
 }
 
-function formatTime(iso: string | null): string {
+function formatTime(iso: string | null, lang: string): string {
   if (!iso) return ''
-  return new Intl.DateTimeFormat('en', { hour: 'numeric', minute: '2-digit' }).format(new Date(iso))
+  return new Intl.DateTimeFormat(lang === 'ko' ? 'ko-KR' : 'en-US', { hour: 'numeric', minute: '2-digit' }).format(new Date(iso))
 }
 
-function formatDate(iso: string | null): string {
+function formatDate(iso: string | null, lang: string): string {
   if (!iso) return ''
   const d = new Date(iso)
   const today = new Date()
-  if (d.toDateString() === today.toDateString()) return 'Today'
+  if (d.toDateString() === today.toDateString()) return lang === 'ko' ? '오늘' : 'Today'
   const yesterday = new Date(today)
   yesterday.setDate(today.getDate() - 1)
-  if (d.toDateString() === yesterday.toDateString()) return 'Yesterday'
-  return new Intl.DateTimeFormat('en', { dateStyle: 'long' }).format(d)
+  if (d.toDateString() === yesterday.toDateString()) return lang === 'ko' ? '어제' : 'Yesterday'
+  return new Intl.DateTimeFormat(lang === 'ko' ? 'ko-KR' : 'en-US', { dateStyle: 'long' }).format(d)
 }
 
 function Avatar({ name, avatarUrl, size = 8 }: { name: string; avatarUrl: string | null; size?: number }) {
@@ -67,6 +69,7 @@ function Avatar({ name, avatarUrl, size = 8 }: { name: string; avatarUrl: string
 }
 
 export function ChatRoom({ channel, initialMessages, token: _token, currentMemberId, currentMemberName = 'You', currentMemberAvatarUrl = null }: ChatRoomProps) {
+  const { t, lang } = useTranslation()
   const [messages, setMessages] = useState<Message[]>(initialMessages)
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
@@ -122,7 +125,7 @@ export function ChatRoom({ channel, initialMessages, token: _token, currentMembe
                 setMessages((p) =>
                   p.some((m) => m.id === newMsg.id)
                     ? p
-                    : [...p, { id: newMsg.id, channelId: newMsg.channel_id, body: newMsg.body, createdAt: newMsg.created_at, editedAt: newMsg.edited_at, authorId: newMsg.author_id, authorName: 'Member', authorAvatarUrl: null }]
+                    : [...p, { id: newMsg.id, channelId: newMsg.channel_id, body: newMsg.body, createdAt: newMsg.created_at, editedAt: newMsg.edited_at, authorId: newMsg.author_id, authorName: t('chat.member'), authorAvatarUrl: null }]
                 )
               })
             return prev
@@ -183,7 +186,7 @@ export function ChatRoom({ channel, initialMessages, token: _token, currentMembe
         if (status === 'SUBSCRIBED') {
           await presenceChannel.track({
             userId: currentMemberId,
-            name: currentMemberName,
+            name: currentMemberName || t('chat.you'),
             onlineAt: new Date().toISOString(),
           })
         }
@@ -202,10 +205,10 @@ export function ChatRoom({ channel, initialMessages, token: _token, currentMembe
       supabase.channel(`chat:${channel.id}:presence`).send({
         type: 'broadcast',
         event: 'typing',
-        payload: { userId: currentMemberId, name: currentMemberName, isTyping },
+        payload: { userId: currentMemberId, name: currentMemberName || t('chat.you'), isTyping },
       })
     },
-    [supabase, channel.id, currentMemberId, currentMemberName],
+    [supabase, channel.id, currentMemberId, currentMemberName, t],
   )
 
   function handleInputChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
@@ -237,7 +240,7 @@ export function ChatRoom({ channel, initialMessages, token: _token, currentMembe
       createdAt: new Date().toISOString(),
       editedAt: null,
       authorId: currentMemberId,
-      authorName: currentMemberName,
+      authorName: currentMemberName || t('chat.you'),
       authorAvatarUrl: currentMemberAvatarUrl ?? null,
     }
     setMessages((prev) => [...prev, optimistic])
@@ -253,7 +256,7 @@ export function ChatRoom({ channel, initialMessages, token: _token, currentMembe
       setSending(false)
       inputRef.current?.focus()
     }
-  }, [input, sending, channel.id, broadcastTyping, currentMemberId, currentMemberName, currentMemberAvatarUrl])
+  }, [input, sending, channel.id, broadcastTyping, currentMemberId, currentMemberName, currentMemberAvatarUrl, t])
 
   async function handleEdit(msgId: string) {
     const body = editBody.trim()
@@ -287,7 +290,7 @@ export function ChatRoom({ channel, initialMessages, token: _token, currentMembe
   // Group messages by date
   const grouped: { date: string; msgs: Message[] }[] = []
   for (const msg of messages) {
-    const date = formatDate(msg.createdAt)
+    const date = formatDate(msg.createdAt, lang)
     const last = grouped.at(-1)
     if (!last || last.date !== date) {
       grouped.push({ date, msgs: [msg] })
@@ -299,11 +302,11 @@ export function ChatRoom({ channel, initialMessages, token: _token, currentMembe
   // Typing indicator text
   const typingText =
     typingUsers.length === 1
-      ? `${typingUsers[0]} is typing…`
+      ? t('chat.typing.one').replace('{name}', typingUsers[0] ?? '')
       : typingUsers.length === 2
-      ? `${typingUsers[0]} and ${typingUsers[1]} are typing…`
+      ? t('chat.typing.two').replace('{name1}', typingUsers[0] ?? '').replace('{name2}', typingUsers[1] ?? '')
       : typingUsers.length > 2
-      ? 'Several people are typing…'
+      ? t('chat.typing.many')
       : null
 
   return (
@@ -325,7 +328,7 @@ export function ChatRoom({ channel, initialMessages, token: _token, currentMembe
         {/* Online count */}
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
           <span className="h-2 w-2 rounded-full bg-emerald-500" />
-          {onlineCount} online
+          {lang === 'ko' ? `${onlineCount}명 접속 중` : `${onlineCount} online`}
         </div>
       </div>
 
@@ -334,8 +337,12 @@ export function ChatRoom({ channel, initialMessages, token: _token, currentMembe
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full text-center">
             <div className="mb-3 text-4xl">💬</div>
-            <p className="text-sm font-medium text-muted-foreground">No messages yet</p>
-            <p className="mt-1 text-xs text-muted-foreground">Be the first to say something!</p>
+            <p className="text-sm font-medium text-muted-foreground">
+              {t('chat.emptyDesc')}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {t('chat.firstMessage')}
+            </p>
           </div>
         )}
 
@@ -370,7 +377,7 @@ export function ChatRoom({ channel, initialMessages, token: _token, currentMembe
                       <div className="w-8 flex-shrink-0">
                         {isHovered && (
                           <span className="flex h-full items-center justify-center text-[10px] text-muted-foreground/60">
-                            {formatTime(msg.createdAt)}
+                            {formatTime(msg.createdAt, lang)}
                           </span>
                         )}
                       </div>
@@ -380,7 +387,7 @@ export function ChatRoom({ channel, initialMessages, token: _token, currentMembe
                       {!isSameAuthor && (
                         <div className="flex items-baseline gap-2 mb-0.5">
                           <span className="text-sm font-semibold text-surface-foreground">{msg.authorName}</span>
-                          <span className="text-xs text-muted-foreground">{formatTime(msg.createdAt)}</span>
+                          <span className="text-xs text-muted-foreground">{formatTime(msg.createdAt, lang)}</span>
                         </div>
                       )}
 
@@ -403,7 +410,7 @@ export function ChatRoom({ channel, initialMessages, token: _token, currentMembe
                               onClick={() => handleEdit(msg.id)}
                               className="font-medium text-brand hover:underline"
                             >
-                              Save
+                              {t('chat.action.save')}
                             </button>
                             <span className="text-muted-foreground">·</span>
                             <button
@@ -411,7 +418,7 @@ export function ChatRoom({ channel, initialMessages, token: _token, currentMembe
                               onClick={() => { setEditingId(null); setEditBody('') }}
                               className="text-muted-foreground hover:text-surface-foreground"
                             >
-                              Cancel
+                              {t('chat.action.cancel')}
                             </button>
                           </div>
                         </div>
@@ -419,7 +426,9 @@ export function ChatRoom({ channel, initialMessages, token: _token, currentMembe
                         <p className="text-sm text-surface-foreground whitespace-pre-wrap break-words">
                           {msg.body}
                           {msg.editedAt && (
-                            <span className="ml-1 text-[10px] text-muted-foreground/60">(edited)</span>
+                            <span className="ml-1 text-[10px] text-muted-foreground/60">
+                              {t('chat.action.edited')}
+                            </span>
                           )}
                         </p>
                       )}
@@ -431,7 +440,7 @@ export function ChatRoom({ channel, initialMessages, token: _token, currentMembe
                         {isOwnMessage && (
                           <button
                             type="button"
-                            title="Edit message"
+                            title={t('chat.action.editTitle')}
                             onClick={() => { setEditingId(msg.id); setEditBody(msg.body) }}
                             className="flex h-7 w-7 items-center justify-center rounded hover:bg-muted text-muted-foreground hover:text-surface-foreground transition-colors"
                           >
@@ -440,7 +449,7 @@ export function ChatRoom({ channel, initialMessages, token: _token, currentMembe
                         )}
                         <button
                           type="button"
-                          title="Delete message"
+                          title={t('chat.action.deleteTitle')}
                           onClick={() => handleDelete(msg.id)}
                           className="flex h-7 w-7 items-center justify-center rounded hover:bg-red-50 text-muted-foreground hover:text-red-600 transition-colors"
                         >
@@ -460,10 +469,10 @@ export function ChatRoom({ channel, initialMessages, token: _token, currentMembe
       {/* Typing indicator */}
       <div className="h-5 px-5">
         {typingText && (
-          <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+          <div className="text-xs text-muted-foreground flex items-center gap-1.5">
             <TypingDots />
             {typingText}
-          </p>
+          </div>
         )}
       </div>
 
@@ -475,7 +484,7 @@ export function ChatRoom({ channel, initialMessages, token: _token, currentMembe
             value={input}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
-            placeholder={`Message #${channel.name}`}
+            placeholder={t('chat.placeholder').replace('{name}', channel.name)}
             rows={1}
             className="flex-1 resize-none bg-transparent text-sm text-surface-foreground placeholder:text-muted-foreground outline-none max-h-32"
             style={{ lineHeight: '1.5rem' }}
@@ -490,7 +499,9 @@ export function ChatRoom({ channel, initialMessages, token: _token, currentMembe
             <SendIcon />
           </button>
         </div>
-        <p className="mt-1.5 text-xs text-muted-foreground">Enter to send · Shift+Enter for new line</p>
+        <p className="mt-1.5 text-xs text-muted-foreground">
+          {t('chat.hint')}
+        </p>
       </div>
     </div>
   )

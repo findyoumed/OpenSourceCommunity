@@ -145,7 +145,7 @@ export default async function CoursesPage() {
 
 // ─── Course Card ──────────────────────────────────────────────────────────────
 
-function CourseCard({ item, lang = 'en' }: { item: CourseListItem; lang?: string | null }) {
+function CourseCard({ item, lang = 'en' }: { item: CourseListItem; lang?: string | null | undefined }) {
   const { course, lessonCount, enrollmentCount } = item
   const gradient = gradientForId(course.id)
 

@@ -10,7 +10,7 @@ interface IdeaVoteButtonProps {
   voteCount: number
   hasVoted: boolean
   token: string
-  lang?: string | null
+  lang?: string | null | undefined
 }
 
 export function IdeaVoteButton({

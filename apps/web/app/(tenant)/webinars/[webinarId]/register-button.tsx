@@ -11,7 +11,7 @@ interface RegisterButtonProps {
   registrationCount: number
   maxAttendees: number | null
   token: string
-  lang?: string | null
+  lang?: string | null | undefined
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

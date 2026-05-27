@@ -1,60 +1,88 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import { createClient } from '@/lib/supabase/server'
+import { apiGet } from '@/lib/api'
+import { t, type DictionaryKey } from '@/lib/i18n'
 
-export const metadata: Metadata = { title: 'Integrations \u2014 Admin' }
+export async function generateMetadata(): Promise<Metadata> {
+  const lang = await getUserLanguage()
+  return { title: `${t('admin.integrations.title', lang)} - ${t('admin.title', lang)}` }
+}
 
 const INTEGRATIONS = [
   {
     name: 'Salesforce',
-    description: 'Sync community members and activity with Salesforce CRM contacts and accounts.',
+    descriptionKey: 'admin.integrations.salesforce.desc',
     icon: '\u2601\ufe0f',
     status: 'available',
     docsHref: '#',
   },
   {
     name: 'HubSpot',
-    description: 'Push community engagement data into HubSpot contacts and track lifecycle stages.',
+    descriptionKey: 'admin.integrations.hubspot.desc',
     icon: '\ud83d\udd36',
     status: 'available',
     docsHref: '#',
   },
   {
     name: 'Slack',
-    description: 'Receive notifications in Slack for new threads, ideas, and moderation flags.',
+    descriptionKey: 'admin.integrations.slack.desc',
     icon: '\ud83d\udcac',
     status: 'available',
     docsHref: '#',
   },
   {
     name: 'Zapier',
-    description: 'Connect to 6,000+ apps with no-code automations triggered by community events.',
+    descriptionKey: 'admin.integrations.zapier.desc',
     icon: '\u26a1',
     status: 'available',
     docsHref: '#',
   },
   {
     name: 'Webhooks',
-    description: 'Send real-time event payloads to any endpoint when members post, vote, or join.',
+    descriptionKey: 'admin.integrations.webhooks.desc',
     icon: '\ud83d\udd17',
     status: 'available',
     href: '/admin/integrations/webhooks',
   },
   {
     name: 'SSO / SAML',
-    description: 'Enable single sign-on with Okta, Azure AD, or any SAML 2.0 identity provider.',
+    descriptionKey: 'admin.integrations.sso.desc',
     icon: '\ud83d\udd10',
     status: 'enterprise',
     docsHref: '#',
   },
-]
+] satisfies Array<{
+  name: string
+  descriptionKey: DictionaryKey
+  icon: string
+  status: 'available' | 'enterprise'
+  docsHref?: string
+  href?: string
+}>
 
-export default function IntegrationsPage() {
+async function getUserLanguage() {
+  const supabase = await createClient()
+  const token = (await supabase.auth.getSession()).data.session?.access_token
+  try {
+    const profile = await apiGet<{ language: string | null }>('/api/me', token, 60)
+    return profile?.language ?? 'en'
+  } catch {
+    return 'en'
+  }
+}
+
+export default async function IntegrationsPage() {
+  const userLanguage = await getUserLanguage()
+
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-semibold text-surface-foreground">Integrations</h2>
+        <h2 className="text-lg font-semibold text-surface-foreground">
+          {t('admin.integrations.title', userLanguage)}
+        </h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Connect your community to the tools your team already uses
+          {t('admin.integrations.description', userLanguage)}
         </p>
       </div>
 
@@ -68,24 +96,28 @@ export default function IntegrationsPage() {
               </div>
               {intg.status === 'enterprise' && (
                 <span className="rounded-full bg-violet-50 border border-violet-200 px-2 py-0.5 text-xs font-medium text-violet-700">
-                  Enterprise
+                  {t('admin.integrations.status.enterprise', userLanguage)}
                 </span>
               )}
             </div>
-            <p className="mb-4 text-xs text-muted-foreground leading-relaxed">{intg.description}</p>
+            <p className="mb-4 text-xs text-muted-foreground leading-relaxed">
+              {t(intg.descriptionKey, userLanguage)}
+            </p>
             {'href' in intg && intg.href ? (
               <Link
                 href={intg.href}
                 className="flex w-full items-center justify-center rounded-lg border border-border px-3 py-2 text-xs font-semibold text-surface-foreground hover:bg-muted transition-colors"
               >
-                Configure →
+                {t('admin.integrations.action.configureArrow', userLanguage)}
               </Link>
             ) : (
               <button
                 type="button"
                 className="w-full rounded-lg border border-border px-3 py-2 text-xs font-semibold text-surface-foreground hover:bg-muted transition-colors"
               >
-                {intg.status === 'enterprise' ? 'Configure' : 'Connect'}
+                {intg.status === 'enterprise'
+                  ? t('admin.integrations.action.configure', userLanguage)
+                  : t('admin.integrations.action.connect', userLanguage)}
               </button>
             )}
           </div>

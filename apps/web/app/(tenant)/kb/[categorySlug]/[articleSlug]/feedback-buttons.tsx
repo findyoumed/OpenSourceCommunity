@@ -7,7 +7,7 @@ import { useTranslation } from '@/lib/i18n-context'
 
 interface FeedbackButtonsProps {
   articleId: string
-  lang?: string | null
+  lang?: string | null | undefined
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

@@ -10,7 +10,7 @@ import { WidgetShell } from './widget-shell'
 interface ThreadRow {
   id: string
   title: string
-  body?: string
+  body?: any
   categorySlug?: string
   categoryName?: string
   authorName: string
@@ -33,13 +33,49 @@ function timeAgo(iso: string, isKo: boolean): string {
   return isKo ? `${Math.floor(hrs / 24)}일 전` : `${Math.floor(hrs / 24)}d ago`
 }
 
+// [LOG: 20260527_1546] Extract plain text recursively from dynamic Rich Text formats
+function extractTextFromRichBody(body: any): string {
+  if (!body) return ''
+  
+  if (typeof body === 'string') {
+    if (body.trim().startsWith('{') || body.trim().startsWith('[')) {
+      try {
+        const parsed = JSON.parse(body)
+        return extractTextFromRichBody(parsed)
+      } catch {
+        return body
+      }
+    }
+    return body
+  }
+
+  if (Array.isArray(body)) {
+    return body.map(extractTextFromRichBody).filter(Boolean).join(' ')
+  }
+
+  if (typeof body === 'object') {
+    if (body.type === 'text' && typeof body.text === 'string') {
+      return body.text
+    }
+    if (body.content && Array.isArray(body.content)) {
+      return extractTextFromRichBody(body.content)
+    }
+    if (body.children && Array.isArray(body.children)) {
+      return extractTextFromRichBody(body.children)
+    }
+  }
+
+  return ''
+}
+
 function stripHtml(html: string): string {
   return html.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim()
 }
 
-function excerpt(body: string | undefined, maxLen = 90): string {
+function excerpt(body: any, maxLen = 90): string {
   if (!body) return ''
-  const text = stripHtml(body)
+  const plainText = extractTextFromRichBody(body)
+  const text = stripHtml(plainText)
   return text.length > maxLen ? `${text.slice(0, maxLen)}…` : text
 }
 

@@ -17,7 +17,7 @@ interface Props {
   initialPrefs: Record<string, EventPref>
   token: string
   apiUrl: string
-  lang?: string | null
+  lang?: string | null | undefined
 }
 
 const EVENT_GROUPS = [

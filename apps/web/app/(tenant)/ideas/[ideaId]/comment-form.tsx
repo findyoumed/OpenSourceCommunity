@@ -9,7 +9,7 @@ import { useTranslation } from '@/lib/i18n-context'
 interface CommentFormProps {
   ideaId: string
   token: string
-  lang?: string | null
+  lang?: string | null | undefined
 }
 
 export function CommentForm({ ideaId, token, lang: _lang }: CommentFormProps) {

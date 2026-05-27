@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { apiClientPatch } from '@/lib/api-client'
+import { useTranslation } from '@/lib/i18n-context'
 
 export function BrandingForm({
   initialName, initialLogoUrl, initialColor, token: _token,
@@ -10,6 +11,7 @@ export function BrandingForm({
   initialColor: string
   token: string
 }) {
+  const { t } = useTranslation()
   const [name, setName] = useState(initialName)
   const [logoUrl, setLogoUrl] = useState(initialLogoUrl)
   const [primaryColor, setPrimaryColor] = useState(initialColor)
@@ -26,7 +28,7 @@ export function BrandingForm({
       setSaved(true)
       setTimeout(() => setSaved(false), 3000)
     } catch {
-      setError('Failed to save branding. Please try again.')
+      setError(t('admin.branding.error'))
     } finally {
       setSaving(false)
     }
@@ -36,19 +38,19 @@ export function BrandingForm({
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="rounded-xl border border-border bg-card p-6 space-y-5">
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-surface-foreground">Community name</label>
+          <label className="mb-1.5 block text-sm font-medium text-surface-foreground">{t('admin.branding.communityName')}</label>
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="community name"
+            placeholder={t('admin.branding.communityNamePlaceholder')}
             className="w-full max-w-md rounded-lg border border-border px-3 py-2 text-sm text-surface-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             required
           />
         </div>
 
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-surface-foreground">Logo URL</label>
+          <label className="mb-1.5 block text-sm font-medium text-surface-foreground">{t('admin.branding.logoUrl')}</label>
           <input
             type="url"
             value={logoUrl}
@@ -58,13 +60,13 @@ export function BrandingForm({
           />
           {logoUrl && (
             <div className="mt-2">
-              <img src={logoUrl} alt="Logo preview" className="h-10 w-10 rounded-lg object-cover" />
+              <img src={logoUrl} alt={t('admin.branding.logoPreview')} className="h-10 w-10 rounded-lg object-cover" />
             </div>
           )}
         </div>
 
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-surface-foreground">Primary colour</label>
+          <label className="mb-1.5 block text-sm font-medium text-surface-foreground">{t('admin.branding.primaryColor')}</label>
           <div className="flex items-center gap-3">
             <input
               type="color"
@@ -93,9 +95,9 @@ export function BrandingForm({
           disabled={saving}
           className="rounded-lg bg-brand px-5 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50 transition-colors"
         >
-          {saving ? 'Saving\u2026' : 'Save branding'}
+          {saving ? t('admin.branding.saving') : t('admin.branding.save')}
         </button>
-        {saved && <p className="text-sm text-emerald-600 font-medium">Saved!</p>}
+        {saved && <p className="text-sm text-emerald-600 font-medium">{t('admin.branding.saved')}</p>}
       </div>
     </form>
   )

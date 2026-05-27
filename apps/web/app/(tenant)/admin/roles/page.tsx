@@ -2,8 +2,12 @@ import { createClient } from '@/lib/supabase/server'
 import { apiGet } from '@/lib/api'
 import type { Metadata } from 'next'
 import { RoleSelector } from './role-selector'
+import { t, type DictionaryKey } from '@/lib/i18n'
 
-export const metadata: Metadata = { title: 'Roles \u2014 Admin' }
+export async function generateMetadata(): Promise<Metadata> {
+  const userLanguage = await getUserLanguage()
+  return { title: `${t('admin.roles.title', userLanguage)} - ${t('admin.title', userLanguage)}` }
+}
 
 type MemberRole = 'guest' | 'member' | 'moderator' | 'org_admin'
 
@@ -16,16 +20,28 @@ interface Member {
   createdAt: string
 }
 
-const ROLE_BADGE: Record<MemberRole, { label: string; className: string }> = {
-  guest: { label: 'Guest', className: 'bg-muted text-muted-foreground' },
-  member: { label: 'Member', className: 'bg-blue-50 text-blue-700' },
-  moderator: { label: 'Moderator', className: 'bg-amber-50 text-amber-700' },
-  org_admin: { label: 'Admin', className: 'bg-brand/5 text-brand' },
+const ROLE_BADGE: Record<MemberRole, { labelKey: DictionaryKey; className: string }> = {
+  guest: { labelKey: 'admin.role.guest', className: 'bg-muted text-muted-foreground' },
+  member: { labelKey: 'admin.role.member', className: 'bg-blue-50 text-blue-700' },
+  moderator: { labelKey: 'admin.role.moderator', className: 'bg-amber-50 text-amber-700' },
+  org_admin: { labelKey: 'admin.role.org_admin', className: 'bg-brand/5 text-brand' },
+}
+
+async function getUserLanguage() {
+  const supabase = await createClient()
+  const token = (await supabase.auth.getSession()).data.session?.access_token
+  try {
+    const profile = await apiGet<{ language: string | null }>('/api/me', token, 60)
+    return profile?.language ?? 'en'
+  } catch {
+    return 'en'
+  }
 }
 
 export default async function RolesPage() {
   const supabase = await createClient()
   const token = (await supabase.auth.getSession()).data.session?.access_token
+  const userLanguage = await getUserLanguage()
 
   let members: Member[] = []
   try {
@@ -35,23 +51,23 @@ export default async function RolesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-semibold text-surface-foreground">Roles &amp; Permissions</h2>
+        <h2 className="text-lg font-semibold text-surface-foreground">{t('admin.roles.title', userLanguage)}</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Assign roles to members. Admins can manage modules and members. Moderators can review flagged content.
+          {t('admin.roles.description', userLanguage)}
         </p>
       </div>
 
       {/* Role descriptions */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {([
-          { role: 'org_admin', label: 'Admin', desc: 'Full access to all settings', className: 'border-brand/30 bg-brand/5' },
-          { role: 'moderator', label: 'Moderator', desc: 'Can review and remove content', className: 'border-amber-200 bg-amber-50' },
-          { role: 'member', label: 'Member', desc: 'Standard community access', className: 'border-blue-200 bg-blue-50' },
-          { role: 'guest', label: 'Guest', desc: 'Read-only, limited access', className: 'border-border bg-muted' },
+          { role: 'org_admin', labelKey: 'admin.role.org_admin', descKey: 'admin.roles.desc.org_admin', className: 'border-brand/30 bg-brand/5' },
+          { role: 'moderator', labelKey: 'admin.role.moderator', descKey: 'admin.roles.desc.moderator', className: 'border-amber-200 bg-amber-50' },
+          { role: 'member', labelKey: 'admin.role.member', descKey: 'admin.roles.desc.member', className: 'border-blue-200 bg-blue-50' },
+          { role: 'guest', labelKey: 'admin.role.guest', descKey: 'admin.roles.desc.guest', className: 'border-border bg-muted' },
         ] as const).map((r) => (
           <div key={r.role} className={['rounded-xl border p-4', r.className].join(' ')}>
-            <p className="text-sm font-semibold text-surface-foreground">{r.label}</p>
-            <p className="mt-0.5 text-xs text-muted-foreground">{r.desc}</p>
+            <p className="text-sm font-semibold text-surface-foreground">{t(r.labelKey, userLanguage)}</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">{t(r.descKey, userLanguage)}</p>
           </div>
         ))}
       </div>
@@ -62,9 +78,9 @@ export default async function RolesPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border bg-muted text-xs text-muted-foreground">
-                <th className="py-3 pl-5 pr-3 text-left font-medium">Member</th>
-                <th className="px-3 py-3 text-left font-medium">Current role</th>
-                <th className="py-3 pl-3 pr-5 text-right font-medium">Change role</th>
+                <th className="py-3 pl-5 pr-3 text-left font-medium">{t('admin.members.table.member', userLanguage)}</th>
+                <th className="px-3 py-3 text-left font-medium">{t('admin.roles.table.current', userLanguage)}</th>
+                <th className="py-3 pl-3 pr-5 text-right font-medium">{t('admin.roles.table.change', userLanguage)}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -89,7 +105,7 @@ export default async function RolesPage() {
                     </td>
                     <td className="px-3 py-3">
                       <span className={['inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium', badge.className].join(' ')}>
-                        {badge.label}
+                        {t(badge.labelKey, userLanguage)}
                       </span>
                     </td>
                     <td className="py-3 pl-3 pr-5 text-right">
@@ -101,7 +117,9 @@ export default async function RolesPage() {
             </tbody>
           </table>
           <div className="border-t border-border px-5 py-3 text-xs text-muted-foreground">
-            {members.length} member{members.length !== 1 ? 's' : ''}
+            {members.length === 1
+              ? t('admin.roles.count.one', userLanguage)
+              : t('admin.roles.count.many', userLanguage).replace('{count}', String(members.length))}
           </div>
         </div>
       )}

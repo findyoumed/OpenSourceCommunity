@@ -1,61 +1,85 @@
+// [LOG: 20260527_1650]
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { Brain, Target, Bell, Search, Inbox, TrendingUp } from 'lucide-react'
+import { createClient } from '@/lib/supabase/server'
+import { apiGet } from '@/lib/api'
+import { t } from '@/lib/i18n'
 
-export const metadata: Metadata = { title: 'Intelligence Settings — Admin' }
+export async function generateMetadata(): Promise<Metadata> {
+  const supabase = await createClient()
+  const token = (await supabase.auth.getSession()).data.session?.access_token
+  let lang = 'en'
+  try {
+    const profile = await apiGet<{ language: string | null }>('/api/me', token, 60)
+    lang = profile?.language ?? 'en'
+  } catch {}
+  return { title: t('admin.intelligence.title', lang) }
+}
 
-const INTEL_SECTIONS = [
-  {
-    href: '/intelligence/inbox',
-    label: 'Mentions Inbox',
-    desc: 'Review and triage incoming brand mentions from all connected sources.',
-    icon: Inbox,
-    accent: '#8b5cf6',
-  },
-  {
-    href: '/intelligence/sentiment',
-    label: 'Sentiment',
-    desc: 'Track sentiment trends over time across monitored keywords and channels.',
-    icon: TrendingUp,
-    accent: '#10b981',
-  },
-  {
-    href: '/intelligence/competitors',
-    label: 'Competitors',
-    desc: 'Define competitor keyword groups and compare share of voice.',
-    icon: Target,
-    accent: '#ef4444',
-  },
-  {
-    href: '/intelligence/advocates',
-    label: 'Advocates',
-    desc: 'Identify top brand advocates and most engaged community members.',
-    icon: Brain,
-    accent: '#f59e0b',
-  },
-  {
-    href: '/intelligence/alerts',
-    label: 'Alerts',
-    desc: 'Configure alert rules for spikes in mentions, negative sentiment, or competitor activity.',
-    icon: Bell,
-    accent: '#0ea5e9',
-  },
-  {
-    href: '/intelligence/keywords',
-    label: 'Keywords',
-    desc: 'Manage keyword groups that define what topics and terms are monitored.',
-    icon: Search,
-    accent: '#a855f7',
-  },
-]
+export default async function IntelligenceSettingsPage() {
+  const supabase = await createClient()
+  const token = (await supabase.auth.getSession()).data.session?.access_token
 
-export default function IntelligenceSettingsPage() {
+  let userLanguage = 'en'
+  try {
+    const profile = await apiGet<{ language: string | null }>('/api/me', token, 60)
+    userLanguage = profile?.language ?? 'en'
+  } catch {}
+
+  const INTEL_SECTIONS = [
+    {
+      href: '/intelligence/inbox',
+      label: t('admin.intelligence.sections.inbox.label', userLanguage),
+      desc: t('admin.intelligence.sections.inbox.desc', userLanguage),
+      icon: Inbox,
+      accent: '#8b5cf6',
+    },
+    {
+      href: '/intelligence/sentiment',
+      label: t('admin.intelligence.sections.sentiment.label', userLanguage),
+      desc: t('admin.intelligence.sections.sentiment.desc', userLanguage),
+      icon: TrendingUp,
+      accent: '#10b981',
+    },
+    {
+      href: '/intelligence/competitors',
+      label: t('admin.intelligence.sections.competitors.label', userLanguage),
+      desc: t('admin.intelligence.sections.competitors.desc', userLanguage),
+      icon: Target,
+      accent: '#ef4444',
+    },
+    {
+      href: '/intelligence/advocates',
+      label: t('admin.intelligence.sections.advocates.label', userLanguage),
+      desc: t('admin.intelligence.sections.advocates.desc', userLanguage),
+      icon: Brain,
+      accent: '#f59e0b',
+    },
+    {
+      href: '/intelligence/alerts',
+      label: t('admin.intelligence.sections.alerts.label', userLanguage),
+      desc: t('admin.intelligence.sections.alerts.desc', userLanguage),
+      icon: Bell,
+      accent: '#0ea5e9',
+    },
+    {
+      href: '/intelligence/keywords',
+      label: t('admin.intelligence.sections.keywords.label', userLanguage),
+      desc: t('admin.intelligence.sections.keywords.desc', userLanguage),
+      icon: Search,
+      accent: '#a855f7',
+    },
+  ]
+
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-semibold text-surface-foreground">Intelligence Settings</h2>
+        <h2 className="text-lg font-semibold text-surface-foreground">
+          {t('admin.intelligence.header', userLanguage)}
+        </h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Configure social listening, keyword monitoring, alerts, and analytics.
+          {t('admin.intelligence.subtitle', userLanguage)}
         </p>
       </div>
 
@@ -84,13 +108,23 @@ export default function IntelligenceSettingsPage() {
       </div>
 
       <div className="rounded-xl border border-border bg-card p-5">
-        <p className="text-sm font-semibold text-surface-foreground">Data Sources</p>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Social pipeline connectors (G2, Trustpilot, Product Hunt, Reddit, etc.) are configured via
-          environment variables on the API worker. See the{' '}
-          <code className="rounded bg-muted px-1.5 py-0.5 text-xs font-mono">SOCIAL_PIPELINE_*</code>{' '}
-          variables in your deployment environment.
+        <p className="text-sm font-semibold text-surface-foreground">
+          {t('admin.intelligence.sources.title', userLanguage)}
         </p>
+        {userLanguage === 'ko' ? (
+          <p className="mt-1 text-sm text-muted-foreground">
+            소셜 파이프라인 커넥터(G2, Trustpilot, Product Hunt, Reddit 등)는 백엔드 API 워커의 환경 변수를 기반으로 작동합니다. 상세 내용은 관리 환경의{' '}
+            <code className="rounded bg-muted px-1.5 py-0.5 text-xs font-mono">SOCIAL_PIPELINE_*</code>{' '}
+            설정을 참조하십시오.
+          </p>
+        ) : (
+          <p className="mt-1 text-sm text-muted-foreground">
+            Social pipeline connectors (G2, Trustpilot, Product Hunt, Reddit, etc.) are configured via
+            environment variables on the API worker. See the{' '}
+            <code className="rounded bg-muted px-1.5 py-0.5 text-xs font-mono">SOCIAL_PIPELINE_*</code>{' '}
+            variables in your deployment environment.
+          </p>
+        )}
       </div>
     </div>
   )

@@ -3,8 +3,12 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { apiGet } from '@/lib/api'
 import type { Metadata } from 'next'
+import { t } from '@/lib/i18n'
 
-export const metadata: Metadata = { title: 'Members — Admin' }
+export async function generateMetadata(): Promise<Metadata> {
+  const { userLanguage } = await getAdminContext()
+  return { title: `${t('admin.members.title', userLanguage)} - ${t('admin.title', userLanguage)}` }
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -21,15 +25,15 @@ interface Member {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const ROLE_BADGE: Record<MemberRole, { label: string; className: string }> = {
-  guest: { label: 'Guest', className: 'bg-muted text-muted-foreground' },
-  member: { label: 'Member', className: 'bg-blue-50 text-blue-700' },
-  moderator: { label: 'Moderator', className: 'bg-amber-50 text-amber-700' },
-  org_admin: { label: 'Admin', className: 'bg-brand/5 text-brand' },
+const ROLE_BADGE: Record<MemberRole, { labelKey: Parameters<typeof t>[0]; className: string }> = {
+  guest: { labelKey: 'admin.role.guest', className: 'bg-muted text-muted-foreground' },
+  member: { labelKey: 'admin.role.member', className: 'bg-blue-50 text-blue-700' },
+  moderator: { labelKey: 'admin.role.moderator', className: 'bg-amber-50 text-amber-700' },
+  org_admin: { labelKey: 'admin.role.org_admin', className: 'bg-brand/5 text-brand' },
 }
 
-function joinedDate(iso: string): string {
-  return new Intl.DateTimeFormat('en', {
+function joinedDate(iso: string, lang: string): string {
+  return new Intl.DateTimeFormat(lang === 'ko' ? 'ko' : 'en', {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
@@ -37,6 +41,18 @@ function joinedDate(iso: string): string {
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
+async function getAdminContext() {
+  const supabase = await createClient()
+  const token = (await supabase.auth.getSession()).data.session?.access_token
+  let isAdmin = false
+  let userLanguage = 'en'
+  try {
+    const profile = await apiGet<{ role: string; language: string | null }>('/api/me', token, 60)
+    isAdmin = profile.role === 'org_admin'
+    userLanguage = profile.language ?? 'en'
+  } catch {}
+  return { token, isAdmin, userLanguage }
+}
 
 export default async function AdminMembersPage({
   searchParams,
@@ -45,17 +61,7 @@ export default async function AdminMembersPage({
 }) {
   const { search } = await searchParams
 
-  const supabase = await createClient()
-  const token = (await supabase.auth.getSession()).data.session?.access_token
-
-  // Verify org_admin
-  let isAdmin = false
-  try {
-    const profile = await apiGet<{ role: string }>('/api/me', token, 60)
-    isAdmin = profile.role === 'org_admin'
-  } catch {
-    // Will redirect below
-  }
+  const { token, isAdmin, userLanguage } = await getAdminContext()
 
   if (!isAdmin) {
     redirect('/home')
@@ -79,16 +85,16 @@ export default async function AdminMembersPage({
       {/* ── Header ────────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-surface-foreground">Members</h1>
+          <h1 className="text-2xl font-bold text-surface-foreground">{t('admin.members.title', userLanguage)}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Manage all members in this community
+            {t('admin.members.description', userLanguage)}
           </p>
         </div>
         <Link
           href="/admin/members/invite"
           className="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white hover:opacity-90 transition-colors whitespace-nowrap"
         >
-          Invite member
+          {t('admin.members.invite', userLanguage)}
         </Link>
       </div>
 
@@ -99,7 +105,7 @@ export default async function AdminMembersPage({
             type="search"
             name="search"
             defaultValue={search}
-            placeholder="Search by name or username…"
+            placeholder={t('admin.members.searchPlaceholder', userLanguage)}
             className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-surface-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
           />
         </div>
@@ -107,14 +113,14 @@ export default async function AdminMembersPage({
           type="submit"
           className="rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-surface-foreground hover:bg-muted transition-colors"
         >
-          Search
+          {t('admin.members.search', userLanguage)}
         </button>
         {search && (
           <Link
             href="/admin/members"
             className="text-sm text-muted-foreground hover:text-surface-foreground transition-colors"
           >
-            Clear
+            {t('admin.members.clear', userLanguage)}
           </Link>
         )}
       </form>
@@ -122,17 +128,17 @@ export default async function AdminMembersPage({
       {/* ── Error ─────────────────────────────────────────────────────────── */}
       {fetchError && (
         <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          Failed to load members. Please try refreshing.
+          {t('admin.members.error', userLanguage)}
         </div>
       )}
 
       {/* ── Empty state ───────────────────────────────────────────────────── */}
       {!fetchError && members.length === 0 && (
         <div className="rounded-xl border border-dashed border-border bg-card px-6 py-16 text-center">
-          <p className="text-sm font-medium text-muted-foreground">No members found</p>
+          <p className="text-sm font-medium text-muted-foreground">{t('admin.members.empty', userLanguage)}</p>
           {search && (
             <p className="mt-1 text-xs text-muted-foreground">
-              Try adjusting your search.
+              {t('admin.members.emptySearch', userLanguage)}
             </p>
           )}
         </div>
@@ -144,10 +150,10 @@ export default async function AdminMembersPage({
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border bg-muted text-xs text-muted-foreground">
-                <th className="py-3 pl-5 pr-3 text-left font-medium">Member</th>
-                <th className="px-3 py-3 text-left font-medium">Role</th>
-                <th className="px-3 py-3 text-left font-medium">Joined</th>
-                <th className="py-3 pl-3 pr-5 text-right font-medium">Actions</th>
+                <th className="py-3 pl-5 pr-3 text-left font-medium">{t('admin.members.table.member', userLanguage)}</th>
+                <th className="px-3 py-3 text-left font-medium">{t('admin.members.table.role', userLanguage)}</th>
+                <th className="px-3 py-3 text-left font-medium">{t('admin.members.table.joined', userLanguage)}</th>
+                <th className="py-3 pl-3 pr-5 text-right font-medium">{t('admin.members.table.actions', userLanguage)}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -190,13 +196,13 @@ export default async function AdminMembersPage({
                           badge.className,
                         ].join(' ')}
                       >
-                        {badge.label}
+                        {t(badge.labelKey, userLanguage)}
                       </span>
                     </td>
 
                     {/* Joined date */}
                     <td className="px-3 py-3 text-xs text-muted-foreground">
-                      {joinedDate(member.createdAt)}
+                      {joinedDate(member.createdAt, userLanguage)}
                     </td>
 
                     {/* Actions */}
@@ -205,7 +211,7 @@ export default async function AdminMembersPage({
                         href={`/members/${member.id}`}
                         className="text-xs font-medium text-brand hover:underline"
                       >
-                        View profile
+                        {t('admin.members.viewProfile', userLanguage)}
                       </Link>
                     </td>
                   </tr>
@@ -214,7 +220,9 @@ export default async function AdminMembersPage({
             </tbody>
           </table>
           <div className="border-t border-border px-5 py-3 text-xs text-muted-foreground">
-            {members.length} member{members.length !== 1 ? 's' : ''} shown
+            {members.length === 1
+              ? t('admin.members.count.one', userLanguage)
+              : t('admin.members.count.many', userLanguage).replace('{count}', String(members.length))}
           </div>
         </div>
       )}

@@ -191,7 +191,7 @@ export default async function WebinarsPage() {
 
 // ─── WebinarCard ──────────────────────────────────────────────────────────────
 
-function WebinarCard({ item, lang = 'en' }: { item: WebinarSummary; lang?: string | null }) {
+function WebinarCard({ item, lang = 'en' }: { item: WebinarSummary; lang?: string | null | undefined }) {
   const { webinar, registrationCount } = item
   const gradient = gradientForId(webinar.id)
 

@@ -2,9 +2,11 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslation } from '@/lib/i18n-context'
 
 export function ModerationActions({ reportId, token }: { reportId: string; token: string }) {
   const router = useRouter()
+  const { t } = useTranslation()
   const [busy, setBusy] = useState<string | null>(null)
 
   async function resolve(status: 'removed' | 'dismissed') {
@@ -29,7 +31,7 @@ export function ModerationActions({ reportId, token }: { reportId: string; token
         disabled={busy !== null}
         className="rounded-lg bg-red-50 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100 disabled:opacity-50 transition-colors"
       >
-        {busy === 'removed' ? '…' : 'Remove content'}
+        {busy === 'removed' ? '...' : t('admin.moderation.action.remove')}
       </button>
       <button
         type="button"
@@ -37,7 +39,7 @@ export function ModerationActions({ reportId, token }: { reportId: string; token
         disabled={busy !== null}
         className="rounded-lg bg-muted px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted transition-colors disabled:opacity-50"
       >
-        {busy === 'dismissed' ? '…' : 'Dismiss'}
+        {busy === 'dismissed' ? '...' : t('admin.moderation.action.dismiss')}
       </button>
     </div>
   )

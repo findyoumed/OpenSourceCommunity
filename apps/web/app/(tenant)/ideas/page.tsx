@@ -144,7 +144,7 @@ export default async function IdeasPage({
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function IdeaCard({ idea, lang = 'en' }: { idea: Idea; lang?: string | null }) {
+function IdeaCard({ idea, lang = 'en' }: { idea: Idea; lang?: string | null | undefined }) {
   const statusConfig = STATUS_CONFIG[idea.status] ?? STATUS_CONFIG.new
   const statusLabelKey = `ideas.status.${idea.status}` as any
 

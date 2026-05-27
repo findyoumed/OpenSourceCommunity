@@ -11,6 +11,8 @@ import { eq, and, asc, sql, count } from 'drizzle-orm'
 export function registerCoursesRoutes(app: Hono<HonoEnv>) {
   const coursesRouter = new Hono<HonoEnv>()
   coursesRouter.use('*', requireModule('courses'))
+  // [LOG: 20260527_1645]
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
   // ---------------------------------------------------------------------------
   // GET /api/courses/my-enrollments — registered BEFORE /:id to avoid conflict
@@ -75,6 +77,9 @@ export function registerCoursesRoutes(app: Hono<HonoEnv>) {
     const tenantId = c.get('tenantId')
     const member = c.get('member')
     const courseId = c.req.param('id')
+    if (!uuidRegex.test(courseId)) {
+      return c.json({ error: 'Course not found' }, 404)
+    }
     const isAdmin = member?.role === 'org_admin'
 
     const course = await db.query.courses.findFirst({
@@ -145,6 +150,9 @@ export function registerCoursesRoutes(app: Hono<HonoEnv>) {
     const db = getClient(c.env.DATABASE_URL, c.env.HYPERDRIVE)
     const tenantId = c.get('tenantId')
     const courseId = c.req.param('id')
+    if (!uuidRegex.test(courseId)) {
+      return c.json({ error: 'Course not found' }, 404)
+    }
     const data = c.req.valid('json')
 
     const existing = await db.query.courses.findFirst({
@@ -182,6 +190,9 @@ export function registerCoursesRoutes(app: Hono<HonoEnv>) {
     const db = getClient(c.env.DATABASE_URL, c.env.HYPERDRIVE)
     const tenantId = c.get('tenantId')
     const courseId = c.req.param('id')
+    if (!uuidRegex.test(courseId)) {
+      return c.json({ error: 'Course not found' }, 404)
+    }
     const data = c.req.valid('json')
 
     const course = await db.query.courses.findFirst({
@@ -227,6 +238,9 @@ export function registerCoursesRoutes(app: Hono<HonoEnv>) {
     const tenantId = c.get('tenantId')
     const courseId = c.req.param('id')
     const lessonId = c.req.param('lessonId')
+    if (!uuidRegex.test(courseId) || !uuidRegex.test(lessonId)) {
+      return c.json({ error: 'Lesson not found' }, 404)
+    }
     const data = c.req.valid('json')
 
     const existing = await db.query.courseLessons.findFirst({
@@ -268,6 +282,9 @@ export function registerCoursesRoutes(app: Hono<HonoEnv>) {
     const tenantId = c.get('tenantId')
     const courseId = c.req.param('id')
     const lessonId = c.req.param('lessonId')
+    if (!uuidRegex.test(courseId) || !uuidRegex.test(lessonId)) {
+      return c.json({ error: 'Lesson not found' }, 404)
+    }
 
     const existing = await db.query.courseLessons.findFirst({
       where: and(
@@ -298,6 +315,9 @@ export function registerCoursesRoutes(app: Hono<HonoEnv>) {
     const tenantId = c.get('tenantId')
     const member = c.get('member')!
     const courseId = c.req.param('id')
+    if (!uuidRegex.test(courseId)) {
+      return c.json({ error: 'Course not found' }, 404)
+    }
 
     const course = await db.query.courses.findFirst({
       where: and(eq(courses.id, courseId), eq(courses.tenantId, tenantId), eq(courses.status, 'published')),
@@ -335,6 +355,9 @@ export function registerCoursesRoutes(app: Hono<HonoEnv>) {
     const member = c.get('member')!
     const courseId = c.req.param('id')
     const lessonId = c.req.param('lessonId')
+    if (!uuidRegex.test(courseId) || !uuidRegex.test(lessonId)) {
+      return c.json({ error: 'Lesson not found' }, 404)
+    }
 
     const enrollment = await db.query.courseEnrollments.findFirst({
       where: and(

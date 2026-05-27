@@ -15,7 +15,7 @@ interface IdeaCategory {
 interface NewIdeaFormProps {
   categories: IdeaCategory[]
   token: string
-  lang?: string | null
+  lang?: string | null | undefined
 }
 
 export function NewIdeaForm({

@@ -38,7 +38,7 @@ const BADGE_VARIANT: Record<ActivityItem['type'], BadgeProps['variant']> = {
   comment: 'secondary',
 }
 
-const getBadgeLabel = (type: ActivityItem['type'], lang?: string | null) => {
+const getBadgeLabel = (type: ActivityItem['type'], lang?: string | null | undefined) => {
   const isKo = lang === 'ko'
   const labels: Record<ActivityItem['type'], { en: string; ko: string }> = {
     post:    { en: 'Post',  ko: '게시글' },

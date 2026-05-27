@@ -1,3 +1,4 @@
+// [LOG: 20260527_1449]
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -15,8 +16,18 @@ import type { Metadata } from 'next'
 import { ModuleToggle } from './module-toggle'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
+import { t } from '@/lib/i18n'
 
-export const metadata: Metadata = { title: 'Admin' }
+export async function generateMetadata(): Promise<Metadata> {
+  const supabase = await createClient()
+  const token = (await supabase.auth.getSession()).data.session?.access_token
+  let lang = 'en'
+  try {
+    const profile = await apiGet<{ language: string | null }>('/api/me', token, 60)
+    lang = profile?.language ?? 'en'
+  } catch {}
+  return { title: t('admin.title', lang) }
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -45,22 +56,6 @@ interface AdminOverview {
   pendingModeration: number
 }
 
-// ─── Module metadata ──────────────────────────────────────────────────────────
-
-const MODULE_META: Record<
-  ModuleKey,
-  { label: string; description: string; emoji: string; settingsHref: string }
-> = {
-  forums: { label: 'Forums', description: 'Discussion threads organised by category', emoji: '💬', settingsHref: '/admin/forums' },
-  ideas: { label: 'Ideas', description: 'Vote-based feedback and feature requests', emoji: '💡', settingsHref: '/admin/ideas' },
-  events: { label: 'Events', description: 'In-person and virtual event listings', emoji: '📅', settingsHref: '/admin/events' },
-  courses: { label: 'Courses', description: 'Structured learning paths and lessons', emoji: '📚', settingsHref: '/admin/courses' },
-  webinars: { label: 'Webinars', description: 'Live and recorded video sessions', emoji: '🎥', settingsHref: '/admin/webinars' },
-  kb: { label: 'Knowledge Base', description: 'Searchable documentation and articles', emoji: '📖', settingsHref: '/admin/kb' },
-  intelligence: { label: 'Intelligence', description: 'AI-powered analytics and member insights', emoji: '🧠', settingsHref: '/admin/intelligence' },
-  chat: { label: 'Chat', description: 'Real-time messaging channels for members', emoji: '💬', settingsHref: '/admin/chat' },
-}
-
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default async function AdminOverviewPage() {
@@ -68,6 +63,7 @@ export default async function AdminOverviewPage() {
   const token = (await supabase.auth.getSession()).data.session?.access_token
 
   let isAdmin = false
+  let userLanguage = 'en'
   let overview: AdminOverview = {
     modules: [],
     memberCount: 0,
@@ -79,8 +75,9 @@ export default async function AdminOverviewPage() {
   }
 
   try {
-    const profile = await apiGet<{ role: string }>('/api/me', token, 60)
+    const profile = await apiGet<{ role: string; language: string | null }>('/api/me', token, 60)
     isAdmin = profile.role === 'org_admin'
+    userLanguage = profile.language ?? 'en'
   } catch {}
 
   if (isAdmin) {
@@ -93,14 +90,29 @@ export default async function AdminOverviewPage() {
     redirect('/home')
   }
 
+  // ─── Module metadata (localized) ───────────────────────────────────────────
+  const MODULE_META: Record<
+    ModuleKey,
+    { label: string; description: string; emoji: string; settingsHref: string }
+  > = {
+    forums: { label: t('admin.modules.forums.label', userLanguage), description: t('admin.modules.forums.desc', userLanguage), emoji: '💬', settingsHref: '/admin/forums' },
+    ideas: { label: t('admin.modules.ideas.label', userLanguage), description: t('admin.modules.ideas.desc', userLanguage), emoji: '💡', settingsHref: '/admin/ideas' },
+    events: { label: t('admin.modules.events.label', userLanguage), description: t('admin.modules.events.desc', userLanguage), emoji: '📅', settingsHref: '/admin/events' },
+    courses: { label: t('admin.modules.courses.label', userLanguage), description: t('admin.modules.courses.desc', userLanguage), emoji: '📚', settingsHref: '/admin/courses' },
+    webinars: { label: t('admin.modules.webinars.label', userLanguage), description: t('admin.modules.webinars.desc', userLanguage), emoji: '🎥', settingsHref: '/admin/webinars' },
+    kb: { label: t('admin.modules.kb.label', userLanguage), description: t('admin.modules.kb.desc', userLanguage), emoji: '📖', settingsHref: '/admin/kb' },
+    intelligence: { label: t('admin.modules.intelligence.label', userLanguage), description: t('admin.modules.intelligence.desc', userLanguage), emoji: '🧠', settingsHref: '/admin/intelligence' },
+    chat: { label: t('admin.modules.chat.label', userLanguage), description: t('admin.modules.chat.desc', userLanguage), emoji: '💬', settingsHref: '/admin/chat' },
+  }
+
   const quickLinks = [
-    { label: 'Moderation queue', href: '/admin/moderation', badge: overview.pendingModeration, icon: <Flag className="h-4 w-4" /> },
-    { label: 'Members', href: '/admin/members', icon: <Users className="h-4 w-4" /> },
-    { label: 'Analytics', href: '/admin/analytics', icon: <TrendingUp className="h-4 w-4" /> },
-    { label: 'Audit log', href: '/admin/audit-log', icon: <span className="text-sm">📋</span> },
-    { label: 'Roles & permissions', href: '/admin/roles', icon: <Puzzle className="h-4 w-4" /> },
-    { label: 'Custom branding', href: '/admin/branding', icon: <span className="text-sm">🎨</span> },
-    { label: 'Integrations', href: '/admin/integrations', icon: <span className="text-sm">🔌</span> },
+    { label: t('admin.quickLinks.moderation', userLanguage), href: '/admin/moderation', badge: overview.pendingModeration, icon: <Flag className="h-4 w-4" /> },
+    { label: t('admin.quickLinks.members', userLanguage), href: '/admin/members', icon: <Users className="h-4 w-4" /> },
+    { label: t('admin.quickLinks.analytics', userLanguage), href: '/admin/analytics', icon: <TrendingUp className="h-4 w-4" /> },
+    { label: t('admin.quickLinks.auditLog', userLanguage), href: '/admin/audit-log', icon: <span className="text-sm">📋</span> },
+    { label: t('admin.quickLinks.roles', userLanguage), href: '/admin/roles', icon: <Puzzle className="h-4 w-4" /> },
+    { label: t('admin.quickLinks.branding', userLanguage), href: '/admin/branding', icon: <span className="text-sm">🎨</span> },
+    { label: t('admin.quickLinks.integrations', userLanguage), href: '/admin/integrations', icon: <span className="text-sm">🔌</span> },
   ]
 
   return (
@@ -110,33 +122,33 @@ export default async function AdminOverviewPage() {
       <div className="overflow-hidden rounded-2xl border border-border bg-card">
         <div className="grid grid-cols-2 divide-x divide-y divide-border sm:grid-cols-3 lg:grid-cols-6">
           <StatCell
-            label="Total members"
+            label={t('admin.stats.totalMembers', userLanguage)}
             value={overview.memberCount}
             icon={<Users className="h-4 w-4" />}
           />
           <StatCell
-            label="Pending moderation"
+            label={t('admin.stats.pendingModeration', userLanguage)}
             value={overview.pendingModeration}
             icon={<Flag className="h-4 w-4" />}
             alert={overview.pendingModeration > 0}
           />
           <StatCell
-            label="Active modules"
+            label={t('admin.stats.activeModules', userLanguage)}
             value={overview.modules.filter((m) => m.enabled).length}
             icon={<Puzzle className="h-4 w-4" />}
           />
           <StatCell
-            label="Forum threads"
+            label={t('admin.stats.forumThreads', userLanguage)}
             value={overview.threadCount}
             icon={<MessageSquare className="h-4 w-4" />}
           />
           <StatCell
-            label="Ideas"
+            label={t('admin.stats.ideas', userLanguage)}
             value={overview.ideaCount}
             icon={<Lightbulb className="h-4 w-4" />}
           />
           <StatCell
-            label="New members (7d)"
+            label={t('admin.stats.newMembers', userLanguage)}
             value={overview.newMembersThisWeek}
             icon={<TrendingUp className="h-4 w-4" />}
           />
@@ -145,7 +157,9 @@ export default async function AdminOverviewPage() {
 
       {/* Modules */}
       <section>
-        <h2 className="mb-4 text-base font-bold tracking-tight text-surface-foreground">Modules</h2>
+        <h2 className="mb-4 text-base font-bold tracking-tight text-surface-foreground">
+          {t('admin.modules.title', userLanguage)}
+        </h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {overview.modules.map((mod) => {
             const meta = MODULE_META[mod.key]
@@ -176,7 +190,7 @@ export default async function AdminOverviewPage() {
                     href={meta.settingsHref}
                     className="text-xs font-medium text-brand hover:underline"
                   >
-                    Settings →
+                    {t('admin.modules.settingsLink', userLanguage)}
                   </Link>
                 </div>
               </div>
@@ -188,7 +202,7 @@ export default async function AdminOverviewPage() {
       {/* Quick links */}
       <section>
         <h2 className="mb-4 text-base font-bold tracking-tight text-surface-foreground">
-          Quick links
+          {t('admin.quickLinks.title', userLanguage)}
         </h2>
         <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {quickLinks.map((link) => (
@@ -242,3 +256,4 @@ function StatCell({
     </div>
   )
 }
+

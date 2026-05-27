@@ -10,7 +10,7 @@ interface CompleteButtonProps {
   lessonId: string
   token: string | undefined
   isComplete: boolean
-  lang?: string | null
+  lang?: string | null | undefined
 }
 
 export function CompleteButton({

@@ -11,7 +11,7 @@ interface QaSectionProps {
   initialItems: QaItem[]
   isAuthenticated: boolean
   token: string | undefined
-  lang?: string | null
+  lang?: string | null | undefined
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

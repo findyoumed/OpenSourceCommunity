@@ -2,8 +2,12 @@ import { createClient } from '@/lib/supabase/server'
 import { apiGet } from '@/lib/api'
 import type { Metadata } from 'next'
 import { BrandingForm } from './branding-form'
+import { t } from '@/lib/i18n'
 
-export const metadata: Metadata = { title: 'Branding \u2014 Admin' }
+export async function generateMetadata(): Promise<Metadata> {
+  const { userLanguage } = await getBrandingContext()
+  return { title: `${t('admin.branding.title', userLanguage)} - ${t('admin.title', userLanguage)}` }
+}
 
 interface TenantConfig {
   id: string
@@ -13,9 +17,19 @@ interface TenantConfig {
   slug: string
 }
 
-export default async function BrandingPage() {
+async function getBrandingContext() {
   const supabase = await createClient()
   const token = (await supabase.auth.getSession()).data.session?.access_token
+  let userLanguage = 'en'
+  try {
+    const profile = await apiGet<{ language: string | null }>('/api/me', token, 60)
+    userLanguage = profile?.language ?? 'en'
+  } catch {}
+  return { token, userLanguage }
+}
+
+export default async function BrandingPage() {
+  const { token, userLanguage } = await getBrandingContext()
 
   let tenant: TenantConfig | null = null
   try {
@@ -25,8 +39,8 @@ export default async function BrandingPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-semibold text-surface-foreground">Branding</h2>
-        <p className="mt-1 text-sm text-muted-foreground">Customise how your community appears to members</p>
+        <h2 className="text-lg font-semibold text-surface-foreground">{t('admin.branding.title', userLanguage)}</h2>
+        <p className="mt-1 text-sm text-muted-foreground">{t('admin.branding.description', userLanguage)}</p>
       </div>
       <BrandingForm
         initialName={tenant?.name ?? ''}

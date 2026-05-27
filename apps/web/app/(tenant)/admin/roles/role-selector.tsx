@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { apiClientPatch } from '@/lib/api-client'
+import { useTranslation } from '@/lib/i18n-context'
 
 type MemberRole = 'guest' | 'member' | 'moderator' | 'org_admin'
 
@@ -13,6 +14,7 @@ export function RoleSelector({
   currentRole: MemberRole
   token: string
 }) {
+  const { t } = useTranslation()
   const [role, setRole] = useState<MemberRole>(currentRole)
   const [saving, setSaving] = useState(false)
 
@@ -34,10 +36,10 @@ export function RoleSelector({
       disabled={saving}
       className="rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs font-medium text-surface-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-50"
     >
-      <option value="guest">Guest</option>
-      <option value="member">Member</option>
-      <option value="moderator">Moderator</option>
-      <option value="org_admin">Admin</option>
+      <option value="guest">{t('admin.role.guest')}</option>
+      <option value="member">{t('admin.role.member')}</option>
+      <option value="moderator">{t('admin.role.moderator')}</option>
+      <option value="org_admin">{t('admin.role.org_admin')}</option>
     </select>
   )
 }

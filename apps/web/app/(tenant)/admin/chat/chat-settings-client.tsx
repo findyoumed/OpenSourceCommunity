@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, Fragment } from 'react'
 import { apiClientPost, apiClientPatch, apiClientDelete } from '@/lib/api-client'
 import { Badge } from '@/components/ui/badge'
 
@@ -199,8 +199,8 @@ export function ChatSettingsClient({ initialChannels }: { initialChannels: ChatC
             </thead>
             <tbody className="divide-y divide-border">
               {channels.map((channel) => (
-                <>
-                  <tr key={channel.id} className="hover:bg-muted/30 transition-colors">
+                <Fragment key={channel.id}>
+                  <tr className="hover:bg-muted/30 transition-colors">
                     <td className="px-4 py-3">
                       <p className="font-medium text-surface-foreground">#{channel.name}</p>
                       {channel.description && (
@@ -243,7 +243,7 @@ export function ChatSettingsClient({ initialChannels }: { initialChannels: ChatC
                       </td>
                     </tr>
                   )}
-                </>
+                </Fragment>
               ))}
             </tbody>
           </table>

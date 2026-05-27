@@ -12,7 +12,7 @@ interface RsvpButtonProps {
   goingCount: number
   interestedCount: number
   token: string | undefined
-  lang?: string | null
+  lang?: string | null | undefined
 }
 
 type RsvpOption = 'going' | 'interested' | 'not_going'

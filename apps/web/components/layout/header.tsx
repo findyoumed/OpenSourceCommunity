@@ -162,10 +162,12 @@ export function Header({
           </Link>
 
           {/* User avatar dropdown (Radix) */}
+          {/* [LOG: 20260527_1633] Added stable id to prevent Radix dynamic ID SSR/CSR hydration mismatch */}
           <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
               <button
                 type="button"
+                id="user-menu-trigger"
                 className="flex items-center rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 aria-label="User menu"
               >

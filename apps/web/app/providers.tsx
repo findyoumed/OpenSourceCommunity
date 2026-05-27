@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { TranslationProvider } from '@/lib/i18n-context'
 
 /**
  * Client-side providers wrapper.
@@ -26,6 +27,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
   )
 
   return (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    <QueryClientProvider client={queryClient}>
+      <TranslationProvider initialLang="en">{children}</TranslationProvider>
+    </QueryClientProvider>
   )
 }
