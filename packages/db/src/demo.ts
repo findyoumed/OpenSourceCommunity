@@ -163,14 +163,11 @@ async function seed() {
   // -------------------------------------------------------------------------
   console.log('Creating Supabase auth users...')
   const userDefs = [
-    { email: 'admin@acme.com',  password: 'password123', displayName: 'Admin User',   role: 'org_admin'  as const, username: 'admin',  bio: 'Community admin and product evangelist at Acme.', avatar: 'admin'  },
-    { email: 'sarah@acme.com',  password: 'password123', displayName: 'Sarah Chen',   role: 'moderator'  as const, username: 'sarah',  bio: 'Community moderator. Passionate about developer experience.', avatar: 'sarah'  },
-    { email: 'alex@acme.com',   password: 'password123', displayName: 'Alex Rivera',  role: 'member'     as const, username: 'alex',   bio: 'Full-stack engineer, integration enthusiast.', avatar: 'alex'   },
-    { email: 'maya@acme.com',   password: 'password123', displayName: 'Maya Patel',   role: 'member'     as const, username: 'maya',   bio: 'Head of Operations. Automates everything possible.', avatar: 'maya'   },
-    { email: 'james@acme.com',  password: 'password123', displayName: 'James Okafor', role: 'member'     as const, username: 'james',  bio: 'Startup founder. Using OpenSourceCommunity to scale support.', avatar: 'james'  },
-    { email: 'priya@acme.com',  password: 'password123', displayName: 'Priya Singh',  role: 'member'     as const, username: 'priya',  bio: 'Customer Success Manager. Loves webinars.', avatar: 'priya'  },
-    { email: 'tom@acme.com',    password: 'password123', displayName: 'Tom Nguyen',   role: 'member'     as const, username: 'tom',    bio: 'Backend engineer, API power user.', avatar: 'tom'    },
-    { email: 'guest@acme.com',  password: 'password123', displayName: 'Guest User',   role: 'guest'      as const, username: 'guest',  bio: 'Just exploring the community.', avatar: 'guest'  },
+    { email: 'test1@acme.com', password: 'password123', displayName: '테스트 유저 1', role: 'org_admin' as const, username: 'test1', bio: '커뮤니티 대표 최고 관리자입니다.', avatar: 'test1' },
+    { email: 'test2@acme.com', password: 'password123', displayName: '테스트 유저 2', role: 'moderator' as const, username: 'test2', bio: '커뮤니티 전문 모더레이터입니다.', avatar: 'test2' },
+    { email: 'test3@acme.com', password: 'password123', displayName: '테스트 유저 3', role: 'member' as const, username: 'test3', bio: '프론트엔드 전문 개발 회원입니다.', avatar: 'test3' },
+    { email: 'test4@acme.com', password: 'password123', displayName: '테스트 유저 4', role: 'member' as const, username: 'test4', bio: '운영 및 비즈니스 담당 회원입니다.', avatar: 'test4' },
+    { email: 'test5@acme.com', password: 'password123', displayName: '테스트 유저 5', role: 'member' as const, username: 'test5', bio: '백엔드 기술 열정 회원입니다.', avatar: 'test5' },
   ]
 
   const authIds: string[] = []
@@ -204,20 +201,16 @@ async function seed() {
     username: u.username,
     avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${u.avatar}`,
     bio: u.bio,
-    socialHandles: u.username === 'admin'
-      ? { twitter: '@acmecommunity', linkedin: 'acme-community' }
-      : u.username === 'sarah'
-      ? { twitter: '@sarahchen_dev', github: 'sarahchen' }
-      : u.username === 'alex'
-      ? { github: 'alexrivera', twitter: '@alexrivera_eng' }
-      : u.username === 'maya'
-      ? { linkedin: 'mayapatel-ops' }
-      : u.username === 'james'
-      ? { twitter: '@jamesokafor', linkedin: 'james-okafor' }
-      : u.username === 'priya'
-      ? { linkedin: 'priya-singh-cs', twitter: '@priyasingh_cs' }
-      : u.username === 'tom'
-      ? { github: 'tomnguyen', twitter: '@tomng_dev' }
+    socialHandles: u.username === 'test1'
+      ? { twitter: '@test1_admin', linkedin: 'test1-admin' }
+      : u.username === 'test2'
+      ? { twitter: '@test2_mod', github: 'test2-mod' }
+      : u.username === 'test3'
+      ? { github: 'test3-dev', twitter: '@test3_dev' }
+      : u.username === 'test4'
+      ? { linkedin: 'test4-ops' }
+      : u.username === 'test5'
+      ? { twitter: '@test5_eng', linkedin: 'test5-eng' }
       : {},
     lastActiveAt: daysAgo(Math.floor(Math.random() * 7)),
   }))
@@ -239,8 +232,18 @@ async function seed() {
     memberByUserId[m.userId] = m.id
   }
 
-  const [adminMId, sarahMId, alexMId, mayaMId, jamesMId, priyaMId, tomMId, guestMId] =
-    authIds.map((uid) => memberByUserId[uid]!) as [string, string, string, string, string, string, string, string]
+  const [test1MId, test2MId, test3MId, test4MId, test5MId] =
+    authIds.map((uid) => memberByUserId[uid]!) as [string, string, string, string, string]
+
+  // [LOG: 20260527_1545] Map old variables to new ones for seamless compatibility
+  const adminMId = test1MId
+  const sarahMId = test2MId
+  const alexMId = test3MId
+  const mayaMId = test4MId
+  const jamesMId = test5MId
+  const priyaMId = test3MId
+  const tomMId = test4MId
+  const guestMId = test5MId
 
   console.log(`  Members: ${Object.keys(memberByUserId).length} found`)
 
@@ -646,7 +649,7 @@ async function seed() {
     ideaIds.push(inserted.id)
 
     // Insert votes (distribute among members)
-    const voters = [adminMId, sarahMId, alexMId, mayaMId, jamesMId, priyaMId, tomMId, guestMId]
+    const voters = [test1MId, test2MId, test3MId, test4MId, test5MId]
     const voteCount = Math.min(idea.voteCount, voters.length)
     for (let i = 0; i < voteCount; i++) {
       await db
@@ -681,7 +684,7 @@ async function seed() {
   // Step 7: Events
   // -------------------------------------------------------------------------
   console.log('Creating events...')
-  const allMembers = [adminMId, sarahMId, alexMId, mayaMId, jamesMId, priyaMId, tomMId, guestMId]
+  const allMembers = [test1MId, test2MId, test3MId, test4MId, test5MId]
 
   const eventDefs = [
     {
