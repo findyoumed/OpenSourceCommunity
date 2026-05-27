@@ -3,6 +3,9 @@ import { createClient } from '@/lib/supabase/server'
 import { apiGet } from '@/lib/api'
 import type { ModuleKey } from '@/components/layout/sidebar'
 import { resolveWidgets, type HomepageConfig } from './widgets/types'
+import { headers } from 'next/headers'
+
+// [LOG: 20260527_1736]
 
 // ─── Widget imports ───────────────────────────────────────────────────────────
 
@@ -67,6 +70,12 @@ export default async function CommunityHomePage() {
   const supabase = await createClient()
   const token = (await supabase.auth.getSession()).data.session?.access_token
 
+  // Read browser Accept-Language on the server side to match the default language directly
+  const headersList = await headers()
+  const acceptLanguage = headersList.get('accept-language') || ''
+  const prefersKorean = acceptLanguage.toLowerCase().includes('ko')
+  const defaultLang = prefersKorean ? 'ko' : 'en'
+
   let tenantConfig: TenantConfig = {
     id: '',
     name: 'Community',
@@ -74,7 +83,7 @@ export default async function CommunityHomePage() {
     enabledModules: ['forums', 'ideas'],
   }
   let isAdmin = false
-  let userLang: string | null | undefined = 'en'
+  let userLang: string | null | undefined = undefined
 
   try {
     // [LOG: 20260527_1658]
@@ -99,6 +108,8 @@ export default async function CommunityHomePage() {
     tenantConfig.enabledModules
   )
 
+  const resolvedLang = userLang ?? defaultLang
+
   return (
     <div
       className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
@@ -106,7 +117,7 @@ export default async function CommunityHomePage() {
     >
       {/* [LOG: 20260527_1127] */}
       {widgets.map((w) =>
-        renderWidget(w.id, token, tenantConfig.name, tenantConfig.enabledModules, isAdmin, userLang)
+        renderWidget(w.id, token, tenantConfig.name, tenantConfig.enabledModules, isAdmin, resolvedLang)
       )}
     </div>
   )

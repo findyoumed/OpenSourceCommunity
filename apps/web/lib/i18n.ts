@@ -101,6 +101,19 @@ export const dictionary = {
     'forums.thread.new.cancelBtn': 'Cancel',
     'forums.thread.new.errorGeneric': 'Something went wrong. Please try again.',
 
+    // Forums Category
+    'forums.category.newThreadBtn': 'New thread',
+    'forums.category.sortNewest': 'Newest',
+    'forums.category.sortActive': 'Most active',
+    'forums.category.emptyTitle': 'No threads yet',
+    'forums.category.emptyDesc': 'Be the first to start a discussion!',
+    'forums.category.cardPinned': 'Pinned',
+    'forums.category.cardAnswered': 'Answered',
+    'forums.category.cardReplies': 'replies',
+    'forums.category.cardViews': 'views',
+    'forums.category.cardActive': 'Active',
+    'forums.category.by': 'by',
+
     // Ideas Page
     'ideas.title': 'Ideas',
     'ideas.description': 'Vote on and submit ideas for this community',
@@ -169,6 +182,11 @@ export const dictionary = {
     'events.rsvps': 'RSVPs',
     'events.location.virtual': 'Virtual',
     'events.location.irl': 'In-person',
+
+    // Events - Create
+    'events.new.title': 'Create event',
+    'events.new.subtitle': 'Fill in the details to create a new community event.',
+    'events.new.breadcrumbNew': 'New event',
 
     // Events - Detail
     'events.detail.backBtn': 'Back to events',
@@ -268,6 +286,11 @@ export const dictionary = {
     'webinars.status.ended': 'Ended',
     'webinars.registered': 'registered',
 
+    // Webinars - Create
+    'webinars.new.title': 'Create webinar',
+    'webinars.new.subtitle': 'New webinars start in draft status — publish when ready.',
+    'webinars.new.breadcrumbCreate': 'Create webinar',
+
     // Webinars - Detail
     'webinars.detail.backBtn': 'Back to webinars',
     'webinars.detail.about': 'About this webinar',
@@ -336,6 +359,76 @@ export const dictionary = {
     'settings.notifications.desc.events': 'Choose how you want to be notified about events activity.',
     'settings.notifications.desc.kb': 'Choose how you want to be notified about knowledge base activity.',
     'settings.notifications.desc.community': 'Choose how you want to be notified about community activity.',
+
+    // Members Page
+    'members.title': 'Members',
+    'members.description': 'Everyone in this community',
+    'members.searchPlaceholder': 'Search by name or username…',
+    'members.allRoles': 'All roles',
+    'members.searchBtn': 'Search',
+    'members.clearBtn': 'Clear',
+    'members.loadMore': 'Load more',
+    'members.error': 'Failed to load members. Please try refreshing.',
+    'members.emptyTitle': 'No members found',
+    'members.emptyDesc': 'Try adjusting your search or filter.',
+    'members.joinedPrefix': 'Member since',
+
+    // Profile Page
+    'profile.title': 'My Profile',
+    'profile.editSettings': 'Edit in Settings',
+    'profile.errorLoad': 'Failed to load profile. Please try refreshing.',
+    'profile.memberSince': 'Member since',
+    'profile.noBio': 'No bio yet.',
+    'profile.addBioLink': 'Add one in Settings →',
+    'profile.appearanceNotice': 'This is how your profile appears to other members.',
+    'profile.editSettingsLink': 'Edit your profile in Settings →',
+
+    // Notifications Page
+    'notifications.title': 'Notifications',
+    'notifications.subtitle': 'Your activity and mentions',
+    'notifications.empty': 'No notifications yet',
+    'notifications.emptyDesc': "You'll be notified of replies, mentions, and community activity.",
+    'notifications.time.justNow': 'just now',
+    'notifications.time.minutesAgo': '{mins}m ago',
+    'notifications.time.hoursAgo': '{hrs}h ago',
+    'notifications.time.daysAgo': '{days}d ago',
+
+    // Search Page
+    'search.pageTitle': 'Search',
+    'search.inputPlaceholder': 'Search threads, ideas, events, articles…',
+    'search.btn': 'Search',
+    'search.tabs.all': 'All',
+    'search.tabs.threads': 'Threads',
+    'search.tabs.ideas': 'Ideas',
+    'search.tabs.events': 'Events',
+    'search.tabs.kb': 'Knowledge Base',
+    'search.tabs.members': 'Members',
+    'search.emptyTitle': 'No results found',
+    'search.emptyDesc': 'Nothing matched "{q}"{typeDesc}. Try different keywords.',
+    'search.startTitle': 'Start searching',
+    'search.startDesc': 'Search across forum threads, ideas, events, articles, and members.',
+    'search.badge.thread': 'Thread',
+    'search.badge.idea': 'Idea',
+    'search.badge.event': 'Event',
+    'search.badge.article': 'Article',
+    'search.badge.member': 'Member',
+
+    // Rich Editor
+    'editor.bold': 'Bold',
+    'editor.italic': 'Italic',
+    'editor.underline': 'Underline',
+    'editor.strike': 'Strikethrough',
+    'editor.code': 'Inline code',
+    'editor.codeBlock': 'Code block',
+    'editor.h1': 'Heading 1',
+    'editor.h2': 'Heading 2',
+    'editor.h3': 'Heading 3',
+    'editor.bullet': 'Bullet list',
+    'editor.ordered': 'Numbered list',
+    'editor.quote': 'Blockquote',
+    'editor.link': 'Link',
+    'editor.insertLink': 'Insert link',
+    'editor.enterUrl': 'Enter URL',
 
     // Auth
     'auth.login.title': 'Welcome back',
@@ -774,6 +867,19 @@ export const dictionary = {
     'forums.thread.new.cancelBtn': '취소',
     'forums.thread.new.errorGeneric': '문제가 발생했습니다. 다시 시도해 주세요.',
 
+    // Forums Category
+    'forums.category.newThreadBtn': '새 글 쓰기',
+    'forums.category.sortNewest': '최신순',
+    'forums.category.sortActive': '활성순',
+    'forums.category.emptyTitle': '아직 게시물이 없습니다',
+    'forums.category.emptyDesc': '첫 번째 게시물의 주인공이 되어보세요!',
+    'forums.category.cardPinned': '고정됨',
+    'forums.category.cardAnswered': '해결됨',
+    'forums.category.cardReplies': '댓글',
+    'forums.category.cardViews': '조회',
+    'forums.category.cardActive': '최근 활동',
+    'forums.category.by': '작성자',
+
     // Ideas Page
     'ideas.title': '아이디어 건의',
     'ideas.description': '커뮤니티를 위한 새로운 아이디어를 제안하고 투표해 주세요',
@@ -842,6 +948,11 @@ export const dictionary = {
     'events.rsvps': '참여 신청',
     'events.location.virtual': '온라인',
     'events.location.irl': '오프라인',
+
+    // Events - Create
+    'events.new.title': '이벤트 만들기',
+    'events.new.subtitle': '상세 정보를 입력해 새로운 커뮤니티 이벤트를 생성합니다.',
+    'events.new.breadcrumbNew': '새 이벤트',
 
     // Events - Detail
     'events.detail.backBtn': '이벤트 목록으로',
@@ -941,6 +1052,11 @@ export const dictionary = {
     'webinars.status.ended': '종료됨',
     'webinars.registered': '명 신청 완료',
 
+    // Webinars - Create
+    'webinars.new.title': '웨비나 만들기',
+    'webinars.new.subtitle': '새 웨비나는 초안 상태로 생성됩니다 — 준비가 되었을 때 공개해 주세요.',
+    'webinars.new.breadcrumbCreate': '새 웨비나',
+
     // Webinars - Detail
     'webinars.detail.backBtn': '웨비나 목록으로',
     'webinars.detail.about': '웨비나 소개',
@@ -1009,6 +1125,76 @@ export const dictionary = {
     'settings.notifications.desc.events': '새로운 이벤트 등록 알림 방식을 선택하세요.',
     'settings.notifications.desc.kb': '새로운 가이드 및 아티클 등록 알림 방식을 선택하세요.',
     'settings.notifications.desc.community': '새로운 멤버 가입 등 커뮤니티 전반의 알림 방식을 선택하세요.',
+
+    // Members Page
+    'members.title': '멤버 목록',
+    'members.description': '우리 커뮤니티의 모든 멤버들을 소개합니다',
+    'members.searchPlaceholder': '이름 또는 사용자명으로 검색…',
+    'members.allRoles': '모든 역할',
+    'members.searchBtn': '검색',
+    'members.clearBtn': '초기화',
+    'members.loadMore': '더 보기',
+    'members.error': '멤버 목록을 불러오지 못했습니다. 새로고침을 시도해 주세요.',
+    'members.emptyTitle': '검색된 멤버가 없습니다',
+    'members.emptyDesc': '검색어 또는 필터를 조정해 보세요.',
+    'members.joinedPrefix': '가입일:',
+
+    // Profile Page
+    'profile.title': '내 프로필',
+    'profile.editSettings': '프로필 설정 수정',
+    'profile.errorLoad': '프로필 정보를 불러오지 못했습니다. 새로고침을 시도해 주세요.',
+    'profile.memberSince': '가입일:',
+    'profile.noBio': '아직 등록된 소개글이 없습니다.',
+    'profile.addBioLink': '설정에서 소개글 추가하기 →',
+    'profile.appearanceNotice': '다른 멤버들에게 나의 프로필 카드가 이렇게 표시됩니다.',
+    'profile.editSettingsLink': '설정에서 프로필 수정하기 →',
+
+    // Notifications Page
+    'notifications.title': '알림',
+    'notifications.subtitle': '내 활동 및 실시간 언급 알림',
+    'notifications.empty': '새로운 알림이 없습니다',
+    'notifications.emptyDesc': '답글, 언급 및 커뮤니티 소식이 있을 때 여기에 표시됩니다.',
+    'notifications.time.justNow': '방금 전',
+    'notifications.time.minutesAgo': '{mins}분 전',
+    'notifications.time.hoursAgo': '{hrs}시간 전',
+    'notifications.time.daysAgo': '{days}일 전',
+
+    // Search Page
+    'search.pageTitle': '검색',
+    'search.inputPlaceholder': '게시글, 아이디어, 모임, 아티클 검색…',
+    'search.btn': '검색',
+    'search.tabs.all': '전체',
+    'search.tabs.threads': '포럼 글',
+    'search.tabs.ideas': '아이디어 건의',
+    'search.tabs.events': '이벤트/모임',
+    'search.tabs.kb': '지식 베이스',
+    'search.tabs.members': '멤버',
+    'search.emptyTitle': '검색 결과가 없습니다',
+    'search.emptyDesc': '"{q}"{typeDesc}와(과) 일치하는 항목을 찾을 수 없습니다. 다른 키워드로 검색해 보세요.',
+    'search.startTitle': '통합 검색 시작하기',
+    'search.startDesc': '포럼 스레드, 아이디어 건의, 오프라인 이벤트, 가이드북 아티클 및 멤버 목록을 모두 검색합니다.',
+    'search.badge.thread': '스레드',
+    'search.badge.idea': '아이디어',
+    'search.badge.event': '이벤트',
+    'search.badge.article': '아티클',
+    'search.badge.member': '멤버',
+
+    // Rich Editor
+    'editor.bold': '굵게',
+    'editor.italic': '기울임꼴',
+    'editor.underline': '밑줄',
+    'editor.strike': '취소선',
+    'editor.code': '인라인 코드',
+    'editor.codeBlock': '코드 블록',
+    'editor.h1': '제목 1',
+    'editor.h2': '제목 2',
+    'editor.h3': '제목 3',
+    'editor.bullet': '글머리 기호 목록',
+    'editor.ordered': '번호 매기기 목록',
+    'editor.quote': '인용구',
+    'editor.link': '링크',
+    'editor.insertLink': '링크 삽입',
+    'editor.enterUrl': 'URL 입력',
 
     // Auth
     'auth.login.title': '다시 만나서 반가워요',

@@ -6,8 +6,22 @@ import { Search, MessageSquare, Lightbulb, Calendar, BookOpen, Users } from 'luc
 import { Badge } from '@/components/ui/badge'
 import { EmptyState } from '@/components/ui/empty-state'
 import { PageHeader } from '@/components/ui/page-header'
+import { t } from '@/lib/i18n'
 
-export const metadata: Metadata = { title: 'Search' }
+// [LOG: 20260527_1720]
+
+export async function generateMetadata(): Promise<Metadata> {
+  const supabase = await createClient()
+  const token = (await supabase.auth.getSession()).data.session?.access_token
+  let lang = 'en'
+  if (token) {
+    try {
+      const profile = await apiGet<{ language: string | null }>('/api/me', token, 60)
+      lang = profile?.language ?? 'en'
+    } catch {}
+  }
+  return { title: t('search.pageTitle', lang) }
+}
 
 interface SearchResult {
   id: string
@@ -25,12 +39,12 @@ interface SearchData {
   kb: SearchResult[]
 }
 
-const TYPE_CONFIG: Record<string, { label: string; icon: React.ElementType; color: string }> = {
-  threads: { label: 'Thread', icon: MessageSquare, color: 'blue' as const },
-  ideas: { label: 'Idea', icon: Lightbulb, color: 'purple' as const },
-  events: { label: 'Event', icon: Calendar, color: 'warning' as const },
-  kb: { label: 'Article', icon: BookOpen, color: 'success' as const },
-  members: { label: 'Member', icon: Users, color: 'secondary' as const },
+const TYPE_CONFIG_KEYS: Record<string, { labelKey: string; icon: React.ElementType; color: string }> = {
+  threads: { labelKey: 'search.badge.thread', icon: MessageSquare, color: 'blue' as const },
+  ideas: { labelKey: 'search.badge.idea', icon: Lightbulb, color: 'purple' as const },
+  events: { labelKey: 'search.badge.event', icon: Calendar, color: 'warning' as const },
+  kb: { labelKey: 'search.badge.article', icon: BookOpen, color: 'success' as const },
+  members: { labelKey: 'search.badge.member', icon: Users, color: 'secondary' as const },
 }
 
 export default async function SearchPage({
@@ -42,6 +56,14 @@ export default async function SearchPage({
 
   const supabase = await createClient()
   const token = (await supabase.auth.getSession()).data.session?.access_token
+
+  let lang = 'en'
+  if (token) {
+    try {
+      const profile = await apiGet<{ language: string | null }>('/api/me', token, 60)
+      lang = profile?.language ?? 'en'
+    } catch {}
+  }
 
   let results: SearchData = { threads: [], ideas: [], members: [], events: [], kb: [] }
 
@@ -62,12 +84,12 @@ export default async function SearchPage({
   ]
 
   const tabs = [
-    { key: undefined, label: 'All', count: allResults.length },
-    { key: 'threads', label: 'Threads', count: results.threads.length },
-    { key: 'ideas', label: 'Ideas', count: results.ideas.length },
-    { key: 'events', label: 'Events', count: results.events.length },
-    { key: 'kb', label: 'Knowledge Base', count: results.kb.length },
-    { key: 'members', label: 'Members', count: results.members.length },
+    { key: undefined, labelKey: 'search.tabs.all', count: allResults.length },
+    { key: 'threads', labelKey: 'search.tabs.threads', count: results.threads.length },
+    { key: 'ideas', labelKey: 'search.tabs.ideas', count: results.ideas.length },
+    { key: 'events', labelKey: 'search.tabs.events', count: results.events.length },
+    { key: 'kb', labelKey: 'search.tabs.kb', count: results.kb.length },
+    { key: 'members', labelKey: 'search.tabs.members', count: results.members.length },
   ]
 
   const displayResults = type
@@ -76,7 +98,7 @@ export default async function SearchPage({
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Search" />
+      <PageHeader title={t('search.pageTitle', lang)} />
 
       {/* Search bar */}
       <form method="GET" action="/search" className="flex gap-2">
@@ -85,7 +107,7 @@ export default async function SearchPage({
           <input
             name="q"
             defaultValue={q}
-            placeholder="Search threads, ideas, events, articles…"
+            placeholder={t('search.inputPlaceholder', lang)}
             autoFocus={!q}
             className="flex h-10 w-full rounded-lg border border-input bg-card pl-9 pr-4 text-sm text-card-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
           />
@@ -95,7 +117,7 @@ export default async function SearchPage({
           type="submit"
           className="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-dark transition-colors"
         >
-          Search
+          {t('search.btn', lang)}
         </button>
       </form>
 
@@ -110,7 +132,7 @@ export default async function SearchPage({
                 : `/search?q=${encodeURIComponent(q)}`
               return (
                 <Link
-                  key={tab.label}
+                  key={tab.labelKey}
                   href={href}
                   className={[
                     'flex shrink-0 items-center gap-1.5 border-b-2 px-3 pb-2 text-sm font-medium transition-colors',
@@ -119,7 +141,7 @@ export default async function SearchPage({
                       : 'border-transparent text-muted-foreground hover:text-surface-foreground',
                   ].join(' ')}
                 >
-                  {tab.label}
+                  {t(tab.labelKey as any, lang)}
                   {tab.count > 0 && (
                     <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
                       {tab.count}
@@ -134,13 +156,16 @@ export default async function SearchPage({
           {displayResults.length === 0 ? (
             <EmptyState
               icon={<Search className="h-6 w-6" />}
-              title="No results found"
-              description={`Nothing matched "${q}"${type ? ` in ${type}` : ''}. Try different keywords.`}
+              title={t('search.emptyTitle', lang)}
+              description={t('search.emptyDesc', lang)
+                .replace('{q}', q)
+                .replace('{typeDesc}', type ? ` (${t(`search.tabs.${type}` as any, lang)})` : '')
+              }
             />
           ) : (
             <div className="space-y-2">
               {displayResults.map(result => {
-                const config = TYPE_CONFIG[result.type]!
+                const config = TYPE_CONFIG_KEYS[result.type]!
                 const Icon = config.icon
                 return (
                   <Link
@@ -155,7 +180,7 @@ export default async function SearchPage({
                       <div className="flex items-center gap-2">
                         <p className="text-sm font-semibold text-surface-foreground">{result.title}</p>
                         <Badge variant={config.color as 'blue' | 'purple' | 'warning' | 'success' | 'secondary'} className="shrink-0">
-                          {config.label}
+                          {t(config.labelKey as any, lang)}
                         </Badge>
                       </div>
                       {result.subtitle && (
@@ -179,8 +204,8 @@ export default async function SearchPage({
       {!q.trim() && (
         <EmptyState
           icon={<Search className="h-6 w-6" />}
-          title="Start searching"
-          description="Search across forum threads, ideas, events, articles, and members."
+          title={t('search.startTitle', lang)}
+          description={t('search.startDesc', lang)}
         />
       )}
     </div>

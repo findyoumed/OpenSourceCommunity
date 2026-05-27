@@ -8,8 +8,22 @@ import { Avatar } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
+import { t } from '@/lib/i18n'
 
-export const metadata: Metadata = { title: 'Members' }
+// [LOG: 20260527_1720]
+
+export async function generateMetadata(): Promise<Metadata> {
+  const supabase = await createClient()
+  const token = (await supabase.auth.getSession()).data.session?.access_token
+  let lang = 'en'
+  if (token) {
+    try {
+      const profile = await apiGet<{ language: string | null }>('/api/me', token, 60)
+      lang = profile?.language ?? 'en'
+    } catch {}
+  }
+  return { title: t('members.title', lang) }
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -33,15 +47,15 @@ const ROLE_BADGE_VARIANT: Record<MemberRole, React.ComponentProps<typeof Badge>[
   org_admin: 'default',
 }
 
-const ROLE_LABEL: Record<MemberRole, string> = {
-  guest: 'Guest',
-  member: 'Member',
-  moderator: 'Moderator',
-  org_admin: 'Admin',
+const ROLE_LABEL_KEYS: Record<MemberRole, string> = {
+  guest: 'admin.role.guest',
+  member: 'admin.role.member',
+  moderator: 'admin.role.moderator',
+  org_admin: 'admin.role.org_admin',
 }
 
-function joinedDate(iso: string): string {
-  return new Intl.DateTimeFormat('en', { month: 'short', year: 'numeric' }).format(new Date(iso))
+function joinedDate(iso: string, lang: string): string {
+  return new Intl.DateTimeFormat(lang === 'ko' ? 'ko-KR' : 'en-US', { month: 'short', year: 'numeric' }).format(new Date(iso))
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
@@ -55,6 +69,14 @@ export default async function MembersPage({
 
   const supabase = await createClient()
   const token = (await supabase.auth.getSession()).data.session?.access_token
+
+  let lang = 'en'
+  if (token) {
+    try {
+      const profile = await apiGet<{ language: string | null }>('/api/me', token, 60)
+      lang = profile?.language ?? 'en'
+    } catch {}
+  }
 
   const qs = new URLSearchParams({ page, limit: '40' })
   if (search) qs.set('search', search)
@@ -72,8 +94,8 @@ export default async function MembersPage({
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Members"
-        description="Everyone in this community"
+        title={t('members.title', lang)}
+        description={t('members.description', lang)}
       />
 
       {/* Search & filter */}
@@ -83,7 +105,7 @@ export default async function MembersPage({
             type="search"
             name="search"
             defaultValue={search}
-            placeholder="Search by name or username…"
+            placeholder={t('members.searchPlaceholder', lang)}
             className="w-full rounded-lg border border-input bg-card px-3 py-2 text-sm text-surface-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
           />
         </div>
@@ -93,42 +115,42 @@ export default async function MembersPage({
           defaultValue={role ?? ''}
           className="rounded-lg border border-input bg-card px-3 py-2 text-sm text-surface-foreground focus:outline-none focus:ring-1 focus:ring-ring"
         >
-          <option value="">All roles</option>
-          <option value="member">Members</option>
-          <option value="moderator">Moderators</option>
-          <option value="org_admin">Admins</option>
+          <option value="">{t('members.allRoles', lang)}</option>
+          <option value="member">{t('admin.role.member', lang)}</option>
+          <option value="moderator">{t('admin.role.moderator', lang)}</option>
+          <option value="org_admin">{t('admin.role.org_admin', lang)}</option>
         </select>
 
-        <Button type="submit">Search</Button>
+        <Button type="submit">{t('members.searchBtn', lang)}</Button>
 
         {(search || role) && (
           <Link
             href="/members"
             className="text-sm text-muted-foreground hover:text-surface-foreground transition-colors"
           >
-            Clear
+            {t('members.clearBtn', lang)}
           </Link>
         )}
       </form>
 
       {fetchError && (
         <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-          Failed to load members. Please try refreshing.
+          {t('members.error', lang)}
         </div>
       )}
 
       {!fetchError && members.length === 0 && (search || role) && (
         <EmptyState
           icon={<Users className="h-6 w-6" />}
-          title="No members found"
-          description="Try adjusting your search or filter."
+          title={t('members.emptyTitle', lang)}
+          description={t('members.emptyDesc', lang)}
         />
       )}
 
       {!fetchError && members.length === 0 && !search && !role && (
         <EmptyState
           icon={<Users className="h-6 w-6" />}
-          title="No members found"
+          title={t('members.emptyTitle', lang)}
         />
       )}
 
@@ -155,10 +177,10 @@ export default async function MembersPage({
                 )}
                 <div className="mt-1.5 flex items-center gap-2">
                   <Badge variant={ROLE_BADGE_VARIANT[member.role]}>
-                    {ROLE_LABEL[member.role]}
+                    {t(ROLE_LABEL_KEYS[member.role] as any, lang)}
                   </Badge>
                   <span className="text-xs text-muted-foreground">
-                    {joinedDate(member.createdAt)}
+                    {t('members.joinedPrefix', lang)} {joinedDate(member.createdAt, lang)}
                   </span>
                 </div>
               </div>
@@ -174,7 +196,7 @@ export default async function MembersPage({
             <Link
               href={`/members?${new URLSearchParams({ ...(search ? { search } : {}), ...(role ? { role } : {}), page: String(Number(page) + 1) })}`}
             >
-              Load more
+              {t('members.loadMore', lang)}
             </Link>
           </Button>
         </div>

@@ -111,7 +111,7 @@ export function Sidebar({
   tenantLogoUrl,
 }: SidebarProps) {
   const pathname = usePathname()
-  const { t } = useTranslation()
+  const { t, lang } = useTranslation()
   const [mobileOpen, setMobileOpen] = useState(false)
 
   const visibleItems = ALL_NAV_ITEMS.filter(
@@ -227,7 +227,7 @@ export function Sidebar({
         type="button"
         className="fixed bottom-4 left-4 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-brand text-white shadow-lg lg:hidden"
         onClick={() => setMobileOpen(true)}
-        aria-label="Open navigation"
+        aria-label={lang === 'ko' ? '탐색 메뉴 열기' : 'Open navigation'}
       >
         <Menu className="h-5 w-5" />
       </button>
@@ -244,7 +244,7 @@ export function Sidebar({
               type="button"
               className="absolute right-4 top-4 rounded-lg p-1 text-muted-foreground hover:bg-muted"
               onClick={() => setMobileOpen(false)}
-              aria-label="Close navigation"
+              aria-label={lang === 'ko' ? '탐색 메뉴 닫기' : 'Close navigation'}
             >
               <X className="h-5 w-5" />
             </button>

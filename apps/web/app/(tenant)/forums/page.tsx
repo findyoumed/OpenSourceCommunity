@@ -8,6 +8,7 @@ import { PageHeader } from '@/components/ui/page-header'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
 import { t } from '@/lib/i18n'
+import { headers } from 'next/headers'
 
 export async function generateMetadata(): Promise<Metadata> {
   const supabase = await createClient()
@@ -56,9 +57,15 @@ export default async function ForumsPage() {
   const supabase = await createClient()
   const token = (await supabase.auth.getSession()).data.session?.access_token
 
+  // Resolve language preferences
+  const headersList = await headers()
+  const acceptLanguage = headersList.get('accept-language') || ''
+  const prefersKorean = acceptLanguage.toLowerCase().includes('ko')
+  const defaultLang = prefersKorean ? 'ko' : 'en'
+
   let categories: ForumCategory[] = []
   let fetchError = false
-  let userLanguage = 'en'
+  let userLanguage = undefined
 
   try {
     // [LOG: 20260527_1701]
@@ -68,7 +75,7 @@ export default async function ForumsPage() {
         apiGet<{ language: string | null }>('/api/me', token, 60)
       ])
       categories = cats
-      userLanguage = profile?.language ?? 'en'
+      userLanguage = profile?.language
     } else {
       categories = await apiGet<ForumCategory[]>('/api/forums/categories', undefined)
     }
@@ -76,32 +83,34 @@ export default async function ForumsPage() {
     fetchError = true
   }
 
+  const resolvedLang = userLanguage ?? defaultLang
+
   return (
     <div className="space-y-6">
       <PageHeader
-        title={t('forums.title', userLanguage)}
-        description={t('forums.description', userLanguage)}
+        title={t('forums.title', resolvedLang)}
+        description={t('forums.description', resolvedLang)}
         action={
           <Button asChild>
-            <Link href="/forums/new">{t('forums.newBtn', userLanguage)}</Link>
+            <Link href="/forums/new">{t('forums.newBtn', resolvedLang)}</Link>
           </Button>
         }
       />
 
       {fetchError && (
         <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-          {t('forums.error', userLanguage)}
+          {t('forums.error', resolvedLang)}
         </div>
       )}
 
       {!fetchError && categories.length === 0 && (
         <EmptyState
           icon={<MessageSquare className="h-6 w-6" />}
-          title={t('forums.emptyTitle', userLanguage)}
-          description={t('forums.emptyDesc', userLanguage)}
+          title={t('forums.emptyTitle', resolvedLang)}
+          description={t('forums.emptyDesc', resolvedLang)}
           action={
             <Button asChild>
-              <Link href="/forums/new">{t('forums.emptyAction', userLanguage)}</Link>
+              <Link href="/forums/new">{t('forums.emptyAction', resolvedLang)}</Link>
             </Button>
           }
         />
@@ -130,11 +139,11 @@ export default async function ForumsPage() {
 
                     {cat.lastThread && (
                       <p className="mt-1.5 text-xs text-muted-foreground">
-                        {t('forums.latest', userLanguage)}:{' '}
+                        {t('forums.latest', resolvedLang)}:{' '}
                         <span className="text-surface-foreground font-medium">
                           {cat.lastThread.title}
                         </span>{' '}
-                        {t('forums.by', userLanguage)} {cat.lastThread.authorName}
+                        {t('forums.by', resolvedLang)} {cat.lastThread.authorName}
                       </p>
                     )}
                   </div>
@@ -143,20 +152,20 @@ export default async function ForumsPage() {
                     <div className="flex gap-4 text-xs text-muted-foreground">
                       <div>
                         <p className="text-base font-bold text-surface-foreground">
-                          {cat.threadCount.toLocaleString(userLanguage === 'ko' ? 'ko-KR' : 'en-US')}
+                          {cat.threadCount.toLocaleString(resolvedLang === 'ko' ? 'ko-KR' : 'en-US')}
                         </p>
-                        {t('forums.threads', userLanguage)}
+                        {t('forums.threads', resolvedLang)}
                       </div>
                       <div>
                         <p className="text-base font-bold text-surface-foreground">
-                          {cat.postCount.toLocaleString(userLanguage === 'ko' ? 'ko-KR' : 'en-US')}
+                          {cat.postCount.toLocaleString(resolvedLang === 'ko' ? 'ko-KR' : 'en-US')}
                         </p>
-                        {t('forums.posts', userLanguage)}
+                        {t('forums.posts', resolvedLang)}
                       </div>
                     </div>
                     {cat.lastActivityAt && (
                       <p className="mt-1 text-xs text-muted-foreground">
-                        {formatDate(cat.lastActivityAt, userLanguage)}
+                        {formatDate(cat.lastActivityAt, resolvedLang)}
                       </p>
                     )}
                   </div>

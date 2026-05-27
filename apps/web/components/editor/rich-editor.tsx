@@ -1,5 +1,7 @@
 'use client'
 
+// [LOG: 20260527_1720]
+
 import { useEditor, EditorContent } from '@tiptap/react'
 import { BubbleMenu } from '@tiptap/react/menus'
 import StarterKit from '@tiptap/starter-kit'
@@ -8,6 +10,7 @@ import Link from '@tiptap/extension-link'
 import Underline from '@tiptap/extension-underline'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
 import { common, createLowlight } from 'lowlight'
+import { useTranslation } from '@/lib/i18n-context'
 
 const lowlight = createLowlight(common)
 
@@ -67,16 +70,19 @@ function Divider() {
 export function RichEditor({
   value,
   onChange,
-  placeholder = 'Write something…',
+  placeholder,
   minHeight = '200px',
   disabled = false,
 }: RichEditorProps) {
+  const { t } = useTranslation()
+  const resolvedPlaceholder = placeholder ?? t('ideas.detail.commentPlaceholder') // Fallback to localized default
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
         codeBlock: false, // replaced by CodeBlockLowlight
       }),
-      Placeholder.configure({ placeholder }),
+      Placeholder.configure({ placeholder: resolvedPlaceholder }),
       Link.configure({
         openOnClick: false,
         HTMLAttributes: { class: 'text-brand underline cursor-pointer' },
@@ -84,7 +90,7 @@ export function RichEditor({
       Underline,
       CodeBlockLowlight.configure({ lowlight }),
     ],
-    immediatelyRender: false, // [LOG: 20260527_1427]
+    immediatelyRender: false,
     content: value ?? '',
     editable: !disabled,
     onUpdate({ editor }) {
@@ -100,7 +106,7 @@ export function RichEditor({
   function setLink() {
     if (!editor) return
     const previous = editor.getAttributes('link').href as string | undefined
-    const url = window.prompt('Enter URL', previous ?? 'https://')
+    const url = window.prompt(t('editor.enterUrl'), previous ?? 'https://')
     if (url === null) return // cancelled
     if (url === '') {
       editor.chain().focus().extendMarkRange('link').unsetLink().run()
@@ -126,28 +132,28 @@ export function RichEditor({
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleBold().run()}
           active={editor.isActive('bold')}
-          title="Bold"
+          title={t('editor.bold')}
         >
           <strong>B</strong>
         </ToolbarButton>
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleItalic().run()}
           active={editor.isActive('italic')}
-          title="Italic"
+          title={t('editor.italic')}
         >
           <em>I</em>
         </ToolbarButton>
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleUnderline().run()}
           active={editor.isActive('underline')}
-          title="Underline"
+          title={t('editor.underline')}
         >
           <span className="underline">U</span>
         </ToolbarButton>
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleStrike().run()}
           active={editor.isActive('strike')}
-          title="Strikethrough"
+          title={t('editor.strike')}
         >
           <span className="line-through">S</span>
         </ToolbarButton>
@@ -158,14 +164,14 @@ export function RichEditor({
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleCode().run()}
           active={editor.isActive('code')}
-          title="Inline code"
+          title={t('editor.code')}
         >
           <span className="font-mono text-[11px]">`…`</span>
         </ToolbarButton>
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleCodeBlock().run()}
           active={editor.isActive('codeBlock')}
-          title="Code block"
+          title={t('editor.codeBlock')}
         >
           <span className="font-mono text-[10px]">{'</>'}</span>
         </ToolbarButton>
@@ -176,21 +182,21 @@ export function RichEditor({
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
           active={editor.isActive('heading', { level: 1 })}
-          title="Heading 1"
+          title={t('editor.h1')}
         >
           H1
         </ToolbarButton>
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
           active={editor.isActive('heading', { level: 2 })}
-          title="Heading 2"
+          title={t('editor.h2')}
         >
           H2
         </ToolbarButton>
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
           active={editor.isActive('heading', { level: 3 })}
-          title="Heading 3"
+          title={t('editor.h3')}
         >
           H3
         </ToolbarButton>
@@ -201,7 +207,7 @@ export function RichEditor({
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleBulletList().run()}
           active={editor.isActive('bulletList')}
-          title="Bullet list"
+          title={t('editor.bullet')}
         >
           <svg viewBox="0 0 16 16" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.5">
             <circle cx="2.5" cy="4" r="1" fill="currentColor" stroke="none" />
@@ -215,7 +221,7 @@ export function RichEditor({
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
           active={editor.isActive('orderedList')}
-          title="Numbered list"
+          title={t('editor.ordered')}
         >
           <svg viewBox="0 0 16 16" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.5">
             <text x="1" y="5" fontSize="4" fill="currentColor" stroke="none">1.</text>
@@ -233,7 +239,7 @@ export function RichEditor({
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleBlockquote().run()}
           active={editor.isActive('blockquote')}
-          title="Blockquote"
+          title={t('editor.quote')}
         >
           <svg viewBox="0 0 16 16" className="h-4 w-4" fill="currentColor">
             <path d="M3 4a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h1.5a2.5 2.5 0 0 1-1.4 2.2.5.5 0 1 0 .4.9A3.5 3.5 0 0 0 6 7.8V5a1 1 0 0 0-1-1H3zm7 0a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h1.5a2.5 2.5 0 0 1-1.4 2.2.5.5 0 1 0 .4.9A3.5 3.5 0 0 0 13 7.8V5a1 1 0 0 0-1-1h-2z" />
@@ -244,7 +250,7 @@ export function RichEditor({
         <ToolbarButton
           onClick={setLink}
           active={editor.isActive('link')}
-          title="Insert link"
+          title={t('editor.insertLink')}
         >
           <svg viewBox="0 0 16 16" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
             <path d="M6.5 9.5a3.5 3.5 0 0 0 4.95 0l1.77-1.77a3.5 3.5 0 0 0-4.95-4.95L7 4" />
@@ -269,21 +275,21 @@ export function RichEditor({
           <ToolbarButton
             onClick={() => editor.chain().focus().toggleBold().run()}
             active={editor.isActive('bold')}
-            title="Bold"
+            title={t('editor.bold')}
           >
             <strong>B</strong>
           </ToolbarButton>
           <ToolbarButton
             onClick={() => editor.chain().focus().toggleItalic().run()}
             active={editor.isActive('italic')}
-            title="Italic"
+            title={t('editor.italic')}
           >
             <em>I</em>
           </ToolbarButton>
           <ToolbarButton
             onClick={() => editor.chain().focus().toggleUnderline().run()}
             active={editor.isActive('underline')}
-            title="Underline"
+            title={t('editor.underline')}
           >
             <span className="underline">U</span>
           </ToolbarButton>
@@ -291,7 +297,7 @@ export function RichEditor({
           <ToolbarButton
             onClick={setLink}
             active={editor.isActive('link')}
-            title="Link"
+            title={t('editor.link')}
           >
             <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
               <path d="M6.5 9.5a3.5 3.5 0 0 0 4.95 0l1.77-1.77a3.5 3.5 0 0 0-4.95-4.95L7 4" />

@@ -1,9 +1,10 @@
-// [LOG: 20260527_1013]
+// [LOG: 20260527_1735]
 import { createClient } from '@/lib/supabase/server'
 import { apiGet } from '@/lib/api'
 import { Sidebar, type ModuleKey } from '@/components/layout/sidebar'
 import { Header } from '@/components/layout/header'
 import { TranslationProvider } from '@/lib/i18n-context'
+import { headers } from 'next/headers'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -40,6 +41,12 @@ export default async function TenantLayout({
 
   const token = (await supabase.auth.getSession()).data.session?.access_token
 
+  // Read browser Accept-Language on the server side to prevent translation flash
+  const headersList = await headers()
+  const acceptLanguage = headersList.get('accept-language') || ''
+  const prefersKorean = acceptLanguage.toLowerCase().includes('ko')
+  const defaultLang = prefersKorean ? 'ko' : 'en'
+
   // ── Fetch tenant config + member profile in parallel ───────────────────────
   let tenantConfig: TenantConfig = {
     id: 'default',
@@ -72,8 +79,10 @@ export default async function TenantLayout({
     ? ({ '--color-brand': tenantConfig.primaryColor } as React.CSSProperties)
     : undefined
 
+  const resolvedLang = memberProfile?.language ?? defaultLang
+
   return (
-    <TranslationProvider initialLang={memberProfile?.language ?? 'en'}>
+    <TranslationProvider initialLang={resolvedLang}>
       <div className="min-h-screen bg-muted/30" style={brandStyle}>
         {/* Sidebar */}
         <Sidebar

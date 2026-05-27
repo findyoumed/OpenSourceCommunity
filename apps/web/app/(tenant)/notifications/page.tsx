@@ -4,8 +4,22 @@ import { createClient } from '@/lib/supabase/server'
 import { apiGet } from '@/lib/api'
 import type { Metadata } from 'next'
 import { MarkAllReadButton } from './mark-all-read-button'
+import { t } from '@/lib/i18n'
 
-export const metadata: Metadata = { title: 'Notifications' }
+// [LOG: 20260527_1720]
+
+export async function generateMetadata(): Promise<Metadata> {
+  const supabase = await createClient()
+  const token = (await supabase.auth.getSession()).data.session?.access_token
+  let lang = 'en'
+  if (token) {
+    try {
+      const profile = await apiGet<{ language: string | null }>('/api/me', token, 60)
+      lang = profile?.language ?? 'en'
+    } catch {}
+  }
+  return { title: t('notifications.title', lang) }
+}
 
 interface Notification {
   id: string
@@ -22,14 +36,15 @@ interface NotificationsResponse {
   meta: { unreadCount: number; page: number; limit: number }
 }
 
-function timeAgo(iso: string): string {
+function timeAgo(iso: string, lang: string): string {
   const diff = Date.now() - new Date(iso).getTime()
   const mins = Math.floor(diff / 60_000)
-  if (mins < 1) return 'just now'
-  if (mins < 60) return `${mins}m ago`
+  if (mins < 1) return t('notifications.time.justNow', lang)
+  if (mins < 60) return t('notifications.time.minutesAgo', lang).replace('{mins}', String(mins))
   const hrs = Math.floor(mins / 60)
-  if (hrs < 24) return `${hrs}h ago`
-  return `${Math.floor(hrs / 24)}d ago`
+  if (hrs < 24) return t('notifications.time.hoursAgo', lang).replace('{hrs}', String(hrs))
+  const days = Math.floor(hrs / 24)
+  return t('notifications.time.daysAgo', lang).replace('{days}', String(days))
 }
 
 function notificationIcon(type: string) {
@@ -66,6 +81,12 @@ export default async function NotificationsPage() {
   if (!session) redirect('/login')
   const token = session.access_token
 
+  let lang = 'en'
+  try {
+    const profile = await apiGet<{ language: string | null }>('/api/me', token, 60)
+    lang = profile?.language ?? 'en'
+  } catch {}
+
   let result: NotificationsResponse | null = null
   try {
     result = await apiGet<NotificationsResponse>('/api/notifications?limit=50', token, 0)
@@ -78,8 +99,8 @@ export default async function NotificationsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-surface-foreground">Notifications</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Your activity and mentions</p>
+          <h1 className="text-2xl font-bold text-surface-foreground">{t('notifications.title', lang)}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">{t('notifications.subtitle', lang)}</p>
         </div>
         {unreadCount > 0 && (
           <MarkAllReadButton token={token} />
@@ -91,9 +112,9 @@ export default async function NotificationsPage() {
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted text-muted-foreground text-xl">
             🔔
           </div>
-          <p className="text-sm font-medium text-muted-foreground">No notifications yet</p>
+          <p className="text-sm font-medium text-muted-foreground">{t('notifications.empty', lang)}</p>
           <p className="mt-1 text-xs text-muted-foreground">
-            You&apos;ll be notified of replies, mentions, and community activity.
+            {t('notifications.emptyDesc', lang)}
           </p>
         </div>
       ) : (
@@ -119,7 +140,7 @@ export default async function NotificationsPage() {
                   {n.body && (
                     <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">{n.body}</p>
                   )}
-                  <p className="mt-1 text-xs text-muted-foreground">{timeAgo(n.createdAt)}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{timeAgo(n.createdAt, lang)}</p>
                 </div>
 
                 {/* Unread dot */}

@@ -105,7 +105,7 @@ export function Header({
             type="button"
             onClick={() => setSearchOpen(true)}
             className="flex items-center gap-2 rounded-lg border border-border bg-muted/50 px-3 py-2 text-sm text-muted-foreground hover:border-border hover:bg-muted transition-colors"
-            aria-label="Search"
+            aria-label={t('header.search')}
           >
             <Search className="h-4 w-4 shrink-0" />
             <span className="hidden sm:inline">{t('header.search')}</span>
@@ -120,7 +120,7 @@ export function Header({
               type="button"
               onClick={() => setLangMenuOpen((v) => !v)}
               className="flex items-center gap-1 rounded-lg p-2 text-muted-foreground hover:bg-muted transition-colors animate-pulse"
-              aria-label="Change language"
+              aria-label={currentLang === 'ko' ? '언어 변경' : 'Change language'}
             >
               <Languages className="h-5 w-5 text-brand" />
               {currentLang && currentLang !== 'en' && (
@@ -170,7 +170,7 @@ export function Header({
                   type="button"
                   id="user-menu-trigger"
                   className="flex items-center rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                  aria-label="User menu"
+                  aria-label={currentLang === 'ko' ? '사용자 메뉴' : 'User menu'}
                 >
                   <Avatar
                     src={userAvatarUrl ?? null}
@@ -380,16 +380,16 @@ function SearchModal({
           ) : (
             <div className="py-2">
               {results.threads.length > 0 && (
-                <SearchSection label="Threads" items={results.threads} icon="💬" onClose={onClose} />
+                <SearchSection label={currentLang === 'ko' ? '토론' : 'Threads'} items={results.threads} icon="💬" onClose={onClose} />
               )}
               {results.ideas.length > 0 && (
-                <SearchSection label="Ideas" items={results.ideas} icon="💡" onClose={onClose} />
+                <SearchSection label={currentLang === 'ko' ? '아이디어' : 'Ideas'} items={results.ideas} icon="💡" onClose={onClose} />
               )}
               {results.members.length > 0 && (
-                <SearchSection label="Members" items={results.members} icon="👤" onClose={onClose} />
+                <SearchSection label={currentLang === 'ko' ? '멤버' : 'Members'} items={results.members} icon="👤" onClose={onClose} />
               )}
               {results.events.length > 0 && (
-                <SearchSection label="Events" items={results.events} icon="📅" onClose={onClose} />
+                <SearchSection label={currentLang === 'ko' ? '이벤트' : 'Events'} items={results.events} icon="📅" onClose={onClose} />
               )}
             </div>
           )}

@@ -1,12 +1,15 @@
 // [LOG: 20260527_1030]
 'use client'
 
-import React, { createContext, useContext, useState, useTransition } from 'react'
+import React, { createContext, useContext, useState, useTransition, useEffect } from 'react'
 import { apiClientPatch } from '@/lib/api-client'
 import { dictionary, type Locale, type DictionaryKey } from './i18n'
+import { createClient } from '@/lib/supabase/client'
 
 export { dictionary }
 export type { Locale, DictionaryKey }
+
+// [LOG: 20260527_1731]
 
 // ─── 1. Pure Synchronous Translation Function (Re-exported for compatibility) ──
 export function t(key: DictionaryKey, lang?: string | null | undefined): string {
@@ -34,11 +37,27 @@ export function TranslationProvider({
   const [lang, setLang] = useState<Locale>(initialLang === 'ko' ? 'ko' : 'en')
   const [isPending, startTransition] = useTransition()
 
+  // Detect browser language if no database preference is set
+  useEffect(() => {
+    if (!initialLang && typeof window !== 'undefined' && window.navigator) {
+      const browserLang = window.navigator.language || (window.navigator.languages && window.navigator.languages[0])
+      if (browserLang && browserLang.toLowerCase().startsWith('ko')) {
+        setLang('ko')
+      }
+    }
+  }, [initialLang])
+
   async function changeLanguage(newLang: Locale) {
     setLang(newLang)
     const apiValue = newLang === 'en' ? null : newLang
     
-    // Server database update & component refresh
+    // Server database update & component refresh (only if logged in)
+    const supabase = createClient()
+    const sessionRes = await supabase.auth.getSession()
+    if (!sessionRes.data.session) {
+      return
+    }
+
     await new Promise<void>((resolve) => {
       startTransition(async () => {
         try {

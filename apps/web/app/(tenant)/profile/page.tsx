@@ -5,8 +5,22 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { Settings, MessageCircle, ExternalLink } from 'lucide-react'
 import { Avatar } from '@/components/ui/avatar'
+import { t, type DictionaryKey } from '@/lib/i18n'
 
-export const metadata: Metadata = { title: 'Profile' }
+// [LOG: 20260527_1720]
+
+export async function generateMetadata(): Promise<Metadata> {
+  const supabase = await createClient()
+  const token = (await supabase.auth.getSession()).data.session?.access_token
+  let lang = 'en'
+  if (token) {
+    try {
+      const profile = await apiGet<{ language: string | null }>('/api/me', token, 60)
+      lang = profile?.language ?? 'en'
+    } catch {}
+  }
+  return { title: t('profile.title', lang) }
+}
 
 interface MemberProfile {
   id: string
@@ -16,18 +30,19 @@ interface MemberProfile {
   bio: string | null
   role: string
   createdAt: string
+  language?: string | null
   socialHandles?: Record<string, string>
 }
 
-const ROLE_LABEL: Record<string, string> = {
-  org_admin: 'Admin',
-  moderator: 'Moderator',
-  member: 'Member',
-  guest: 'Guest',
+const ROLE_LABEL_KEYS: Record<string, string> = {
+  org_admin: 'admin.role.org_admin',
+  moderator: 'admin.role.moderator',
+  member: 'admin.role.member',
+  guest: 'admin.role.guest',
 }
 
-function joinedDate(iso: string): string {
-  return new Intl.DateTimeFormat('en', { month: 'long', year: 'numeric' }).format(new Date(iso))
+function joinedDate(iso: string, lang: string): string {
+  return new Intl.DateTimeFormat(lang === 'ko' ? 'ko-KR' : 'en-US', { month: 'long', year: 'numeric' }).format(new Date(iso))
 }
 
 export default async function ProfilePage() {
@@ -36,14 +51,16 @@ export default async function ProfilePage() {
   if (!session) redirect('/login')
 
   let profile: MemberProfile | null = null
+  let lang = 'en'
   try {
     profile = await apiGet<MemberProfile>('/api/me', session.access_token, 60)
+    lang = profile?.language ?? 'en'
   } catch { /* fall through */ }
 
   if (!profile) {
     return (
       <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-        Failed to load profile. Please try refreshing.
+        {t('profile.errorLoad', lang)}
       </div>
     )
   }
@@ -54,13 +71,13 @@ export default async function ProfilePage() {
   return (
     <div className="space-y-6 max-w-2xl">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-surface-foreground">My Profile</h1>
+        <h1 className="text-2xl font-bold text-surface-foreground">{t('profile.title', lang)}</h1>
         <Link
           href="/settings"
           className="flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-surface-foreground hover:bg-muted transition-colors"
         >
           <Settings className="h-4 w-4" />
-          Edit in Settings
+          {t('profile.editSettings', lang)}
         </Link>
       </div>
 
@@ -73,7 +90,7 @@ export default async function ProfilePage() {
               <h2 className="text-xl font-bold text-surface-foreground">{profile.displayName}</h2>
               {isElevated && (
                 <span className="rounded-full bg-brand/10 px-2.5 py-0.5 text-xs font-semibold text-brand">
-                  {ROLE_LABEL[profile.role]}
+                  {t((ROLE_LABEL_KEYS[profile.role] || 'admin.role.member') as DictionaryKey, lang)}
                 </span>
               )}
             </div>
@@ -81,7 +98,7 @@ export default async function ProfilePage() {
               <p className="text-sm text-muted-foreground">@{profile.username}</p>
             )}
             <p className="mt-1 text-xs text-muted-foreground">
-              Member since {joinedDate(profile.createdAt)}
+              {t('profile.memberSince', lang)} {joinedDate(profile.createdAt, lang)}
             </p>
           </div>
         </div>
@@ -133,9 +150,9 @@ export default async function ProfilePage() {
 
         {!profile.bio && !handles.twitter && !handles.linkedin && !handles.reddit && (
           <p className="mt-4 text-sm text-muted-foreground italic border-t border-border pt-4">
-            No bio yet.{' '}
+            {t('profile.noBio', lang)}{' '}
             <Link href="/settings" className="text-brand hover:underline">
-              Add one in Settings →
+              {t('profile.addBioLink', lang)}
             </Link>
           </p>
         )}
@@ -144,9 +161,9 @@ export default async function ProfilePage() {
       {/* How others see you */}
       <div className="rounded-xl border border-border bg-muted/40 px-5 py-4">
         <p className="text-sm text-muted-foreground">
-          This is how your profile appears to other members.{' '}
+          {t('profile.appearanceNotice', lang)}{' '}
           <Link href="/settings" className="text-brand hover:underline font-medium">
-            Edit your profile in Settings →
+            {t('profile.editSettingsLink', lang)}
           </Link>
         </p>
       </div>

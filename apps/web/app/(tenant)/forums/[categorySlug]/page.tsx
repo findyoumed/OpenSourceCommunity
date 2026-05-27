@@ -3,6 +3,10 @@ import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { apiGet } from '@/lib/api'
 import type { Metadata } from 'next'
+import { headers } from 'next/headers'
+import { t } from '@/lib/i18n'
+
+// [LOG: 20260527_1736]
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -41,14 +45,15 @@ export async function generateMetadata({
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function timeAgo(iso: string): string {
+function timeAgo(iso: string, lang: string): string {
   const diff = Date.now() - new Date(iso).getTime()
   const mins = Math.floor(diff / 60_000)
-  if (mins < 1) return 'just now'
-  if (mins < 60) return `${mins}m ago`
+  const isKo = lang === 'ko'
+  if (mins < 1) return isKo ? '방금 전' : 'just now'
+  if (mins < 60) return isKo ? `${mins}분 전` : `${mins}m ago`
   const hrs = Math.floor(mins / 60)
-  if (hrs < 24) return `${hrs}h ago`
-  return `${Math.floor(hrs / 24)}d ago`
+  if (hrs < 24) return isKo ? `${hrs}시간 전` : `${hrs}h ago`
+  return isKo ? `${Math.floor(hrs / 24)}일 전` : `${Math.floor(hrs / 24)}d ago`
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
@@ -68,6 +73,21 @@ export default async function CategoryPage({
 
   const supabase = await createClient()
   const token = (await supabase.auth.getSession()).data.session?.access_token
+
+  // Resolve language preferences
+  const headersList = await headers()
+  const acceptLanguage = headersList.get('accept-language') || ''
+  const prefersKorean = acceptLanguage.toLowerCase().includes('ko')
+  const defaultLang = prefersKorean ? 'ko' : 'en'
+
+  let userLanguage = undefined
+  try {
+    if (token) {
+      const profile = await apiGet<{ language: string | null }>('/api/me', token, 60)
+      userLanguage = profile?.language
+    }
+  } catch {}
+  const lang = userLanguage ?? defaultLang
 
   // Resolve category by slug from the list endpoint
   let category: ForumCategory | null = null
@@ -92,15 +112,15 @@ export default async function CategoryPage({
   }
 
   const sortLabels: Record<SortOption, string> = {
-    newest: 'Newest',
-    active: 'Most active',
+    newest: t('forums.category.sortNewest', lang),
+    active: t('forums.category.sortActive', lang),
   }
 
   return (
     <div className="space-y-6">
       {/* ── Breadcrumb ────────────────────────────────────────────────────── */}
       <nav className="flex items-center gap-2 text-sm text-muted-foreground">
-        <Link href="/forums" className="hover:text-muted-foreground">Forums</Link>
+        <Link href="/forums" className="hover:text-muted-foreground">{t('nav.forums', lang)}</Link>
         <span>/</span>
         <span className="text-surface-foreground font-medium">{category.name}</span>
       </nav>
@@ -117,7 +137,7 @@ export default async function CategoryPage({
           href={`/forums/${categorySlug}/new`}
           className="flex-shrink-0 rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white hover:opacity-90 transition-colors"
         >
-          New thread
+          {t('forums.category.newThreadBtn', lang)}
         </Link>
       </div>
 
@@ -142,8 +162,8 @@ export default async function CategoryPage({
       {/* ── Thread list ───────────────────────────────────────────────────── */}
       {threads.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border bg-card px-6 py-16 text-center">
-          <p className="text-sm font-medium text-muted-foreground">No threads yet</p>
-          <p className="mt-1 text-xs text-muted-foreground">Be the first to start a discussion!</p>
+          <p className="text-sm font-medium text-muted-foreground">{t('forums.category.emptyTitle', lang)}</p>
+          <p className="mt-1 text-xs text-muted-foreground">{t('forums.category.emptyDesc', lang)}</p>
         </div>
       ) : (
         <div className="overflow-hidden rounded-xl border border-border bg-card">
@@ -153,6 +173,7 @@ export default async function CategoryPage({
                 key={thread.id}
                 thread={thread}
                 categorySlug={categorySlug}
+                lang={lang}
               />
             ))}
           </ul>
@@ -167,9 +188,11 @@ export default async function CategoryPage({
 function ThreadCard({
   thread,
   categorySlug,
+  lang,
 }: {
   thread: Thread
   categorySlug: string
+  lang: string
 }) {
   return (
     <li>
@@ -197,12 +220,12 @@ function ThreadCard({
           <div className="flex flex-wrap items-center gap-2">
             {thread.isPinned && (
               <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
-                Pinned
+                {t('forums.category.cardPinned', lang)}
               </span>
             )}
             {thread.isAnswered && (
               <span className="inline-flex items-center rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700">
-                Answered
+                {t('forums.category.cardAnswered', lang)}
               </span>
             )}
           </div>
@@ -210,17 +233,17 @@ function ThreadCard({
             {thread.title}
           </h3>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            by {thread.authorName} &middot; {timeAgo(thread.createdAt)}
+            {t('forums.category.by', lang)} {thread.authorName} &middot; {timeAgo(thread.createdAt, lang)}
           </p>
         </div>
 
         {/* Stats */}
         <div className="hidden flex-shrink-0 text-right text-xs text-muted-foreground sm:block">
-          <p className="font-semibold text-surface-foreground">{thread.replyCount} replies</p>
-          <p>{thread.viewCount.toLocaleString()} views</p>
+          <p className="font-semibold text-surface-foreground">{thread.replyCount} {t('forums.category.cardReplies', lang)}</p>
+          <p>{thread.viewCount.toLocaleString(lang === 'ko' ? 'ko-KR' : 'en-US')} {t('forums.category.cardViews', lang)}</p>
           {thread.lastActivityAt && (
             <p className="text-muted-foreground">
-              Active {timeAgo(thread.lastActivityAt)}
+              {t('forums.category.cardActive', lang)} {timeAgo(thread.lastActivityAt, lang)}
             </p>
           )}
         </div>
