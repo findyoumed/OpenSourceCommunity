@@ -5,27 +5,23 @@ import { apiGet } from '@/lib/api'
 import type { ModuleKey } from '@/components/layout/sidebar'
 import type { Metadata } from 'next'
 import { SubNavLink } from './sub-nav-link'
+import { headers } from 'next/headers'
+import { t } from '@/lib/i18n'
 
-export const metadata: Metadata = { title: 'Social Intelligence' }
+// [LOG: 20260527_1736]
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+export async function generateMetadata(): Promise<Metadata> {
+  const headersList = await headers()
+  const acceptLanguage = headersList.get('accept-language') || ''
+  const prefersKorean = acceptLanguage.toLowerCase().includes('ko')
+  const defaultLang = prefersKorean ? 'ko' : 'en'
+
+  return { title: t('intelligence.layout.title', defaultLang) }
+}
 
 interface TenantConfig {
   enabledModules: ModuleKey[]
 }
-
-// ─── Sub-navigation ───────────────────────────────────────────────────────────
-
-const SUBNAV = [
-  { label: 'Inbox', href: '/intelligence/inbox' },
-  { label: 'Sentiment', href: '/intelligence/sentiment' },
-  { label: 'Competitors', href: '/intelligence/competitors' },
-  { label: 'Advocates', href: '/intelligence/advocates' },
-  { label: 'Alerts', href: '/intelligence/alerts' },
-  { label: 'Keywords', href: '/intelligence/keywords' },
-]
-
-// ─── Layout ─────────────────────────────────────────────────────────────────
 
 export default async function IntelligenceLayout({
   children,
@@ -35,30 +31,40 @@ export default async function IntelligenceLayout({
   const supabase = await createClient()
   const token = (await supabase.auth.getSession()).data.session?.access_token
 
+  // Resolve language preferences
+  const headersList = await headers()
+  const acceptLanguage = headersList.get('accept-language') || ''
+  const prefersKorean = acceptLanguage.toLowerCase().includes('ko')
+  const defaultLang = prefersKorean ? 'ko' : 'en'
+
+  let userLanguage = undefined
   let enabledModules: ModuleKey[] = []
   let isAdmin = false
+
   try {
     const [config, profile] = await Promise.all([
       apiGet<TenantConfig>('/api/tenant', token, 300),
-      apiGet<{ role: string }>('/api/me', token, 60),
+      token ? apiGet<{ role: string; language: string | null }>('/api/me', token, 60) : null,
     ])
     enabledModules = config?.enabledModules ?? []
     isAdmin = profile?.role === 'org_admin'
+    userLanguage = profile?.language
   } catch {
     // fall back to not enabled / not admin
   }
 
   if (!isAdmin) redirect('/home')
 
+  const lang = userLanguage ?? defaultLang
   const isEnabled = enabledModules.includes('intelligence')
 
   if (!isEnabled) {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-surface-foreground">Social Intelligence</h1>
+          <h1 className="text-2xl font-bold text-surface-foreground">{t('intelligence.layout.title', lang)}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Monitor mentions, sentiment, and advocates across social platforms.
+            {t('intelligence.layout.subtitle', lang)}
           </p>
         </div>
 
@@ -67,18 +73,17 @@ export default async function IntelligenceLayout({
             <RadarIcon />
           </div>
           <h2 className="text-lg font-semibold text-surface-foreground">
-            Social Intelligence is not enabled
+            {t('intelligence.layout.disabledTitle', lang)}
           </h2>
           <p className="mx-auto mt-2 max-w-sm text-sm text-muted-foreground">
-            Enable Social Intelligence from the Admin panel to monitor brand mentions, track
-            sentiment trends, identify top advocates, and get alerts.
+            {t('intelligence.layout.disabledDesc', lang)}
           </p>
           <div className="mt-6">
             <Link
               href="/admin"
               className="rounded-lg bg-brand px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition-colors"
             >
-              Go to Admin → Modules
+              {t('intelligence.layout.adminBtn', lang)}
             </Link>
           </div>
         </div>
@@ -86,13 +91,23 @@ export default async function IntelligenceLayout({
     )
   }
 
+  // Dynamic subnav based on localized labels
+  const SUBNAV = [
+    { label: t('intelligence.inbox', lang), href: '/intelligence/inbox' },
+    { label: t('intelligence.sentiment', lang), href: '/intelligence/sentiment' },
+    { label: t('intelligence.competitors', lang), href: '/intelligence/competitors' },
+    { label: t('intelligence.advocates', lang), href: '/intelligence/advocates' },
+    { label: t('intelligence.alerts', lang), href: '/intelligence/alerts' },
+    { label: t('intelligence.keywords', lang), href: '/intelligence/keywords' },
+  ]
+
   return (
     <div className="space-y-6">
       {/* ── Section header ──────────────────────────────────────────────────── */}
       <div>
-        <h1 className="text-2xl font-bold text-surface-foreground">Social Intelligence</h1>
+        <h1 className="text-2xl font-bold text-surface-foreground">{t('intelligence.layout.title', lang)}</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Monitor mentions, sentiment, and advocates across social platforms.
+          {t('intelligence.layout.subtitle', lang)}
         </p>
       </div>
 

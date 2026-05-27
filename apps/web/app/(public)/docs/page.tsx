@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
-  title: 'Documentation — OpenSourceCommunity',
-  description: 'Guides and reference documentation for self-hosting, configuring, and contributing to OpenSourceCommunity.',
+  title: 'Documentation — StudyWithMe',
+  description: 'Guides and reference documentation for self-hosting, configuring, and contributing to StudyWithMe.',
 }
 
 const DOCS = [
@@ -13,7 +13,7 @@ const DOCS = [
       {
         slug: 'self-hosting',
         title: 'Self-Hosting Guide',
-        description: 'Deploy OpenSourceCommunity on Cloudflare Pages + Workers with your own Supabase project. Covers prerequisites, environment variables, database setup, and going live.',
+        description: 'Deploy StudyWithMe on Cloudflare Pages + Workers with your own Supabase project. Covers prerequisites, environment variables, database setup, and going live.',
       },
       {
         slug: 'social-pipeline',
@@ -60,7 +60,7 @@ export default function DocsIndexPage() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight text-surface-foreground">Documentation</h1>
         <p className="mt-3 text-lg text-muted-foreground">
-          Everything you need to deploy, configure, and contribute to OpenSourceCommunity.
+          Everything you need to deploy, configure, and contribute to StudyWithMe.
         </p>
       </div>
 

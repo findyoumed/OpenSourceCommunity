@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#1e1b4b" />
+    </linearGradient>
+    
+    <!-- Brand Gradient -->
+    <linearGradient id="brandGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366f1" />
+      <stop offset="100%" stop-color="#a855f7" />
+    </linearGradient>
+  </defs>
+
+  <!-- Dark base frame -->
+  <rect width="512" height="512" rx="128" fill="url(#bgGrad)" stroke="#1f2937" stroke-width="4" />
+
+  <!-- Outer focus ring -->
+  <circle cx="256" cy="256" r="180" fill="none" stroke="url(#brandGrad)" stroke-width="4" opacity="0.8" />
+  <circle cx="256" cy="256" r="200" fill="none" stroke="url(#brandGrad)" stroke-width="2" stroke-dasharray="16 8" opacity="0.3" />
+
+  <!-- Stylized graduation cap in the center -->
+  <path d="M256 128L406 208L256 288L106 208L256 128Z" fill="#ffffff" />
+  <path d="M166 260V320C166 345 206 360 256 360C306 360 346 345 346 320V260" fill="none" stroke="#ffffff" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" />
+  
+  <!-- Ribbon Tassel -->
+  <path d="M360 220V300" stroke="#ffffff" stroke-width="8" stroke-linecap="round" />
+  <circle cx="360" cy="310" r="10" fill="#ffffff" />
+</svg>

@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const doc = DOCS[slug]
   if (!doc) return {}
   return {
-    title: `${doc.title} — OpenSourceCommunity Docs`,
+    title: `${doc.title} — StudyWithMe Docs`,
   }
 }
 

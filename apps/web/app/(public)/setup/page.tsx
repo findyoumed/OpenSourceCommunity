@@ -339,7 +339,7 @@ export default function SetupPage() {
     <div className="w-full max-w-xl">
       {/* Logo / title */}
       <div className="mb-6 text-center">
-        <span className="text-2xl font-bold text-brand">OpenSourceCommunity</span>
+        <span className="text-2xl font-bold text-brand">Study</span>
         <p className="mt-1 text-sm text-muted-foreground">{t('auth.setup.title')}</p>
       </div>
 

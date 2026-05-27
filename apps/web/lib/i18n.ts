@@ -83,6 +83,13 @@ export const dictionary = {
     'intelligence.competitors': 'Competitors',
     'intelligence.advocates': 'Advocates',
     'intelligence.alerts': 'Alerts',
+    'intelligence.keywords': 'Keywords',
+
+    'intelligence.layout.title': 'Social Intelligence',
+    'intelligence.layout.subtitle': 'Monitor mentions, sentiment, and advocates across social platforms.',
+    'intelligence.layout.disabledTitle': 'Social Intelligence is not enabled',
+    'intelligence.layout.disabledDesc': 'Enable Social Intelligence from the Admin panel to monitor brand mentions, track sentiment trends, identify top advocates, and get alerts.',
+    'intelligence.layout.adminBtn': 'Go to Admin → Modules',
 
     // Forums - New Thread
     'forums.new.title': 'New discussion',
@@ -672,7 +679,7 @@ export const dictionary = {
     // Landing Page - Hero
     'landing.hero.eyebrow': 'Open source · Non-commercial &middot; Self-hostable',
     'landing.hero.title1': 'Welcome to',
-    'landing.hero.title2': 'OpenSourceCommunity',
+    'landing.hero.title2': 'Study',
     'landing.hero.description': 'The official community of the OSC project. Discuss ideas, share knowledge, attend events, and help shape the future of open-source community software.',
     'landing.hero.cta.join': 'Join the OSCommunity',
     'landing.hero.cta.github': 'View on GitHub',
@@ -849,6 +856,13 @@ export const dictionary = {
     'intelligence.competitors': '경쟁사 분석',
     'intelligence.advocates': '활동 회원',
     'intelligence.alerts': '모니터링 알림',
+    'intelligence.keywords': '키워드 그룹',
+
+    'intelligence.layout.title': '소셜 인텔리전스',
+    'intelligence.layout.subtitle': '소셜 플랫폼 전반의 브랜드 언급, 감정 분석 및 옹호자를 모니터링합니다.',
+    'intelligence.layout.disabledTitle': '소셜 인텔리전스 기능이 활성화되어 있지 않습니다',
+    'intelligence.layout.disabledDesc': '브랜드 언급 모니터링, 감정 트렌드 추적, 우수 활동 회원 식별 및 알림 수신을 설정하려면 관리자 패널에서 소셜 인텔리전스를 활성화해 주세요.',
+    'intelligence.layout.adminBtn': '관리자 패널로 이동 → 모듈 설정',
 
     // Forums - New Thread
     'forums.new.title': '새 토론 개설',
@@ -1438,7 +1452,7 @@ export const dictionary = {
     // Landing Page - Hero
     'landing.hero.eyebrow': '오픈 소스 · 비상업적 이용 · 자체 호스팅 가능',
     'landing.hero.title1': '새로운 커뮤니티의 기준,',
-    'landing.hero.title2': 'OpenSourceCommunity',
+    'landing.hero.title2': 'Study',
     'landing.hero.description': 'OSC 프로젝트의 공식 커뮤니티입니다. 아이디어를 나누고, 지식을 공유하며, 이벤트를 통해 오픈 소스 커뮤니티 플랫폼의 미래를 함께 만들어가세요.',
     'landing.hero.cta.join': '지금 커뮤니티 가입하기',
     'landing.hero.cta.github': 'GitHub에서 보기',

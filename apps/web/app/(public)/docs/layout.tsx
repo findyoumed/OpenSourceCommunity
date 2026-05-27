@@ -35,7 +35,7 @@ function Sidebar({ onClose }: { onClose?: () => void }) {
       <div className="flex items-center justify-between px-5 py-4 border-b border-border">
         <Link href="/" className="flex items-center gap-2 group">
           <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-sm">
-            <span className="text-xs font-bold text-white leading-none">UC</span>
+            <span className="text-xs font-bold text-white leading-none">SM</span>
           </div>
           <span className="text-sm font-bold tracking-tight text-surface-foreground">Docs</span>
         </Link>
@@ -136,7 +136,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
           </button>
           <Link href="/" className="flex items-center gap-2">
             <div className="h-6 w-6 rounded-md bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center">
-              <span className="text-[10px] font-bold text-white leading-none">UC</span>
+              <span className="text-[10px] font-bold text-white leading-none">SM</span>
             </div>
             <span className="text-sm font-semibold text-surface-foreground">Docs</span>
           </Link>

@@ -15,10 +15,10 @@ export async function generateMetadata(): Promise<Metadata> {
   } catch {}
 
   return {
-    title: `OpenSourceCommunity — ${lang === 'ko' ? '오픈 소스 커뮤니티 플랫폼' : 'The open-source community platform'}`,
+    title: `Study — ${lang === 'ko' ? '오픈 소스 커뮤니티 플랫폼' : 'The open-source community platform'}`,
     description: t('landing.hero.description', lang),
     openGraph: {
-      title: `OpenSourceCommunity — ${lang === 'ko' ? '오픈 소스 커뮤니티 플랫폼' : 'The open-source community platform'}`,
+      title: `Study — ${lang === 'ko' ? '오픈 소스 커뮤니티 플랫폼' : 'The open-source community platform'}`,
       description: t('landing.footer.tagline', lang),
     },
   }
@@ -400,10 +400,10 @@ export default async function LandingPage() {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5 group">
             <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-sm shadow-brand/20">
-              <span className="text-sm font-bold text-white leading-none">UC</span>
+              <span className="text-sm font-bold text-white leading-none">S</span>
             </div>
             <span className="text-base font-bold tracking-tight text-surface-foreground">
-              OpenSourceCommunity
+              Study
             </span>
           </Link>
 
@@ -795,10 +795,10 @@ export default async function LandingPage() {
             <div className="col-span-2 sm:col-span-1">
               <Link href="/" className="flex items-center gap-2.5">
                 <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center">
-                  <span className="text-sm font-bold text-white leading-none">UC</span>
+                  <span className="text-sm font-bold text-white leading-none">S</span>
                 </div>
                 <span className="text-base font-bold tracking-tight text-surface-foreground">
-                  OpenSourceCommunity
+                  Study
                 </span>
               </Link>
               <p className="mt-3 text-sm text-muted-foreground leading-relaxed max-w-xs">
@@ -864,7 +864,7 @@ export default async function LandingPage() {
           {/* Copyright */}
           <div className="mt-14 pt-6 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
             <p className="text-sm text-muted-foreground">
-              &copy; {new Date().getFullYear()} OpenSourceCommunity. {t('landing.footer.rights', userLanguage)}
+              &copy; {new Date().getFullYear()} Study. {t('landing.footer.rights', userLanguage)}
             </p>
             <p className="text-sm text-muted-foreground">
               {t('landing.footer.released', userLanguage)}{' '}

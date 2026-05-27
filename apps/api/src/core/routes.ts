@@ -633,7 +633,7 @@ export function coreRoutes(app: Hono<HonoEnv>) {
   // Update tenant name, logo, and primary colour (org_admin only)
   app.patch('/api/admin/branding', requireAuth('org_admin'), zValidator('json', z.object({
     name: z.string().min(1).max(100).optional(),
-    logoUrl: z.string().url().or(z.literal('')).optional(),
+    logoUrl: z.string().or(z.literal('')).optional(),
     primaryColor: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
   })), async (c) => {
     const db = getClient(c.env.DATABASE_URL, c.env.HYPERDRIVE)

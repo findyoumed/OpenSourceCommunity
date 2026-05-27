@@ -13,14 +13,17 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    template: '%s | OpenSourceCommunity',
-    default: 'OpenSourceCommunity — The community platform that sees everything',
+    template: '%s | Study',
+    default: 'Study — The community platform that sees everything',
   },
   description:
     'A modular B2B SaaS community platform with forums, ideas, events, courses, and intelligent insights.',
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000',
   ),
+  icons: {
+    icon: '/icon.svg',
+  },
 }
 
 export default function RootLayout({

@@ -52,10 +52,10 @@ export function BrandingForm({
         <div>
           <label className="mb-1.5 block text-sm font-medium text-surface-foreground">{t('admin.branding.logoUrl')}</label>
           <input
-            type="url"
+            type="text"
             value={logoUrl}
             onChange={(e) => setLogoUrl(e.target.value)}
-            placeholder="https://yoursite.com/logo.png"
+            placeholder="/logo.svg or https://yoursite.com/logo.png"
             className="w-full max-w-md rounded-lg border border-border px-3 py-2 text-sm text-surface-foreground focus:outline-none focus:ring-2 focus:ring-ring"
           />
           {logoUrl && (

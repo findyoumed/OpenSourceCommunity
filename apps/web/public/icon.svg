@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366f1" />
+      <stop offset="100%" stop-color="#a855f7" />
+    </linearGradient>
+  </defs>
+  <!-- Beautiful rounded gradient box -->
+  <rect width="32" height="32" rx="9" fill="url(#grad)" />
+  
+  <!-- Premium Minimal Graduation Cap -->
+  <path d="M16 8L26 13L16 18L6 13L16 8Z" fill="#ffffff" />
+  <path d="M10 16.5V20C10 21.5 12.7 22.5 16 22.5C19.3 22.5 22 21.5 22 20V16.5" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M23 14V19" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" />
+  <circle cx="23" cy="19.5" r="1" fill="#ffffff" />
+</svg>
