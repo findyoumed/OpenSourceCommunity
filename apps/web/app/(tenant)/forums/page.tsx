@@ -43,15 +43,6 @@ interface ForumCategory {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function formatDate(iso: string | null, lang: string = 'en'): string {
-  if (!iso) return '—'
-  return new Intl.DateTimeFormat(lang === 'ko' ? 'ko-KR' : 'en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  }).format(new Date(iso))
-}
-
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default async function ForumsPage() {

@@ -31,6 +31,9 @@ interface TenantConfig {
   slug: string
   enabledModules: ModuleKey[]
   homepageConfig?: HomepageConfig
+  settings?: {
+    homepage?: HomepageConfig | null
+  } | null
 }
 
 interface MemberProfile {

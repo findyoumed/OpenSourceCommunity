@@ -1,4 +1,4 @@
-import { Search, ArrowUpRight, Users, MessageSquare, PenLine, Calendar } from 'lucide-react'
+import { ArrowUpRight, Users, MessageSquare, PenLine, Calendar } from 'lucide-react'
 import Link from 'next/link'
 import { DM_Serif_Display } from 'next/font/google'
 import { apiGet } from '@/lib/api'
@@ -88,7 +88,7 @@ export default async function WelcomeBar({
           {/* Greeting */}
           <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-white/55">
             {/* [LOG: 20260528_1423] Dynamic local browser time greeting */}
-            <GreetingText displayName={displayName} lang={lang} />
+            <GreetingText displayName={displayName} lang={lang || null} />
           </p>
 
           {/* Community name — display serif */}
@@ -111,7 +111,7 @@ export default async function WelcomeBar({
           {/* Search + CTA */}
           <div className="mt-7 flex flex-col gap-3 sm:flex-row">
             {/* [LOG: 20260528_1439] Interactive global search trigger */}
-            <DashboardSearchButton lang={lang} />
+            <DashboardSearchButton lang={lang || null} />
             <Link
               href="/forums/new"
               className="flex items-center justify-center gap-2 rounded-xl bg-white px-6 py-3.5 text-sm font-bold text-brand shadow-sm transition-opacity hover:opacity-90 sm:shrink-0"

@@ -315,11 +315,12 @@ export default function ForumListWithSearch({
 
                         {cat.lastThread && (
                           <p className="mt-1.5 text-xs text-muted-foreground">
-                            {t('forums.latest', resolvedLang)}:{' '}
+                            {/* [LOG: 20260528_1523] Fixed client-side useTranslation t() parameters count mismatch */}
+                            {t('forums.latest')}:{' '}
                             <span className="text-surface-foreground font-medium">
                               {cat.lastThread.title}
                             </span>{' '}
-                            {t('forums.by', resolvedLang)} {cat.lastThread.authorName}
+                            {t('forums.by')} {cat.lastThread.authorName}
                           </p>
                         )}
                       </div>
@@ -330,13 +331,13 @@ export default function ForumListWithSearch({
                             <p className="text-base font-bold text-surface-foreground">
                               {cat.threadCount.toLocaleString(resolvedLang === 'ko' ? 'ko-KR' : 'en-US')}
                             </p>
-                            {t('forums.threads', resolvedLang)}
+                            {t('forums.threads')}
                           </div>
                           <div>
                             <p className="text-base font-bold text-surface-foreground">
                               {cat.postCount.toLocaleString(resolvedLang === 'ko' ? 'ko-KR' : 'en-US')}
                             </p>
-                            {t('forums.posts', resolvedLang)}
+                            {t('forums.posts')}
                           </div>
                         </div>
                         {cat.lastActivityAt && (

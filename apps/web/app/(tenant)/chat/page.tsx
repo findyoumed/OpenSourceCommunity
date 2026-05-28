@@ -4,15 +4,26 @@ import { createClient } from '@/lib/supabase/server'
 import { apiGet } from '@/lib/api'
 import type { Metadata } from 'next'
 import { t } from '@/lib/i18n'
+import { headers, cookies } from 'next/headers'
 
 export async function generateMetadata(): Promise<Metadata> {
   const supabase = await createClient()
   const token = (await supabase.auth.getSession()).data.session?.access_token
-  let lang = 'en'
+
+  // [LOG: 20260528_1520] Read language preference from server-side cookies or browser Accept-Language headers to solve Edge environment mismatches
+  const cookieStore = await cookies()
+  const cookieLang = cookieStore.get('NEXT_LOCALE')?.value
+
+  const headersList = await headers()
+  const acceptLanguage = headersList.get('accept-language') || ''
+  const prefersKorean = acceptLanguage.toLowerCase().includes('ko')
+  const defaultLang = cookieLang ?? (prefersKorean ? 'ko' : 'en')
+
+  let lang = defaultLang
   if (token) {
     try {
       const profile = await apiGet<{ language: string | null }>('/api/me', token, 60)
-      lang = profile?.language ?? 'en'
+      lang = profile?.language ?? defaultLang
     } catch {}
   }
   return { title: t('chat.title', lang) }
@@ -31,8 +42,17 @@ export default async function ChatPage() {
   const supabase = await createClient()
   const token = (await supabase.auth.getSession()).data.session?.access_token
 
+  // [LOG: 20260528_1520] Read language preference from server-side cookies or browser Accept-Language headers to solve Edge environment mismatches
+  const cookieStore = await cookies()
+  const cookieLang = cookieStore.get('NEXT_LOCALE')?.value
+
+  const headersList = await headers()
+  const acceptLanguage = headersList.get('accept-language') || ''
+  const prefersKorean = acceptLanguage.toLowerCase().includes('ko')
+  const defaultLang = cookieLang ?? (prefersKorean ? 'ko' : 'en')
+
   let channels: Channel[] = []
-  let userLanguage = 'en'
+  let userLanguage = defaultLang
   try {
     // [LOG: 20260527_1720]
     if (token) {
@@ -41,7 +61,7 @@ export default async function ChatPage() {
         apiGet<{ language: string | null }>('/api/me', token, 60),
       ])
       channels = channelsData
-      userLanguage = profile?.language ?? 'en'
+      userLanguage = profile?.language ?? defaultLang
     } else {
       channels = await apiGet<Channel[]>('/api/chat/channels', undefined, 0)
     }
