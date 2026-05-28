@@ -8,7 +8,7 @@ import { PageHeader } from '@/components/ui/page-header'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
 import { t } from '@/lib/i18n'
-import { headers } from 'next/headers'
+import { headers, cookies } from 'next/headers'
 import ForumListWithSearch from './forum-list-with-search'
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -58,11 +58,15 @@ export default async function ForumsPage() {
   const supabase = await createClient()
   const token = (await supabase.auth.getSession()).data.session?.access_token
 
+  // [LOG: 20260528_1520] Read language preference from server-side cookies or browser Accept-Language headers to solve Edge environment mismatches
+  const cookieStore = await cookies()
+  const cookieLang = cookieStore.get('NEXT_LOCALE')?.value
+
   // Resolve language preferences
   const headersList = await headers()
   const acceptLanguage = headersList.get('accept-language') || ''
   const prefersKorean = acceptLanguage.toLowerCase().includes('ko')
-  const defaultLang = prefersKorean ? 'ko' : 'en'
+  const defaultLang = cookieLang ?? (prefersKorean ? 'ko' : 'en')
 
   let categories: ForumCategory[] = []
   let fetchError = false

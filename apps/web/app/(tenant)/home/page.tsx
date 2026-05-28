@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { apiGet } from '@/lib/api'
 import type { ModuleKey } from '@/components/layout/sidebar'
 import { resolveWidgets, type HomepageConfig } from './widgets/types'
-import { headers } from 'next/headers'
+import { headers, cookies } from 'next/headers'
 
 // [LOG: 20260527_1736]
 
@@ -30,10 +30,12 @@ interface TenantConfig {
   name: string
   slug: string
   enabledModules: ModuleKey[]
-  settings?: { homepage?: HomepageConfig }
+  homepageConfig?: HomepageConfig
 }
 
 interface MemberProfile {
+  id: string
+  displayName: string
   role: 'member' | 'moderator' | 'org_admin'
   language?: string | null
 }
@@ -70,11 +72,14 @@ export default async function CommunityHomePage() {
   const supabase = await createClient()
   const token = (await supabase.auth.getSession()).data.session?.access_token
 
-  // Read browser Accept-Language on the server side to match the default language directly
+  // [LOG: 20260528_1520] Read language preference from server-side cookies or browser Accept-Language headers to solve Edge environment mismatches
+  const cookieStore = await cookies()
+  const cookieLang = cookieStore.get('NEXT_LOCALE')?.value
+
   const headersList = await headers()
   const acceptLanguage = headersList.get('accept-language') || ''
   const prefersKorean = acceptLanguage.toLowerCase().includes('ko')
-  const defaultLang = prefersKorean ? 'ko' : 'en'
+  const defaultLang = cookieLang ?? (prefersKorean ? 'ko' : 'en')
 
   let tenantConfig: TenantConfig = {
     id: '',

@@ -3,16 +3,20 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import type { Metadata } from 'next'
 import { NewEventForm } from './new-event-form'
-import { headers } from 'next/headers'
+import { headers, cookies } from 'next/headers'
 import { t } from '@/lib/i18n'
 
 // [LOG: 20260527_1736]
 
 export async function generateMetadata(): Promise<Metadata> {
+  // [LOG: 20260528_1520] Read language preference from server-side cookies or browser Accept-Language headers to solve Edge environment mismatches
+  const cookieStore = await cookies()
+  const cookieLang = cookieStore.get('NEXT_LOCALE')?.value
+
   const headersList = await headers()
   const acceptLanguage = headersList.get('accept-language') || ''
   const prefersKorean = acceptLanguage.toLowerCase().includes('ko')
-  const defaultLang = prefersKorean ? 'ko' : 'en'
+  const defaultLang = cookieLang ?? (prefersKorean ? 'ko' : 'en')
 
   return { title: t('events.new.title', defaultLang) }
 }
@@ -25,11 +29,15 @@ export default async function NewEventPage() {
 
   if (!session) redirect('/login')
 
+  // [LOG: 20260528_1520] Read language preference from server-side cookies or browser Accept-Language headers to solve Edge environment mismatches
+  const cookieStore = await cookies()
+  const cookieLang = cookieStore.get('NEXT_LOCALE')?.value
+
   // Resolve language preferences
   const headersList = await headers()
   const acceptLanguage = headersList.get('accept-language') || ''
   const prefersKorean = acceptLanguage.toLowerCase().includes('ko')
-  const defaultLang = prefersKorean ? 'ko' : 'en'
+  const defaultLang = cookieLang ?? (prefersKorean ? 'ko' : 'en')
 
   let userLanguage = undefined
   try {
