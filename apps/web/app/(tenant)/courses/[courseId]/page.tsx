@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { cookies, headers } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 import { apiGet } from '@/lib/api'
 import { ApiError } from '@/lib/api'
@@ -76,8 +77,17 @@ export default async function CourseDetailPage({
   } = await supabase.auth.getSession()
   const token = session?.access_token
 
+  // [LOG: 20260528_1645] Dynamic language fallback matching cookies or headers
+  const cookieStore = await cookies()
+  const cookieLang = cookieStore.get('NEXT_LOCALE')?.value
+
+  const headersList = await headers()
+  const acceptLanguage = headersList.get('accept-language') || ''
+  const prefersKorean = acceptLanguage.toLowerCase().includes('ko')
+  const defaultLang = cookieLang ?? (prefersKorean ? 'ko' : 'en')
+
   let detail: CourseDetailResponse
-  let userLanguage = 'en'
+  let userLanguage = defaultLang
 
   try {
     // [LOG: 20260527_1729]
@@ -87,7 +97,7 @@ export default async function CourseDetailPage({
         apiGet<{ language: string | null }>('/api/me', token, 60),
       ])
       detail = detailData
-      userLanguage = profile?.language ?? 'en'
+      userLanguage = profile?.language ?? defaultLang
     } else {
       detail = await apiGet<CourseDetailResponse>(`/api/courses/${courseId}`, undefined, 0)
     }

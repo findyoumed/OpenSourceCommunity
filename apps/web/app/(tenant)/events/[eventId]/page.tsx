@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { cookies, headers } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 import { apiGet } from '@/lib/api'
 import type { Metadata } from 'next'
@@ -148,8 +149,17 @@ export default async function EventDetailPage({
   } = await supabase.auth.getSession()
   const token = session?.access_token
 
+  // [LOG: 20260528_1645] Dynamic language fallback matching cookies or headers
+  const cookieStore = await cookies()
+  const cookieLang = cookieStore.get('NEXT_LOCALE')?.value
+
+  const headersList = await headers()
+  const acceptLanguage = headersList.get('accept-language') || ''
+  const prefersKorean = acceptLanguage.toLowerCase().includes('ko')
+  const defaultLang = cookieLang ?? (prefersKorean ? 'ko' : 'en')
+
   let detail: EventDetailResponse | null = null
-  let userLanguage = 'en'
+  let userLanguage = defaultLang
   let fetchError = false
 
   try {
@@ -160,7 +170,7 @@ export default async function EventDetailPage({
         apiGet<{ language: string | null }>('/api/me', token, 60),
       ])
       detail = detailData
-      userLanguage = profile?.language ?? 'en'
+      userLanguage = profile?.language ?? defaultLang
     } else {
       detail = await apiGet<EventDetailResponse>(`/api/events/${eventId}`, undefined)
     }

@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
+import { cookies, headers } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 import { apiGet } from '@/lib/api'
 import type { Metadata } from 'next'
@@ -24,8 +25,17 @@ export default async function ForumsNewPage() {
 
   const token = session.access_token
 
+  // [LOG: 20260528_1645] Dynamic language fallback matching cookies or headers
+  const cookieStore = await cookies()
+  const cookieLang = cookieStore.get('NEXT_LOCALE')?.value
+
+  const headersList = await headers()
+  const acceptLanguage = headersList.get('accept-language') || ''
+  const prefersKorean = acceptLanguage.toLowerCase().includes('ko')
+  const defaultLang = cookieLang ?? (prefersKorean ? 'ko' : 'en')
+
   let categories: ForumCategory[] = []
-  let userLanguage = 'en'
+  let userLanguage = defaultLang
 
   try {
     const [cats, profile] = await Promise.all([
@@ -33,7 +43,7 @@ export default async function ForumsNewPage() {
       apiGet<{ language: string | null }>('/api/me', token, 60),
     ])
     categories = cats
-    userLanguage = profile?.language ?? 'en'
+    userLanguage = profile?.language ?? defaultLang
   } catch {
     // fall through — show error state
   }

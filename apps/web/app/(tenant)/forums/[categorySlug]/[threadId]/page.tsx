@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import { cookies, headers } from 'next/headers'
 import { CheckCircle2, Pin } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { apiGet } from '@/lib/api'
@@ -133,6 +134,15 @@ export default async function ThreadPage({
   const supabase = await createClient()
   const token = (await supabase.auth.getSession()).data.session?.access_token
 
+  // [LOG: 20260528_1645] Dynamic language fallback matching cookies or headers
+  const cookieStore = await cookies()
+  const cookieLang = cookieStore.get('NEXT_LOCALE')?.value
+
+  const headersList = await headers()
+  const acceptLanguage = headersList.get('accept-language') || ''
+  const prefersKorean = acceptLanguage.toLowerCase().includes('ko')
+  const defaultLang = cookieLang ?? (prefersKorean ? 'ko' : 'en')
+
   let detail: ThreadDetailResponse | null = null
   try {
     detail = await apiGet<ThreadDetailResponse>(`/api/forums/threads/${threadId}`, token)
@@ -142,11 +152,11 @@ export default async function ThreadPage({
   if (!detail) notFound()
 
   // Fetch member language preference (non-fatal)
-  let memberLanguage: string | null = null
+  let memberLanguage: string = defaultLang
   if (token) {
     try {
       const me = await apiGet<{ language?: string | null }>('/api/me', token, 60)
-      memberLanguage = me.language ?? null
+      memberLanguage = me.language ?? defaultLang
     } catch {
       // not logged in or fetch failed — no translation
     }
@@ -160,11 +170,15 @@ export default async function ThreadPage({
     bodyText: bodyToPlainText(post.body),
   }))
 
+  const isKo = memberLanguage === 'ko'
+
   return (
     <div className="space-y-6">
       {/* Breadcrumb */}
       <nav className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground">
-        <Link href="/forums" className="hover:text-surface-foreground transition-colors">Forums</Link>
+        <Link href="/forums" className="hover:text-surface-foreground transition-colors">
+          {isKo ? '포럼' : 'Forums'}
+        </Link>
         <span className="text-border">/</span>
         <Link href={`/forums/${categorySlug}`} className="hover:text-surface-foreground transition-colors">
           {thread.categoryName}
@@ -182,23 +196,23 @@ export default async function ThreadPage({
             <div className="flex flex-wrap gap-2 mb-2">
               {thread.isPinned && (
                 <Badge variant="secondary">
-                  <Pin className="h-3 w-3 mr-1" />Pinned
+                  <Pin className="h-3 w-3 mr-1" />{isKo ? '고정됨' : 'Pinned'}
                 </Badge>
               )}
               {thread.isAnswered && (
                 <Badge variant="success">
-                  <CheckCircle2 className="h-3 w-3 mr-1" />Answered
+                  <CheckCircle2 className="h-3 w-3 mr-1" />{isKo ? '해결됨' : 'Answered'}
                 </Badge>
               )}
             </div>
             <h1 className="text-xl font-bold text-surface-foreground">{thread.title}</h1>
             <p className="mt-1 text-xs text-muted-foreground">
               {thread.authorName} &middot;{' '}
-              {new Intl.DateTimeFormat('en', {
+              {new Intl.DateTimeFormat(isKo ? 'ko-KR' : 'en-US', {
                 dateStyle: 'medium',
                 timeStyle: 'short',
               }).format(new Date(thread.createdAt))}{' '}
-              &middot; {thread.viewCount.toLocaleString()} views
+              &middot; {thread.viewCount.toLocaleString(isKo ? 'ko-KR' : 'en-US')} {isKo ? '조회' : 'views'}
             </p>
           </div>
         </div>
@@ -210,7 +224,7 @@ export default async function ThreadPage({
       ) : (
         <div className="space-y-4">
           {enrichedPosts.map((post) => (
-            <PostCard key={post.id} post={post} />
+            <PostCard key={post.id} post={post} lang={memberLanguage} />
           ))}
         </div>
       )}
@@ -227,7 +241,8 @@ export default async function ThreadPage({
 
 // ─── Post card ────────────────────────────────────────────────────────────────
 
-function PostCard({ post }: { post: PostObj & { bodyHtml: string } }) {
+function PostCard({ post, lang = 'en' }: { post: PostObj & { bodyHtml: string }; lang?: string }) {
+  const isKo = lang === 'ko'
   return (
     <article
       className={[
@@ -240,7 +255,7 @@ function PostCard({ post }: { post: PostObj & { bodyHtml: string } }) {
       {post.isAnswer && (
         <div className="mb-4 flex items-center gap-1.5 text-sm font-semibold text-emerald-600">
           <CheckCircle2 className="h-4 w-4" />
-          Accepted answer
+          {isKo ? '채택된 답변' : 'Accepted answer'}
         </div>
       )}
 
@@ -258,7 +273,7 @@ function PostCard({ post }: { post: PostObj & { bodyHtml: string } }) {
           )}
         </div>
         <time className="ml-auto text-xs text-muted-foreground">
-          {new Intl.DateTimeFormat('en', {
+          {new Intl.DateTimeFormat(isKo ? 'ko-KR' : 'en-US', {
             dateStyle: 'medium',
             timeStyle: 'short',
           }).format(new Date(post.createdAt))}

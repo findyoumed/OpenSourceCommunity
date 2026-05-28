@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { cookies, headers } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 import { apiGet } from '@/lib/api'
 import type { Metadata } from 'next'
@@ -113,10 +114,19 @@ export default async function WebinarDetailPage({
   const token = session?.access_token
   const isAuthenticated = !!session
 
+  // [LOG: 20260528_1645] Dynamic language fallback matching cookies or headers
+  const cookieStore = await cookies()
+  const cookieLang = cookieStore.get('NEXT_LOCALE')?.value
+
+  const headersList = await headers()
+  const acceptLanguage = headersList.get('accept-language') || ''
+  const prefersKorean = acceptLanguage.toLowerCase().includes('ko')
+  const defaultLang = cookieLang ?? (prefersKorean ? 'ko' : 'en')
+
   let webinar: WebinarDetail | null = null
   let qaItems: QaItem[] = []
   let fetchError = false
-  let userLanguage = 'en'
+  let userLanguage = defaultLang
 
   try {
     // [LOG: 20260527_1730]
@@ -126,7 +136,7 @@ export default async function WebinarDetailPage({
         apiGet<{ language: string | null }>('/api/me', token, 60),
       ])
       webinar = detail
-      userLanguage = profile?.language ?? 'en'
+      userLanguage = profile?.language ?? defaultLang
     } else {
       webinar = await apiGet<WebinarDetail>(`/api/webinars/${webinarId}`, undefined)
     }
