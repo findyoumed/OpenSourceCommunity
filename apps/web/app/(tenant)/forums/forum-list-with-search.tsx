@@ -32,6 +32,7 @@ interface SearchedThread {
 
 interface ForumListWithSearchProps {
   categories: ForumCategory[]
+  lang?: string
 }
 
 function formatDate(iso: string | null, lang: string = 'en'): string {
@@ -100,6 +101,7 @@ function cleanSnippet(snippet: string | undefined): string {
 
 export default function ForumListWithSearch({
   categories,
+  lang,
 }: ForumListWithSearchProps) {
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -109,8 +111,9 @@ export default function ForumListWithSearch({
   const [searchedThreads, setSearchedThreads] = useState<SearchedThread[] | null>(null)
   const [loading, setLoading] = useState(false)
   
-  const { t, lang } = useTranslation()
-  const resolvedLang = lang ?? 'en'
+  const { t, lang: translationLang } = useTranslation()
+  // [LOG: 20260528_1645] Dynamic language fallback matching cookies or headers prioritized by lang prop
+  const resolvedLang = lang ?? translationLang ?? 'en'
   const isKo = resolvedLang === 'ko'
 
   // [LOG: 20260528_1459] Function to query actual thread posts from the DB

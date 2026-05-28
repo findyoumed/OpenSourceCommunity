@@ -126,6 +126,7 @@ export default async function ForumsPage() {
       {categories.length > 0 && (
         <ForumListWithSearch
           categories={categories}
+          lang={resolvedLang}
         />
       )}
     </div>
