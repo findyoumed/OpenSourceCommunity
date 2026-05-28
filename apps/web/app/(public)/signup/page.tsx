@@ -9,7 +9,8 @@ import { useTranslation } from '@/lib/i18n-context'
 type Provider = 'google' | 'github'
 
 export default function SignupPage() {
-  const { t } = useTranslation()
+  // [LOG: 20260528_1359] Support manual language switching
+  const { t, lang, changeLanguage } = useTranslation()
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -63,7 +64,32 @@ export default function SignupPage() {
 
   if (success) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-muted/30 px-4">
+      <div className="relative flex min-h-screen items-center justify-center bg-muted/30 px-4">
+        {/* Language Switcher */}
+        <div className="absolute top-4 right-4 flex items-center gap-1 rounded-lg border border-border bg-card p-1 shadow-sm">
+          <button
+            type="button"
+            onClick={() => changeLanguage('ko')}
+            className={`rounded-md px-2.5 py-1 text-xs font-semibold transition-all ${
+              lang === 'ko'
+                ? 'bg-brand text-white shadow-sm'
+                : 'text-muted-foreground hover:bg-muted hover:text-surface-foreground'
+            }`}
+          >
+            KO
+          </button>
+          <button
+            type="button"
+            onClick={() => changeLanguage('en')}
+            className={`rounded-md px-2.5 py-1 text-xs font-semibold transition-all ${
+              lang === 'en'
+                ? 'bg-brand text-white shadow-sm'
+                : 'text-muted-foreground hover:bg-muted hover:text-surface-foreground'
+            }`}
+          >
+            EN
+          </button>
+        </div>
         <div className="w-full max-w-md text-center">
           <div className="mb-4 text-5xl">📬</div>
           <h2 className="text-2xl font-bold text-surface-foreground">{t('auth.signup.checkInbox')}</h2>
@@ -82,12 +108,38 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/30 px-4">
+    <div className="relative flex min-h-screen items-center justify-center bg-muted/30 px-4">
+      {/* Language Switcher */}
+      <div className="absolute top-4 right-4 flex items-center gap-1 rounded-lg border border-border bg-card p-1 shadow-sm">
+        <button
+          type="button"
+          onClick={() => changeLanguage('ko')}
+          className={`rounded-md px-2.5 py-1 text-xs font-semibold transition-all ${
+            lang === 'ko'
+              ? 'bg-brand text-white shadow-sm'
+              : 'text-muted-foreground hover:bg-muted hover:text-surface-foreground'
+          }`}
+        >
+          KO
+        </button>
+        <button
+          type="button"
+          onClick={() => changeLanguage('en')}
+          className={`rounded-md px-2.5 py-1 text-xs font-semibold transition-all ${
+            lang === 'en'
+              ? 'bg-brand text-white shadow-sm'
+              : 'text-muted-foreground hover:bg-muted hover:text-surface-foreground'
+          }`}
+        >
+          EN
+        </button>
+      </div>
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="mb-8 text-center">
           <Link href="/" className="text-2xl font-black text-brand tracking-tight">
-            Study
+            {/* [LOG: 20260528_1258] Brand Update */}
+            Study With Me
           </Link>
           <h1 className="mt-4 text-2xl font-bold text-surface-foreground">
             {t('auth.signup.title')}

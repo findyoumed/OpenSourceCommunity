@@ -25,7 +25,8 @@ function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const next = searchParams.get('next') ?? '/home'
-  const { t } = useTranslation()
+  // [LOG: 20260528_1359] Support manual language switching
+  const { t, lang, changeLanguage } = useTranslation()
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -70,7 +71,32 @@ function LoginForm() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/30 px-4">
+    <div className="relative flex min-h-screen items-center justify-center bg-muted/30 px-4">
+      {/* Language Switcher */}
+      <div className="absolute top-4 right-4 flex items-center gap-1 rounded-lg border border-border bg-card p-1 shadow-sm">
+        <button
+          type="button"
+          onClick={() => changeLanguage('ko')}
+          className={`rounded-md px-2.5 py-1 text-xs font-semibold transition-all ${
+            lang === 'ko'
+              ? 'bg-brand text-white shadow-sm'
+              : 'text-muted-foreground hover:bg-muted hover:text-surface-foreground'
+          }`}
+        >
+          KO
+        </button>
+        <button
+          type="button"
+          onClick={() => changeLanguage('en')}
+          className={`rounded-md px-2.5 py-1 text-xs font-semibold transition-all ${
+            lang === 'en'
+              ? 'bg-brand text-white shadow-sm'
+              : 'text-muted-foreground hover:bg-muted hover:text-surface-foreground'
+          }`}
+        >
+          EN
+        </button>
+      </div>
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="mb-8 text-center">
