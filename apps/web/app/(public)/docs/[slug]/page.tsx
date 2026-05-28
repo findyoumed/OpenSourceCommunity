@@ -27,8 +27,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params
   const doc = DOCS[slug]
   if (!doc) return {}
+  // [LOG: 20260528_1258] Brand Update
   return {
-    title: `${doc.title} — StudyWithMe Docs`,
+    title: `${doc.title} — Study With Me Docs`,
   }
 }
 

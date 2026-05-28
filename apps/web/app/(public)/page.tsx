@@ -14,11 +14,12 @@ export async function generateMetadata(): Promise<Metadata> {
     lang = profile?.language ?? 'en'
   } catch {}
 
+  // [LOG: 20260528_1258] Brand Update to Study With Me
   return {
-    title: `Study — ${lang === 'ko' ? '오픈 소스 커뮤니티 플랫폼' : 'The open-source community platform'}`,
+    title: `Study With Me — ${lang === 'ko' ? '오픈 소스 커뮤니티 플랫폼' : 'The open-source community platform'}`,
     description: t('landing.hero.description', lang),
     openGraph: {
-      title: `Study — ${lang === 'ko' ? '오픈 소스 커뮤니티 플랫폼' : 'The open-source community platform'}`,
+      title: `Study With Me — ${lang === 'ko' ? '오픈 소스 커뮤니티 플랫폼' : 'The open-source community platform'}`,
       description: t('landing.footer.tagline', lang),
     },
   }
@@ -403,7 +404,8 @@ export default async function LandingPage() {
               <span className="text-sm font-bold text-white leading-none">S</span>
             </div>
             <span className="text-base font-bold tracking-tight text-surface-foreground">
-              Study
+              {/* [LOG: 20260528_1258] Brand Update */}
+              Study With Me
             </span>
           </Link>
 
@@ -798,7 +800,8 @@ export default async function LandingPage() {
                   <span className="text-sm font-bold text-white leading-none">S</span>
                 </div>
                 <span className="text-base font-bold tracking-tight text-surface-foreground">
-                  Study
+                  {/* [LOG: 20260528_1258] Brand Update */}
+                  Study With Me
                 </span>
               </Link>
               <p className="mt-3 text-sm text-muted-foreground leading-relaxed max-w-xs">
@@ -864,7 +867,8 @@ export default async function LandingPage() {
           {/* Copyright */}
           <div className="mt-14 pt-6 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
             <p className="text-sm text-muted-foreground">
-              &copy; {new Date().getFullYear()} Study. {t('landing.footer.rights', userLanguage)}
+              {/* [LOG: 20260528_1258] Brand Update */}
+              &copy; {new Date().getFullYear()} Study With Me. {t('landing.footer.rights', userLanguage)}
             </p>
             <p className="text-sm text-muted-foreground">
               {t('landing.footer.released', userLanguage)}{' '}

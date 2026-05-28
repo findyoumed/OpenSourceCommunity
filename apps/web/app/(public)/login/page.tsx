@@ -75,7 +75,8 @@ function LoginForm() {
         {/* Logo */}
         <div className="mb-8 text-center">
           <Link href="/" className="text-2xl font-black text-brand tracking-tight">
-            Study
+            {/* [LOG: 20260528_1258] Brand Update */}
+            Study With Me
           </Link>
           <h1 className="mt-4 text-2xl font-bold text-surface-foreground">
             {t('auth.login.title')}

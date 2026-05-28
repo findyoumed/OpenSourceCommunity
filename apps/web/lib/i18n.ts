@@ -679,7 +679,8 @@ export const dictionary = {
     // Landing Page - Hero
     'landing.hero.eyebrow': 'Open source · Non-commercial &middot; Self-hostable',
     'landing.hero.title1': 'Welcome to',
-    'landing.hero.title2': 'Study',
+    // [LOG: 20260528_1258] Brand Update
+    'landing.hero.title2': 'Study With Me',
     'landing.hero.description': 'The official community of the OSC project. Discuss ideas, share knowledge, attend events, and help shape the future of open-source community software.',
     'landing.hero.cta.join': 'Join the OSCommunity',
     'landing.hero.cta.github': 'View on GitHub',
@@ -1452,7 +1453,8 @@ export const dictionary = {
     // Landing Page - Hero
     'landing.hero.eyebrow': '오픈 소스 · 비상업적 이용 · 자체 호스팅 가능',
     'landing.hero.title1': '새로운 커뮤니티의 기준,',
-    'landing.hero.title2': 'Study',
+    // [LOG: 20260528_1258] Brand Update
+    'landing.hero.title2': 'Study With Me',
     'landing.hero.description': 'OSC 프로젝트의 공식 커뮤니티입니다. 아이디어를 나누고, 지식을 공유하며, 이벤트를 통해 오픈 소스 커뮤니티 플랫폼의 미래를 함께 만들어가세요.',
     'landing.hero.cta.join': '지금 커뮤니티 가입하기',
     'landing.hero.cta.github': 'GitHub에서 보기',

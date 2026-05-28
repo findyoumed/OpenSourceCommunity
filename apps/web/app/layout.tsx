@@ -11,10 +11,11 @@ const inter = Inter({
   display: 'swap',
 })
 
+// [LOG: 20260528_1258] Brand Update to Study With Me
 export const metadata: Metadata = {
   title: {
-    template: '%s | Study',
-    default: 'Study — The community platform that sees everything',
+    template: '%s | Study With Me',
+    default: 'Study With Me — The community platform that sees everything',
   },
   description:
     'A modular B2B SaaS community platform with forums, ideas, events, courses, and intelligent insights.',
