@@ -1,3 +1,4 @@
+import { cookies, headers } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 import { apiGet } from '@/lib/api'
 import type { Metadata } from 'next'
@@ -28,13 +29,22 @@ const ROLE_BADGE: Record<MemberRole, { labelKey: DictionaryKey; className: strin
 }
 
 async function getUserLanguage() {
+  // [LOG: 20260528_1645] Dynamic language fallback matching cookies or headers
+  const cookieStore = await cookies()
+  const cookieLang = cookieStore.get('NEXT_LOCALE')?.value
+
+  const headersList = await headers()
+  const acceptLanguage = headersList.get('accept-language') || ''
+  const prefersKorean = acceptLanguage.toLowerCase().includes('ko')
+  const defaultLang = cookieLang ?? (prefersKorean ? 'ko' : 'en')
+
   const supabase = await createClient()
   const token = (await supabase.auth.getSession()).data.session?.access_token
   try {
     const profile = await apiGet<{ language: string | null }>('/api/me', token, 60)
-    return profile?.language ?? 'en'
+    return profile?.language ?? defaultLang
   } catch {
-    return 'en'
+    return defaultLang
   }
 }
 

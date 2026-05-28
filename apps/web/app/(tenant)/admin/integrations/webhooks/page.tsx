@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+import { cookies, headers } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 import { apiGet } from '@/lib/api'
 import type { Metadata } from 'next'
@@ -23,12 +24,21 @@ async function getAdminContext() {
   const supabase = await createClient()
   const token = (await supabase.auth.getSession()).data.session?.access_token
 
+  // [LOG: 20260528_1645] Dynamic language fallback matching cookies or headers
+  const cookieStore = await cookies()
+  const cookieLang = cookieStore.get('NEXT_LOCALE')?.value
+
+  const headersList = await headers()
+  const acceptLanguage = headersList.get('accept-language') || ''
+  const prefersKorean = acceptLanguage.toLowerCase().includes('ko')
+  const defaultLang = cookieLang ?? (prefersKorean ? 'ko' : 'en')
+
   let isAdmin = false
-  let userLanguage = 'en'
+  let userLanguage = defaultLang
   try {
     const profile = await apiGet<{ role: string; language: string | null }>('/api/me', token, 60)
     isAdmin = profile.role === 'org_admin'
-    userLanguage = profile.language ?? 'en'
+    userLanguage = profile.language ?? defaultLang
   } catch {}
 
   return { token, isAdmin, userLanguage }
