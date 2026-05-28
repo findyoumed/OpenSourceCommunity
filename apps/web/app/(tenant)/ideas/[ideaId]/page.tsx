@@ -9,6 +9,7 @@ import { STATUS_CONFIG } from '../ideas-config'
 import type { IdeaStatus } from '../ideas-config'
 import { Badge } from '@/components/ui/badge'
 import { Avatar } from '@/components/ui/avatar'
+import { headers, cookies } from 'next/headers'
 import { t } from '@/lib/i18n'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -124,8 +125,17 @@ export default async function IdeaDetailPage({
   const supabase = await createClient()
   const token = (await supabase.auth.getSession()).data.session?.access_token
 
+  // [LOG: 20260528_1645] Read language preference from server-side cookies or browser Accept-Language headers to solve Edge environment mismatches
+  const cookieStore = await cookies()
+  const cookieLang = cookieStore.get('NEXT_LOCALE')?.value
+
+  const headersList = await headers()
+  const acceptLanguage = headersList.get('accept-language') || ''
+  const prefersKorean = acceptLanguage.toLowerCase().includes('ko')
+  const defaultLang = cookieLang ?? (prefersKorean ? 'ko' : 'en')
+
   let detail: IdeaDetailResponse | null = null
-  let userLanguage = 'en'
+  let userLanguage = defaultLang
 
   try {
     // [LOG: 20260527_1723]
@@ -135,7 +145,7 @@ export default async function IdeaDetailPage({
         apiGet<{ language: string | null }>('/api/me', token, 60),
       ])
       detail = detailData
-      userLanguage = profile?.language ?? 'en'
+      userLanguage = profile?.language ?? defaultLang
     } else {
       detail = await apiGet<IdeaDetailResponse>(`/api/ideas/${ideaId}`, undefined)
     }
@@ -278,11 +288,12 @@ export default async function IdeaDetailPage({
 
 function CommentCard({
   comment,
-  lang = 'en',
+  lang,
 }: {
   comment: IdeaComment
-  lang?: string | null | undefined
+  lang?: string | null
 }) {
+  const activeLang = lang ?? 'en'
   const bodyHtml = renderBody(comment.body)
 
   return (
@@ -305,12 +316,12 @@ function CommentCard({
             {comment.authorName}
             {comment.isOfficial && (
               <span className="ml-2 inline-flex items-center rounded-full bg-brand/10 px-1.5 py-0.5 text-xs font-medium text-brand">
-                {t('ideas.detail.teamLabel', lang)}
+                {t('ideas.detail.teamLabel', activeLang)}
               </span>
             )}
           </p>
           <time className="text-xs text-muted-foreground">
-            {new Intl.DateTimeFormat(lang === 'ko' ? 'ko-KR' : 'en-US', {
+            {new Intl.DateTimeFormat(activeLang === 'ko' ? 'ko-KR' : 'en-US', {
               dateStyle: 'medium',
               timeStyle: 'short',
             }).format(new Date(comment.createdAt))}

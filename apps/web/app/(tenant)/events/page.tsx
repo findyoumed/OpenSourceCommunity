@@ -249,7 +249,8 @@ export default async function EventsPage({
 
 // ─── Event Card (Grid view) ────────────────────────────────────────────────────
 
-function EventCard({ row, lang = 'en' }: { row: EventListRow; lang?: string | null | undefined }) {
+function EventCard({ row, lang }: { row: EventListRow; lang?: string | null }) {
+  const activeLang = lang ?? 'en'
   const { event, rsvpCount } = row
   const gradient = gradientForId(event.id)
   const locationType = event.location?.type ?? 'virtual'
@@ -286,22 +287,22 @@ function EventCard({ row, lang = 'en' }: { row: EventListRow; lang?: string | nu
         </h2>
 
         <p className="mt-2 text-xs text-muted-foreground">
-          {formatEventDate(event.startsAt, event.timezone, lang ?? 'en')}
+          {formatEventDate(event.startsAt, event.timezone, activeLang)}
         </p>
 
         {/* Footer */}
         <div className="mt-auto flex items-center justify-between pt-3">
           <Badge variant={locationType === 'virtual' ? 'blue' : 'success'}>
             {locationType === 'virtual' ? (
-              <><Globe className="h-3 w-3 mr-1" />{t('events.location.virtual', lang)}</>
+              <><Globe className="h-3 w-3 mr-1" />{t('events.location.virtual', activeLang)}</>
             ) : (
-              <><MapPin className="h-3 w-3 mr-1" />{t('events.location.irl', lang)}</>
+              <><MapPin className="h-3 w-3 mr-1" />{t('events.location.irl', activeLang)}</>
             )}
           </Badge>
 
           {rsvpCount > 0 && (
             <span className="text-xs text-muted-foreground">
-              {rsvpCount.toLocaleString(lang === 'ko' ? 'ko-KR' : 'en-US')} {t('events.attending', lang)}
+              {rsvpCount.toLocaleString(activeLang === 'ko' ? 'ko-KR' : 'en-US')} {t('events.attending', activeLang)}
             </span>
           )}
         </div>
@@ -312,11 +313,12 @@ function EventCard({ row, lang = 'en' }: { row: EventListRow; lang?: string | nu
 
 // ─── Event Row (Calendar view) ────────────────────────────────────────────────
 
-function EventRow({ row, lang = 'en' }: { row: EventListRow; lang?: string | null | undefined }) {
+function EventRow({ row, lang }: { row: EventListRow; lang?: string | null }) {
+  const activeLang = lang ?? 'en'
   const { event, rsvpCount } = row
   const d = new Date(event.startsAt)
   const locationType = event.location?.type ?? 'virtual'
-  const isKo = lang === 'ko'
+  const isKo = activeLang === 'ko'
   const day = d.toLocaleDateString(isKo ? 'ko-KR' : 'en-US', { day: 'numeric', timeZone: event.timezone })
   const weekday = d.toLocaleDateString(isKo ? 'ko-KR' : 'en-US', { weekday: 'short', timeZone: event.timezone })
   const time = d.toLocaleTimeString(isKo ? 'ko-KR' : 'en-US', {
@@ -342,7 +344,7 @@ function EventRow({ row, lang = 'en' }: { row: EventListRow; lang?: string | nul
         </h3>
         <p className="mt-0.5 text-xs text-muted-foreground">
           {time} · <span className={locationType === 'virtual' ? 'text-brand' : 'text-emerald-600'}>
-            {locationType === 'virtual' ? t('events.location.virtual', lang) : t('events.location.irl', lang)}
+            {locationType === 'virtual' ? t('events.location.virtual', activeLang) : t('events.location.irl', activeLang)}
           </span>
         </p>
       </div>
@@ -354,7 +356,7 @@ function EventRow({ row, lang = 'en' }: { row: EventListRow; lang?: string | nul
       ))}
 
       <span className="text-xs text-muted-foreground flex-shrink-0">
-        {rsvpCount.toLocaleString(isKo ? 'ko-KR' : 'en-US')} {t('events.rsvps', lang)}
+        {rsvpCount.toLocaleString(isKo ? 'ko-KR' : 'en-US')} {t('events.rsvps', activeLang)}
       </span>
     </Link>
   )

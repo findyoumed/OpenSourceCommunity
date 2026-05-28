@@ -177,7 +177,8 @@ export default async function IdeasPage({
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function IdeaCard({ idea, lang = 'en' }: { idea: Idea; lang?: string | null | undefined }) {
+function IdeaCard({ idea, lang }: { idea: Idea; lang?: string | null }) {
+  const activeLang = lang ?? 'en'
   const statusConfig = STATUS_CONFIG[idea.status] ?? STATUS_CONFIG.new
   const statusLabelKey = `ideas.status.${idea.status}` as any
 
@@ -189,7 +190,7 @@ function IdeaCard({ idea, lang = 'en' }: { idea: Idea; lang?: string | null | un
       {/* Vote count */}
       <div className="flex flex-shrink-0 flex-col items-center rounded-lg border border-border px-3 py-2 text-center min-w-[56px]">
         <span className="text-lg font-bold text-surface-foreground">{idea.voteCount}</span>
-        <span className="text-xs text-muted-foreground">{t('ideas.votes', lang)}</span>
+        <span className="text-xs text-muted-foreground">{t('ideas.votes', activeLang)}</span>
       </div>
 
       {/* Content */}
@@ -201,7 +202,7 @@ function IdeaCard({ idea, lang = 'en' }: { idea: Idea; lang?: string | null | un
               statusConfig.className,
             ].join(' ')}
           >
-            {t(statusLabelKey, lang)}
+            {t(statusLabelKey, activeLang)}
           </span>
           {idea.category && (
             <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
@@ -213,8 +214,8 @@ function IdeaCard({ idea, lang = 'en' }: { idea: Idea; lang?: string | null | un
           {idea.title}
         </h2>
         <p className="mt-0.5 text-xs text-muted-foreground">
-          {t('ideas.by', lang)} {idea.authorName} &middot; {timeAgo(idea.createdAt, lang ?? 'en')} &middot;{' '}
-          {idea.commentCount} {idea.commentCount === 1 ? t('ideas.comment', lang) : t('ideas.comments', lang)}
+          {t('ideas.by', activeLang)} {idea.authorName} &middot; {timeAgo(idea.createdAt, activeLang)} &middot;{' '}
+          {idea.commentCount} {idea.commentCount === 1 ? t('ideas.comment', activeLang) : t('ideas.comments', activeLang)}
         </p>
       </div>
     </Link>

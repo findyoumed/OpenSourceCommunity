@@ -225,7 +225,8 @@ export default async function WebinarsPage() {
 
 // ─── WebinarCard ──────────────────────────────────────────────────────────────
 
-function WebinarCard({ item, lang = 'en' }: { item: WebinarSummary; lang?: string | null | undefined }) {
+function WebinarCard({ item, lang }: { item: WebinarSummary; lang?: string | null }) {
+  const activeLang = lang ?? 'en'
   const { webinar, registrationCount } = item
   const gradient = gradientForId(webinar.id)
 
@@ -241,7 +242,7 @@ function WebinarCard({ item, lang = 'en' }: { item: WebinarSummary; lang?: strin
             {webinar.status === 'live' && (
               <span className="mr-1.5 inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-current" />
             )}
-            {t(`webinars.status.${webinar.status}` as any, lang)}
+            {t(`webinars.status.${webinar.status}` as any, activeLang)}
           </Badge>
         </span>
       </div>
@@ -253,15 +254,15 @@ function WebinarCard({ item, lang = 'en' }: { item: WebinarSummary; lang?: strin
         </h2>
 
         <p className="mt-2 text-xs text-muted-foreground">
-          {formatWebinarDate(webinar.scheduledAt, lang ?? 'en')}
+          {formatWebinarDate(webinar.scheduledAt, activeLang)}
         </p>
 
         <div className="mt-auto flex items-center justify-between pt-3">
           {webinar.durationMinutes != null && (
-            <span className="text-xs text-muted-foreground">{formatDuration(webinar.durationMinutes, lang ?? 'en')}</span>
+            <span className="text-xs text-muted-foreground">{formatDuration(webinar.durationMinutes, activeLang)}</span>
           )}
           <span className="ml-auto text-xs text-muted-foreground">
-            {registrationCount.toLocaleString(lang === 'ko' ? 'ko-KR' : 'en-US')} {t('webinars.registered', lang)}
+            {registrationCount.toLocaleString(activeLang === 'ko' ? 'ko-KR' : 'en-US')} {t('webinars.registered', activeLang)}
           </span>
         </div>
       </div>

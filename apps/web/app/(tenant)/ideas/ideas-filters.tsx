@@ -17,7 +17,7 @@ interface IdeasFiltersProps {
   status: string | undefined
   category: string | undefined
   categories: IdeaCategory[]
-  lang?: string | null | undefined
+  lang?: string | null
 }
 
 function buildHref({
@@ -42,8 +42,9 @@ export function IdeasFilters({
   status,
   category,
   categories,
-  lang = 'en',
+  lang,
 }: IdeasFiltersProps) {
+  const activeLang = lang ?? 'en'
   const router = useRouter()
 
   const sortOptions: SortOption[] = ['votes', 'newest', 'trending']
@@ -63,7 +64,7 @@ export function IdeasFilters({
                 : 'text-muted-foreground hover:bg-muted',
             ].join(' ')}
           >
-            {t(`ideas.filter.sort.${s}` as any, lang)}
+            {t(`ideas.filter.sort.${s}` as any, activeLang)}
           </a>
         ))}
       </div>
@@ -77,10 +78,10 @@ export function IdeasFilters({
           router.push(buildHref({ sort: sortOption, status: val || undefined, category }))
         }}
       >
-        <option value="">{t('ideas.filter.statusAll', lang)}</option>
+        <option value="">{t('ideas.filter.statusAll', activeLang)}</option>
         {(Object.keys(STATUS_CONFIG) as IdeaStatus[]).map((s) => (
           <option key={s} value={s}>
-            {t(`ideas.status.${s}` as any, lang)}
+            {t(`ideas.status.${s}` as any, activeLang)}
           </option>
         ))}
       </select>
@@ -95,7 +96,7 @@ export function IdeasFilters({
             router.push(buildHref({ sort: sortOption, status, category: val || undefined }))
           }}
         >
-          <option value="">{t('ideas.filter.categoryAll', lang)}</option>
+          <option value="">{t('ideas.filter.categoryAll', activeLang)}</option>
           {categories.map((c) => (
             <option key={c.id} value={c.id}>
               {c.name}

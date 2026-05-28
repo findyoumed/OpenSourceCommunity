@@ -172,7 +172,8 @@ export default async function CoursesPage() {
 
 // ─── Course Card ──────────────────────────────────────────────────────────────
 
-function CourseCard({ item, lang = 'en' }: { item: CourseListItem; lang?: string | null | undefined }) {
+function CourseCard({ item, lang }: { item: CourseListItem; lang?: string | null }) {
+  const activeLang = lang ?? 'en'
   const { course, lessonCount, enrollmentCount } = item
   const gradient = gradientForId(course.id)
 
@@ -197,10 +198,10 @@ function CourseCard({ item, lang = 'en' }: { item: CourseListItem; lang?: string
       {/* Body */}
       <div className="flex flex-1 flex-col p-4">
         {course.status === 'draft' && (
-          <Badge variant="warning" className="mb-2 w-fit">{t('courses.status.draft', lang)}</Badge>
+          <Badge variant="warning" className="mb-2 w-fit">{t('courses.status.draft', activeLang)}</Badge>
         )}
         {course.status === 'archived' && (
-          <Badge variant="secondary" className="mb-2 w-fit">{t('courses.status.archived', lang)}</Badge>
+          <Badge variant="secondary" className="mb-2 w-fit">{t('courses.status.archived', activeLang)}</Badge>
         )}
 
         <h2 className="text-sm font-semibold text-surface-foreground line-clamp-2 group-hover:text-brand transition-colors">
@@ -217,12 +218,12 @@ function CourseCard({ item, lang = 'en' }: { item: CourseListItem; lang?: string
         <div className="mt-auto flex items-center justify-between pt-3">
           <span className="flex items-center gap-1 text-xs text-muted-foreground">
             <BookOpen className="h-3.5 w-3.5" />
-            {lessonCount} {t(lessonCount === 1 ? 'courses.lesson' : 'courses.lessons', lang)}
+            {lessonCount} {t(lessonCount === 1 ? 'courses.lesson' : 'courses.lessons', activeLang)}
           </span>
 
           {enrollmentCount > 0 && (
             <span className="text-xs text-muted-foreground">
-              {enrollmentCount.toLocaleString(lang === 'ko' ? 'ko-KR' : 'en-US')} {t('courses.enrolled', lang)}
+              {enrollmentCount.toLocaleString(activeLang === 'ko' ? 'ko-KR' : 'en-US')} {t('courses.enrolled', activeLang)}
             </span>
           )}
         </div>
