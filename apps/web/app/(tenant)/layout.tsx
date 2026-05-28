@@ -4,7 +4,7 @@ import { apiGet } from '@/lib/api'
 import { Sidebar, type ModuleKey } from '@/components/layout/sidebar'
 import { Header } from '@/components/layout/header'
 import { TranslationProvider } from '@/lib/i18n-context'
-import { headers } from 'next/headers'
+import { headers, cookies } from 'next/headers'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -41,11 +41,14 @@ export default async function TenantLayout({
 
   const token = (await supabase.auth.getSession()).data.session?.access_token
 
-  // Read browser Accept-Language on the server side to prevent translation flash
+  // [LOG: 20260528_1518] Read language preference from server-side cookies or browser Accept-Language headers to solve Edge environment mismatches
+  const cookieStore = await cookies()
+  const cookieLang = cookieStore.get('NEXT_LOCALE')?.value
+
   const headersList = await headers()
   const acceptLanguage = headersList.get('accept-language') || ''
   const prefersKorean = acceptLanguage.toLowerCase().includes('ko')
-  const defaultLang = prefersKorean ? 'ko' : 'en'
+  const defaultLang = cookieLang ?? (prefersKorean ? 'ko' : 'en')
 
   // ── Fetch tenant config + member profile in parallel ───────────────────────
   let tenantConfig: TenantConfig = {

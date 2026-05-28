@@ -49,6 +49,12 @@ export function TranslationProvider({
 
   async function changeLanguage(newLang: Locale) {
     setLang(newLang)
+    
+    // [LOG: 20260528_1518] Persist user language selection in a cookie for robust SSR Edge resolution
+    if (typeof window !== 'undefined') {
+      document.cookie = `NEXT_LOCALE=${newLang}; path=/; max-age=31536000; SameSite=Lax`
+    }
+
     const apiValue = newLang === 'en' ? null : newLang
     
     // Server database update & component refresh (only if logged in)
