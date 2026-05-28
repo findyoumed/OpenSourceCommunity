@@ -28,7 +28,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <TranslationProvider initialLang="en">{children}</TranslationProvider>
+      {/* [LOG: 20260528_1357] Enable automatic browser language detection */}
+      <TranslationProvider initialLang={null}>{children}</TranslationProvider>
     </QueryClientProvider>
   )
 }
