@@ -17,7 +17,7 @@ interface IdeasFiltersProps {
   status: string | undefined
   category: string | undefined
   categories: IdeaCategory[]
-  lang?: string | null
+  lang: string
 }
 
 function buildHref({
@@ -44,7 +44,8 @@ export function IdeasFilters({
   categories,
   lang,
 }: IdeasFiltersProps) {
-  const activeLang = lang ?? 'en'
+  // [LOG: 20260528_1659] Dynamic language fallback matching cookies or headers
+  const activeLang = lang
   const router = useRouter()
 
   const sortOptions: SortOption[] = ['votes', 'newest', 'trending']

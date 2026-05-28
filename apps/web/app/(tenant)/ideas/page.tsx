@@ -177,8 +177,9 @@ export default async function IdeasPage({
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function IdeaCard({ idea, lang }: { idea: Idea; lang?: string | null }) {
-  const activeLang = lang ?? 'en'
+function IdeaCard({ idea, lang }: { idea: Idea; lang: string }) {
+  // [LOG: 20260528_1659] Dynamic language fallback matching cookies or headers
+  const activeLang = lang
   const statusConfig = STATUS_CONFIG[idea.status] ?? STATUS_CONFIG.new
   const statusLabelKey = `ideas.status.${idea.status}` as any
 

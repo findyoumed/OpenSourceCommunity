@@ -172,8 +172,9 @@ export default async function CoursesPage() {
 
 // ─── Course Card ──────────────────────────────────────────────────────────────
 
-function CourseCard({ item, lang }: { item: CourseListItem; lang?: string | null }) {
-  const activeLang = lang ?? 'en'
+function CourseCard({ item, lang }: { item: CourseListItem; lang: string }) {
+  // [LOG: 20260528_1659] Dynamic language fallback matching cookies or headers
+  const activeLang = lang
   const { course, lessonCount, enrollmentCount } = item
   const gradient = gradientForId(course.id)
 

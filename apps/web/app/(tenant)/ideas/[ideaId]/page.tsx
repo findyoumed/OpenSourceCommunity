@@ -291,9 +291,10 @@ function CommentCard({
   lang,
 }: {
   comment: IdeaComment
-  lang?: string | null
+  lang: string
 }) {
-  const activeLang = lang ?? 'en'
+  // [LOG: 20260528_1659] Dynamic language fallback matching cookies or headers
+  const activeLang = lang
   const bodyHtml = renderBody(comment.body)
 
   return (

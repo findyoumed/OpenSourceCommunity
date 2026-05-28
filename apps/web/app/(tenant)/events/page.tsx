@@ -249,8 +249,9 @@ export default async function EventsPage({
 
 // ─── Event Card (Grid view) ────────────────────────────────────────────────────
 
-function EventCard({ row, lang }: { row: EventListRow; lang?: string | null }) {
-  const activeLang = lang ?? 'en'
+function EventCard({ row, lang }: { row: EventListRow; lang: string }) {
+  // [LOG: 20260528_1659] Dynamic language fallback matching cookies or headers
+  const activeLang = lang
   const { event, rsvpCount } = row
   const gradient = gradientForId(event.id)
   const locationType = event.location?.type ?? 'virtual'
@@ -313,8 +314,9 @@ function EventCard({ row, lang }: { row: EventListRow; lang?: string | null }) {
 
 // ─── Event Row (Calendar view) ────────────────────────────────────────────────
 
-function EventRow({ row, lang }: { row: EventListRow; lang?: string | null }) {
-  const activeLang = lang ?? 'en'
+function EventRow({ row, lang }: { row: EventListRow; lang: string }) {
+  // [LOG: 20260528_1659] Dynamic language fallback matching cookies or headers
+  const activeLang = lang
   const { event, rsvpCount } = row
   const d = new Date(event.startsAt)
   const locationType = event.location?.type ?? 'virtual'

@@ -225,8 +225,9 @@ export default async function WebinarsPage() {
 
 // ─── WebinarCard ──────────────────────────────────────────────────────────────
 
-function WebinarCard({ item, lang }: { item: WebinarSummary; lang?: string | null }) {
-  const activeLang = lang ?? 'en'
+function WebinarCard({ item, lang }: { item: WebinarSummary; lang: string }) {
+  // [LOG: 20260528_1659] Dynamic language fallback matching cookies or headers
+  const activeLang = lang
   const { webinar, registrationCount } = item
   const gradient = gradientForId(webinar.id)
 
