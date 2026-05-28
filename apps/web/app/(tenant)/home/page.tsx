@@ -4,6 +4,7 @@ import { apiGet } from '@/lib/api'
 import type { ModuleKey } from '@/components/layout/sidebar'
 import { resolveWidgets, type HomepageConfig } from './widgets/types'
 import { headers, cookies } from 'next/headers'
+import { resolveLocalePreference } from '@/lib/language'
 
 // [LOG: 20260527_1736]
 
@@ -81,8 +82,6 @@ export default async function CommunityHomePage() {
 
   const headersList = await headers()
   const acceptLanguage = headersList.get('accept-language') || ''
-  const prefersKorean = acceptLanguage.toLowerCase().includes('ko')
-  const defaultLang = cookieLang ?? (prefersKorean ? 'ko' : 'en')
 
   let tenantConfig: TenantConfig = {
     id: '',
@@ -116,7 +115,12 @@ export default async function CommunityHomePage() {
     tenantConfig.enabledModules
   )
 
-  const resolvedLang = userLang ?? defaultLang
+  // [LOG: 20260528_1727] Dynamic dynamic locale resolution matching cookies or headers
+  const resolvedLang = resolveLocalePreference({
+    profileLanguage: userLang,
+    cookieLanguage: cookieLang,
+    acceptLanguage,
+  })
 
   return (
     <div
