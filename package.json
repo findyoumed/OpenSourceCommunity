@@ -16,7 +16,7 @@
     "db:generate": "turbo run db:generate",
     "db:push": "turbo run db:push",
     "db:seed": "turbo run db:seed",
-    "prepare": "[ -d .git ] && husky || true"
+    "prepare": "node -e \"if (require('fs').existsSync('.git')) { try { require('child_process').execSync('husky', { stdio: 'inherit' }) } catch (e) {} }\""
   },
   "devDependencies": {
     "@commitlint/cli": "^20.5.0",
