@@ -51,6 +51,32 @@ export function Header({
   const [searchQuery, setSearchQuery] = useState('')
   const [langMenuOpen, setLangMenuOpen] = useState(false)
 
+  // [LOG: 20260528_1509] Restored search modal state toggle for the header button, Ctrl+K, and open-global-search events
+  useEffect(() => {
+    function handleOpenSearch(e: Event) {
+      const customEvent = e as CustomEvent<{ query?: string }>
+      const initialQuery = customEvent.detail?.query ?? ''
+
+      setSearchQuery(initialQuery)
+      setSearchOpen(true)
+    }
+
+    function handleKeyDown(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault()
+        setSearchOpen(true)
+      }
+    }
+
+    window.addEventListener('open-global-search', handleOpenSearch)
+    window.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      window.removeEventListener('open-global-search', handleOpenSearch)
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [])
+
   // Close lang menu on outside click (capture=false so the button toggle fires first)
   useEffect(() => {
     if (!langMenuOpen) return
@@ -284,6 +310,61 @@ interface SearchResults {
   events: SearchResult[]
 }
 
+// [LOG: 20260528_1511] Deep recursive JSON text extractor and robust broken JSON symbol scrub utility
+function cleanSnippet(snippet: string | undefined): string {
+  if (!snippet) return ''
+  
+  const trimmed = snippet.trim()
+  
+  // 1. Recursive extractor if it happens to be valid JSON
+  const extractText = (obj: any): string => {
+    if (!obj) return ''
+    if (typeof obj === 'string') return obj
+    if (Array.isArray(obj)) return obj.map(extractText).join(' ')
+    if (typeof obj === 'object') {
+      let res = ''
+      if (obj.text && typeof obj.text === 'string') res += obj.text
+      if (obj.content) res += ' ' + extractText(obj.content)
+      for (const k in obj) {
+        if (k !== 'content' && k !== 'text' && typeof obj[k] === 'object') {
+          res += ' ' + extractText(obj[k])
+        }
+      }
+      return res.trim()
+    }
+    return ''
+  }
+
+  try {
+    if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+      const parsed = JSON.parse(trimmed)
+      const text = extractText(parsed)
+      if (text) return text
+    }
+  } catch {}
+
+  // 2. High-performance Regex-scrubbing fallback for fragmented/broken JSON strings (Postgres ts_headline crops)
+  let cleaned = snippet
+    .replace(/\\"/g, '"')
+    .replace(/\{\s*"type"\s*:\s*"[^"]*"\s*,?/gi, '')
+    .replace(/"type"\s*:\s*"[^"]*"\s*,?/gi, '')
+    .replace(/"content"\s*:\s*\[?/gi, '')
+    .replace(/"text"\s*:\s*"/gi, '')
+    .replace(/\{\s*"text"\s*:\s*"/gi, '')
+    .replace(/\\n/g, ' ')
+    .replace(/[\{\}\[\]"']/g, '') // Wipe remaining brackets, braces, and quotes
+    .replace(/\btext\b/gi, '')
+    .replace(/\bparagraph\b/gi, '')
+    .replace(/\bdoc\b/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+
+  // Remove leading/trailing commas or colons left from JSON splitting
+  cleaned = cleaned.replace(/^[:,\s]+|[:,\s]+$/g, '')
+
+  return cleaned || snippet
+}
+
 // ─── Search modal ─────────────────────────────────────────────────────────────
 
 function SearchModal({
@@ -297,6 +378,7 @@ function SearchModal({
   onClose: () => void
   token?: string | undefined
 }) {
+  const router = useRouter()
   const { t, lang: currentLang } = useTranslation()
   const inputRef = useRef<HTMLInputElement>(null)
   const [results, setResults] = useState<SearchResults | null>(null)
@@ -351,6 +433,13 @@ function SearchModal({
             placeholder={t('search.placeholder')}
             value={query}
             onChange={(e) => onQueryChange(e.target.value)}
+            // [LOG: 20260528_1510] Support seamless full-page redirect to the global search page on Enter inside SearchModal
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && query.trim().length > 0) {
+                onClose()
+                router.push(`/search?q=${encodeURIComponent(query.trim())}`)
+              }
+            }}
             className="flex-1 bg-transparent text-sm text-surface-foreground placeholder:text-muted-foreground outline-none"
           />
           {loading && (
@@ -427,7 +516,7 @@ function SearchSection({
           <div className="min-w-0">
             <p className="truncate text-sm font-medium text-surface-foreground">{item.title}</p>
             {item.subtitle && (
-              <p className="text-xs text-muted-foreground">{item.subtitle}</p>
+              <p className="text-xs text-muted-foreground">{cleanSnippet(item.subtitle)}</p>
             )}
           </div>
         </Link>

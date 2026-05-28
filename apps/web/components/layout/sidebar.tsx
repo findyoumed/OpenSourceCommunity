@@ -125,7 +125,12 @@ export function Sidebar({
   const navContent = (
     <nav className="flex h-full flex-col">
       {/* Workspace header */}
-      <div className="flex items-center gap-3 border-b border-border px-4 py-5">
+      {/* [LOG: 20260528_1439] Wrap brand in a link that navigates to the root (/home) */}
+      <Link
+        href="/home"
+        onClick={() => setMobileOpen(false)}
+        className="flex items-center gap-3 border-b border-border px-4 py-5 hover:bg-muted/40 transition-colors"
+      >
         {tenantLogoUrl ? (
           <img
             src={tenantLogoUrl}
@@ -140,7 +145,7 @@ export function Sidebar({
         <span className="truncate text-sm font-semibold text-surface-foreground">
           {tenantName}
         </span>
-      </div>
+      </Link>
 
       {/* Primary nav */}
       <div className="flex-1 space-y-0.5 overflow-y-auto px-2 py-4">

@@ -47,6 +47,61 @@ const TYPE_CONFIG_KEYS: Record<string, { labelKey: string; icon: React.ElementTy
   members: { labelKey: 'search.badge.member', icon: Users, color: 'secondary' as const },
 }
 
+// [LOG: 20260528_1511] Deep recursive JSON text extractor and robust broken JSON symbol scrub utility
+function cleanSnippet(snippet: string | undefined): string {
+  if (!snippet) return ''
+  
+  const trimmed = snippet.trim()
+  
+  // 1. Recursive extractor if it happens to be valid JSON
+  const extractText = (obj: any): string => {
+    if (!obj) return ''
+    if (typeof obj === 'string') return obj
+    if (Array.isArray(obj)) return obj.map(extractText).join(' ')
+    if (typeof obj === 'object') {
+      let res = ''
+      if (obj.text && typeof obj.text === 'string') res += obj.text
+      if (obj.content) res += ' ' + extractText(obj.content)
+      for (const k in obj) {
+        if (k !== 'content' && k !== 'text' && typeof obj[k] === 'object') {
+          res += ' ' + extractText(obj[k])
+        }
+      }
+      return res.trim()
+    }
+    return ''
+  }
+
+  try {
+    if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+      const parsed = JSON.parse(trimmed)
+      const text = extractText(parsed)
+      if (text) return text
+    }
+  } catch {}
+
+  // 2. High-performance Regex-scrubbing fallback for fragmented/broken JSON strings (Postgres ts_headline crops)
+  let cleaned = snippet
+    .replace(/\\"/g, '"')
+    .replace(/\{\s*"type"\s*:\s*"[^"]*"\s*,?/gi, '')
+    .replace(/"type"\s*:\s*"[^"]*"\s*,?/gi, '')
+    .replace(/"content"\s*:\s*\[?/gi, '')
+    .replace(/"text"\s*:\s*"/gi, '')
+    .replace(/\{\s*"text"\s*:\s*"/gi, '')
+    .replace(/\\n/g, ' ')
+    .replace(/[\{\}\[\]"']/g, '') // Wipe remaining brackets, braces, and quotes
+    .replace(/\btext\b/gi, '')
+    .replace(/\bparagraph\b/gi, '')
+    .replace(/\bdoc\b/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+
+  // Remove leading/trailing commas or colons left from JSON splitting
+  cleaned = cleaned.replace(/^[:,\s]+|[:,\s]+$/g, '')
+
+  return cleaned || snippet
+}
+
 export default async function SearchPage({
   searchParams,
 }: {
@@ -189,7 +244,7 @@ export default async function SearchPage({
                       {result.snippet && (
                         <p
                           className="mt-1 text-xs text-muted-foreground line-clamp-2"
-                          dangerouslySetInnerHTML={{ __html: result.snippet }}
+                          dangerouslySetInnerHTML={{ __html: cleanSnippet(result.snippet) }}
                         />
                       )}
                     </div>

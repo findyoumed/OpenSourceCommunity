@@ -2,6 +2,8 @@ import { Search, ArrowUpRight, Users, MessageSquare, PenLine, Calendar } from 'l
 import Link from 'next/link'
 import { DM_Serif_Display } from 'next/font/google'
 import { apiGet } from '@/lib/api'
+import GreetingText from './greeting-text'
+import DashboardSearchButton from './dashboard-search-button'
 
 // ─── Font ─────────────────────────────────────────────────────────────────────
 
@@ -26,13 +28,7 @@ interface MeData {
   role: string
 }
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-function greetingFor(hour: number): string {
-  if (hour < 12) return 'Good morning'
-  if (hour < 17) return 'Good afternoon'
-  return 'Good evening'
-}
+// [LOG: 20260528_1423] Greeting helper moved to client-side greeting-text.tsx
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -60,10 +56,6 @@ export default async function WelcomeBar({
   }
 
   const isKo = lang === 'ko'
-
-  const greeting = isKo
-    ? (new Date().getHours() < 12 ? '좋은 아침입니다' : new Date().getHours() < 17 ? '즐거운 오후입니다' : '행복한 저녁입니다')
-    : greetingFor(new Date().getHours())
 
   const statItems = [
     { icon: Users,         value: stats.memberCount.toLocaleString(),   label: isKo ? '회원 수' : 'Members' },
@@ -95,8 +87,8 @@ export default async function WelcomeBar({
         <div className="relative px-8 py-12">
           {/* Greeting */}
           <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-white/55">
-            {/* [LOG: 20260527_1130] */}
-            {greeting}{displayName ? ` · ${displayName}` : ''}
+            {/* [LOG: 20260528_1423] Dynamic local browser time greeting */}
+            <GreetingText displayName={displayName} lang={lang} />
           </p>
 
           {/* Community name — display serif */}
@@ -118,13 +110,8 @@ export default async function WelcomeBar({
 
           {/* Search + CTA */}
           <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-            <Link
-              href="/forums"
-              className="flex flex-1 items-center gap-3 rounded-xl border border-white/20 bg-white/10 px-5 py-3.5 text-sm text-white/50 backdrop-blur-sm transition-colors hover:bg-white/15"
-            >
-              <Search className="h-4 w-4 shrink-0 text-white/40" />
-              <span>{isKo ? '토론, 건의사항, 멤버 검색...' : 'Search discussions, ideas, members…'}</span>
-            </Link>
+            {/* [LOG: 20260528_1439] Interactive global search trigger */}
+            <DashboardSearchButton lang={lang} />
             <Link
               href="/forums/new"
               className="flex items-center justify-center gap-2 rounded-xl bg-white px-6 py-3.5 text-sm font-bold text-brand shadow-sm transition-opacity hover:opacity-90 sm:shrink-0"

@@ -439,7 +439,8 @@ export const dictionary = {
 
     // Auth
     'auth.login.title': 'Welcome back',
-    'auth.login.subtitle': 'Sign in to your community',
+    // [LOG: 20260528_1407] Refine brand subtitle to service
+    'auth.login.subtitle': 'Sign in to service',
     'auth.login.google': 'Continue with Google',
     'auth.login.github': 'Continue with GitHub',
     'auth.login.divider': 'or continue with email',
@@ -450,7 +451,8 @@ export const dictionary = {
     'auth.login.noAccount': "Don't have an account?",
     'auth.login.createAccount': 'Create one free',
     'auth.signup.title': 'Create your account',
-    'auth.signup.subtitle': 'Join the community',
+    // [LOG: 20260528_1407] Refine brand subtitle to service
+    'auth.signup.subtitle': 'Join service',
     'auth.signup.nameLabel': 'Full name',
     'auth.signup.submitBtn': 'Create account',
     'auth.signup.termsPrefix': 'By signing up you agree to our',
@@ -1213,7 +1215,8 @@ export const dictionary = {
 
     // Auth
     'auth.login.title': '다시 만나서 반가워요',
-    'auth.login.subtitle': '우리 커뮤니티에 로그인하세요',
+    // [LOG: 20260528_1407] Update brand subtitle to 서비스
+    'auth.login.subtitle': '서비스에 로그인하세요',
     'auth.login.google': 'Google 계정으로 계속하기',
     'auth.login.github': 'GitHub 계정으로 계속하기',
     'auth.login.divider': '또는 이메일로 로그인',
@@ -1224,7 +1227,8 @@ export const dictionary = {
     'auth.login.noAccount': '아직 계정이 없으신가요?',
     'auth.login.createAccount': '무료로 가입하기',
     'auth.signup.title': '새로운 계정 만들기',
-    'auth.signup.subtitle': '우리 커뮤니티의 멤버가 되어보세요',
+    // [LOG: 20260528_1407] Update brand subtitle to 서비스
+    'auth.signup.subtitle': '서비스의 멤버가 되어보세요',
     'auth.signup.nameLabel': '성함',
     'auth.signup.submitBtn': '가입하기',
     'auth.signup.termsPrefix': '가입 시 서비스',

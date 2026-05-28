@@ -535,7 +535,8 @@ export function coreRoutes(app: Hono<HonoEnv>) {
               eq(forumThreads.tenantId, tenantId),
               sql`to_tsvector('english', coalesce(${forumThreads.title}, '') || ' ' || coalesce(${forumThreads.body}::text, '')) @@ plainto_tsquery('english', ${q})`,
             ))
-            .orderBy(sql`rank DESC`)
+            // [LOG: 20260528_1501] Fixed column "rank" does not exist postgres error by using direct expression
+            .orderBy(desc(sql`ts_rank(to_tsvector('english', coalesce(${forumThreads.title}, '') || ' ' || coalesce(${forumThreads.body}::text, '')), plainto_tsquery('english', ${q}))`))
             .limit(limit)
         : Promise.resolve([]),
       (!type || type === 'ideas')
@@ -551,7 +552,8 @@ export function coreRoutes(app: Hono<HonoEnv>) {
               eq(ideas.isMerged, false),
               sql`to_tsvector('english', coalesce(${ideas.title}, '') || ' ' || coalesce(${ideas.body}::text, '')) @@ plainto_tsquery('english', ${q})`,
             ))
-            .orderBy(sql`rank DESC`)
+            // [LOG: 20260528_1501] Fixed for ideas
+            .orderBy(desc(sql`ts_rank(to_tsvector('english', coalesce(${ideas.title}, '') || ' ' || coalesce(${ideas.body}::text, '')), plainto_tsquery('english', ${q}))`))
             .limit(limit)
         : Promise.resolve([]),
       (!type || type === 'members')
@@ -576,7 +578,8 @@ export function coreRoutes(app: Hono<HonoEnv>) {
               eq(events.status, 'published'),
               sql`to_tsvector('english', coalesce(${events.title}, '') || ' ' || coalesce(${events.body}::text, '')) @@ plainto_tsquery('english', ${q})`,
             ))
-            .orderBy(sql`rank DESC`)
+            // [LOG: 20260528_1501] Fixed for events
+            .orderBy(desc(sql`ts_rank(to_tsvector('english', coalesce(${events.title}, '') || ' ' || coalesce(${events.body}::text, '')), plainto_tsquery('english', ${q}))`))
             .limit(limit)
         : Promise.resolve([]),
       (!type || type === 'kb')
@@ -592,7 +595,8 @@ export function coreRoutes(app: Hono<HonoEnv>) {
               eq(kbArticles.isPublished, true),
               sql`to_tsvector('english', coalesce(${kbArticles.title}, '') || ' ' || coalesce(${kbArticles.body}::text, '')) @@ plainto_tsquery('english', ${q})`,
             ))
-            .orderBy(sql`rank DESC`)
+            // [LOG: 20260528_1501] Fixed for kb articles
+            .orderBy(desc(sql`ts_rank(to_tsvector('english', coalesce(${kbArticles.title}, '') || ' ' || coalesce(${kbArticles.body}::text, '')), plainto_tsquery('english', ${q}))`))
             .limit(limit)
         : Promise.resolve([]),
     ])
