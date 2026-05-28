@@ -5,18 +5,27 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { Settings, MessageCircle, ExternalLink } from 'lucide-react'
 import { Avatar } from '@/components/ui/avatar'
+import { headers, cookies } from 'next/headers'
 import { t, type DictionaryKey } from '@/lib/i18n'
-
-// [LOG: 20260527_1720]
 
 export async function generateMetadata(): Promise<Metadata> {
   const supabase = await createClient()
   const token = (await supabase.auth.getSession()).data.session?.access_token
-  let lang = 'en'
+
+  // [LOG: 20260528_1645] Read language preference from server-side cookies or browser Accept-Language headers to solve Edge environment mismatches
+  const cookieStore = await cookies()
+  const cookieLang = cookieStore.get('NEXT_LOCALE')?.value
+
+  const headersList = await headers()
+  const acceptLanguage = headersList.get('accept-language') || ''
+  const prefersKorean = acceptLanguage.toLowerCase().includes('ko')
+  const defaultLang = cookieLang ?? (prefersKorean ? 'ko' : 'en')
+
+  let lang = defaultLang
   if (token) {
     try {
       const profile = await apiGet<{ language: string | null }>('/api/me', token, 60)
-      lang = profile?.language ?? 'en'
+      lang = profile?.language ?? defaultLang
     } catch {}
   }
   return { title: t('profile.title', lang) }
@@ -50,11 +59,20 @@ export default async function ProfilePage() {
   const { data: { session } } = await supabase.auth.getSession()
   if (!session) redirect('/login')
 
+  // [LOG: 20260528_1645] Read language preference from server-side cookies or browser Accept-Language headers to solve Edge environment mismatches
+  const cookieStore = await cookies()
+  const cookieLang = cookieStore.get('NEXT_LOCALE')?.value
+
+  const headersList = await headers()
+  const acceptLanguage = headersList.get('accept-language') || ''
+  const prefersKorean = acceptLanguage.toLowerCase().includes('ko')
+  const defaultLang = cookieLang ?? (prefersKorean ? 'ko' : 'en')
+
   let profile: MemberProfile | null = null
-  let lang = 'en'
+  let lang = defaultLang
   try {
     profile = await apiGet<MemberProfile>('/api/me', session.access_token, 60)
-    lang = profile?.language ?? 'en'
+    lang = profile?.language ?? defaultLang
   } catch { /* fall through */ }
 
   if (!profile) {

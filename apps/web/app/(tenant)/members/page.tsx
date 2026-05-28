@@ -8,18 +8,27 @@ import { Avatar } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
+import { headers, cookies } from 'next/headers'
 import { t } from '@/lib/i18n'
-
-// [LOG: 20260527_1720]
 
 export async function generateMetadata(): Promise<Metadata> {
   const supabase = await createClient()
   const token = (await supabase.auth.getSession()).data.session?.access_token
-  let lang = 'en'
+
+  // [LOG: 20260528_1645] Read language preference from server-side cookies or browser Accept-Language headers to solve Edge environment mismatches
+  const cookieStore = await cookies()
+  const cookieLang = cookieStore.get('NEXT_LOCALE')?.value
+
+  const headersList = await headers()
+  const acceptLanguage = headersList.get('accept-language') || ''
+  const prefersKorean = acceptLanguage.toLowerCase().includes('ko')
+  const defaultLang = cookieLang ?? (prefersKorean ? 'ko' : 'en')
+
+  let lang = defaultLang
   if (token) {
     try {
       const profile = await apiGet<{ language: string | null }>('/api/me', token, 60)
-      lang = profile?.language ?? 'en'
+      lang = profile?.language ?? defaultLang
     } catch {}
   }
   return { title: t('members.title', lang) }
@@ -70,11 +79,20 @@ export default async function MembersPage({
   const supabase = await createClient()
   const token = (await supabase.auth.getSession()).data.session?.access_token
 
-  let lang = 'en'
+  // [LOG: 20260528_1645] Read language preference from server-side cookies or browser Accept-Language headers to solve Edge environment mismatches
+  const cookieStore = await cookies()
+  const cookieLang = cookieStore.get('NEXT_LOCALE')?.value
+
+  const headersList = await headers()
+  const acceptLanguage = headersList.get('accept-language') || ''
+  const prefersKorean = acceptLanguage.toLowerCase().includes('ko')
+  const defaultLang = cookieLang ?? (prefersKorean ? 'ko' : 'en')
+
+  let lang = defaultLang
   if (token) {
     try {
       const profile = await apiGet<{ language: string | null }>('/api/me', token, 60)
-      lang = profile?.language ?? 'en'
+      lang = profile?.language ?? defaultLang
     } catch {}
   }
 

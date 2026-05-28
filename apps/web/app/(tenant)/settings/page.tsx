@@ -7,16 +7,29 @@ import Link from 'next/link'
 import { Bell } from 'lucide-react'
 import { ProfileForm } from '../profile/profile-form'
 import { LanguageSelect } from './language-select'
+import { headers, cookies } from 'next/headers'
 import { t } from '@/lib/i18n'
 
 export async function generateMetadata(): Promise<Metadata> {
   const supabase = await createClient()
   const token = (await supabase.auth.getSession()).data.session?.access_token
-  let lang = 'en'
-  try {
-    const profile = await apiGet<{ language: string | null }>('/api/me', token, 60)
-    lang = profile?.language ?? 'en'
-  } catch {}
+
+  // [LOG: 20260528_1645] Read language preference from server-side cookies or browser Accept-Language headers to solve Edge environment mismatches
+  const cookieStore = await cookies()
+  const cookieLang = cookieStore.get('NEXT_LOCALE')?.value
+
+  const headersList = await headers()
+  const acceptLanguage = headersList.get('accept-language') || ''
+  const prefersKorean = acceptLanguage.toLowerCase().includes('ko')
+  const defaultLang = cookieLang ?? (prefersKorean ? 'ko' : 'en')
+
+  let lang = defaultLang
+  if (token) {
+    try {
+      const profile = await apiGet<{ language: string | null }>('/api/me', token, 60)
+      lang = profile?.language ?? defaultLang
+    } catch {}
+  }
   return { title: t('settings.title', lang) }
 }
 
@@ -37,6 +50,15 @@ export default async function SettingsPage() {
   if (!session) redirect('/login')
   const token = session.access_token
 
+  // [LOG: 20260528_1645] Read language preference from server-side cookies or browser Accept-Language headers to solve Edge environment mismatches
+  const cookieStore = await cookies()
+  const cookieLang = cookieStore.get('NEXT_LOCALE')?.value
+
+  const headersList = await headers()
+  const acceptLanguage = headersList.get('accept-language') || ''
+  const prefersKorean = acceptLanguage.toLowerCase().includes('ko')
+  const defaultLang = cookieLang ?? (prefersKorean ? 'ko' : 'en')
+
   let profile: MemberProfile | null = null
   try {
     profile = await apiGet<MemberProfile>('/api/me', token, 60)
@@ -50,7 +72,7 @@ export default async function SettingsPage() {
     )
   }
 
-  const userLanguage = profile.language ?? 'en'
+  const userLanguage = profile.language ?? defaultLang
 
   return (
     <div className="space-y-8 max-w-2xl">

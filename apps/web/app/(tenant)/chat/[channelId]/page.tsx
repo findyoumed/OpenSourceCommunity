@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { apiGet } from '@/lib/api'
 import type { Metadata } from 'next'
 import { ChatRoom } from './chat-room'
+import { headers, cookies } from 'next/headers'
 import { t } from '@/lib/i18n'
 
 export async function generateMetadata({
@@ -14,14 +15,24 @@ export async function generateMetadata({
   const { channelId } = await params
   const supabase = await createClient()
   const token = (await supabase.auth.getSession()).data.session?.access_token
-  let lang = 'en'
+
+  // [LOG: 20260528_1645] Read language preference from server-side cookies or browser Accept-Language headers to solve Edge environment mismatches
+  const cookieStore = await cookies()
+  const cookieLang = cookieStore.get('NEXT_LOCALE')?.value
+
+  const headersList = await headers()
+  const acceptLanguage = headersList.get('accept-language') || ''
+  const prefersKorean = acceptLanguage.toLowerCase().includes('ko')
+  const defaultLang = cookieLang ?? (prefersKorean ? 'ko' : 'en')
+
+  let lang = defaultLang
   let channelName = ''
   try {
     const [profile, channel] = await Promise.all([
       apiGet<{ language: string | null }>('/api/me', token, 60),
       apiGet<{ name: string }>(`/api/chat/channels/${channelId}`, token),
     ])
-    lang = profile?.language ?? 'en'
+    lang = profile?.language ?? defaultLang
     channelName = channel?.name ?? ''
   } catch {}
   
@@ -63,10 +74,19 @@ export default async function ChatChannelPage({
   const session = await supabase.auth.getSession()
   const token = session.data.session?.access_token
 
+  // [LOG: 20260528_1645] Read language preference from server-side cookies or browser Accept-Language headers to solve Edge environment mismatches
+  const cookieStore = await cookies()
+  const cookieLang = cookieStore.get('NEXT_LOCALE')?.value
+
+  const headersList = await headers()
+  const acceptLanguage = headersList.get('accept-language') || ''
+  const prefersKorean = acceptLanguage.toLowerCase().includes('ko')
+  const defaultLang = cookieLang ?? (prefersKorean ? 'ko' : 'en')
+
   let channel: Channel | null = null
   let initialMessages: Message[] = []
   let memberProfile: MemberProfile | null = null
-  let userLanguage = 'en'
+  let userLanguage = defaultLang
 
   try {
     const [cData, mData, pData] = await Promise.all([
@@ -77,7 +97,7 @@ export default async function ChatChannelPage({
     channel = cData
     initialMessages = mData
     memberProfile = pData
-    userLanguage = pData?.language ?? 'en'
+    userLanguage = pData?.language ?? defaultLang
   } catch {
     notFound()
   }
