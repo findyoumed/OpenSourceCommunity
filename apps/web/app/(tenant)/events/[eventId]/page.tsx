@@ -6,6 +6,7 @@ import { apiGet } from '@/lib/api'
 import type { Metadata } from 'next'
 import { RsvpButton } from './rsvp-button'
 import { t } from '@/lib/i18n'
+import { resolveLocalePreference } from '@/lib/language'
 
 export async function generateMetadata({
   params,
@@ -155,11 +156,10 @@ export default async function EventDetailPage({
 
   const headersList = await headers()
   const acceptLanguage = headersList.get('accept-language') || ''
-  const prefersKorean = acceptLanguage.toLowerCase().includes('ko')
-  const defaultLang = cookieLang ?? (prefersKorean ? 'ko' : 'en')
+  // [LOG: 20260528_1735] Replaced old locale pattern with resolveLocalePreference
 
   let detail: EventDetailResponse | null = null
-  let userLanguage = defaultLang
+  let userLanguage = resolveLocalePreference({ cookieLanguage: cookieLang, acceptLanguage })
   let fetchError = false
 
   try {
@@ -170,7 +170,7 @@ export default async function EventDetailPage({
         apiGet<{ language: string | null }>('/api/me', token, 60),
       ])
       detail = detailData
-      userLanguage = profile?.language ?? defaultLang
+      userLanguage = resolveLocalePreference({ profileLanguage: profile?.language, cookieLanguage: cookieLang, acceptLanguage })
     } else {
       detail = await apiGet<EventDetailResponse>(`/api/events/${eventId}`, undefined)
     }

@@ -9,8 +9,7 @@ import { ThreadActions } from './thread-actions'
 import { TranslatableThread } from './translatable-thread'
 import { Badge } from '@/components/ui/badge'
 import { Avatar } from '@/components/ui/avatar'
-
-// ─── Types ────────────────────────────────────────────────────────────────────
+import { resolveLocalePreference, type Locale } from '@/lib/language'
 
 interface ThreadObj {
   id: string
@@ -45,8 +44,6 @@ interface ThreadDetailResponse {
   posts: PostObj[]
 }
 
-// ─── Metadata ─────────────────────────────────────────────────────────────────
-
 export async function generateMetadata({
   params,
 }: {
@@ -63,25 +60,30 @@ export async function generateMetadata({
   }
 }
 
-// ─── Body renderer ────────────────────────────────────────────────────────────
-
 function renderNode(node: Record<string, unknown>): string {
   const type = node.type as string
   const content = (node.content as Record<string, unknown>[] | undefined) ?? []
   const children = content.map((child) => renderNode(child)).join('')
 
   switch (type) {
-    case 'doc': return children
-    case 'paragraph': return `<p>${children || '<br>'}</p>`
+    case 'doc':
+      return children
+    case 'paragraph':
+      return `<p>${children || '<br>'}</p>`
     case 'heading': {
       const level = (node.attrs as Record<string, number> | undefined)?.level ?? 2
       return `<h${level}>${children}</h${level}>`
     }
-    case 'bulletList': return `<ul>${children}</ul>`
-    case 'orderedList': return `<ol>${children}</ol>`
-    case 'listItem': return `<li>${children}</li>`
-    case 'blockquote': return `<blockquote>${children}</blockquote>`
-    case 'codeBlock': return `<pre><code>${children}</code></pre>`
+    case 'bulletList':
+      return `<ul>${children}</ul>`
+    case 'orderedList':
+      return `<ol>${children}</ol>`
+    case 'listItem':
+      return `<li>${children}</li>`
+    case 'blockquote':
+      return `<blockquote>${children}</blockquote>`
+    case 'codeBlock':
+      return `<pre><code>${children}</code></pre>`
     case 'text': {
       let text = (node.text as string | undefined) ?? ''
       const marks = (node.marks as Array<{ type: string }> | undefined) ?? []
@@ -94,7 +96,8 @@ function renderNode(node: Record<string, unknown>): string {
       }
       return text
     }
-    default: return children
+    default:
+      return children
   }
 }
 
@@ -122,8 +125,6 @@ function bodyToPlainText(body: Record<string, unknown> | string): string {
   }
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
-
 export default async function ThreadPage({
   params,
 }: {
@@ -134,14 +135,11 @@ export default async function ThreadPage({
   const supabase = await createClient()
   const token = (await supabase.auth.getSession()).data.session?.access_token
 
-  // [LOG: 20260528_1645] Dynamic language fallback matching cookies or headers
   const cookieStore = await cookies()
   const cookieLang = cookieStore.get('NEXT_LOCALE')?.value
 
   const headersList = await headers()
-  const acceptLanguage = headersList.get('accept-language') || ''
-  const prefersKorean = acceptLanguage.toLowerCase().includes('ko')
-  const defaultLang = cookieLang ?? (prefersKorean ? 'ko' : 'en')
+  const acceptLanguage = headersList.get('accept-language')
 
   let detail: ThreadDetailResponse | null = null
   try {
@@ -151,18 +149,25 @@ export default async function ThreadPage({
   }
   if (!detail) notFound()
 
-  // Fetch member language preference (non-fatal)
-  let memberLanguage: string = defaultLang
+  let memberLanguage: Locale = resolveLocalePreference({
+    cookieLanguage: cookieLang,
+    acceptLanguage,
+  })
+
   if (token) {
     try {
       const me = await apiGet<{ language?: string | null }>('/api/me', token, 60)
-      memberLanguage = me.language ?? defaultLang
-    } catch {
-      // not logged in or fetch failed — no translation
-    }
+      memberLanguage = resolveLocalePreference({
+        profileLanguage: me.language,
+        cookieLanguage: cookieLang,
+        acceptLanguage,
+      })
+    } catch {}
   }
 
   const { thread, posts } = detail
+  const isKo = memberLanguage === 'ko'
+  const locale = isKo ? 'ko-KR' : 'en-US'
 
   const enrichedPosts = posts.map((post) => ({
     ...post,
@@ -170,11 +175,8 @@ export default async function ThreadPage({
     bodyText: bodyToPlainText(post.body),
   }))
 
-  const isKo = memberLanguage === 'ko'
-
   return (
     <div className="space-y-6">
-      {/* Breadcrumb */}
       <nav className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground">
         <Link href="/forums" className="hover:text-surface-foreground transition-colors">
           {isKo ? '포럼' : 'Forums'}
@@ -189,37 +191,37 @@ export default async function ThreadPage({
         </span>
       </nav>
 
-      {/* Thread header */}
       <div className="rounded-xl border border-border bg-card p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex-1">
-            <div className="flex flex-wrap gap-2 mb-2">
+            <div className="mb-2 flex flex-wrap gap-2">
               {thread.isPinned && (
                 <Badge variant="secondary">
-                  <Pin className="h-3 w-3 mr-1" />{isKo ? '고정됨' : 'Pinned'}
+                  <Pin className="mr-1 h-3 w-3" />
+                  {isKo ? '고정됨' : 'Pinned'}
                 </Badge>
               )}
               {thread.isAnswered && (
                 <Badge variant="success">
-                  <CheckCircle2 className="h-3 w-3 mr-1" />{isKo ? '해결됨' : 'Answered'}
+                  <CheckCircle2 className="mr-1 h-3 w-3" />
+                  {isKo ? '해결됨' : 'Answered'}
                 </Badge>
               )}
             </div>
             <h1 className="text-xl font-bold text-surface-foreground">{thread.title}</h1>
             <p className="mt-1 text-xs text-muted-foreground">
               {thread.authorName} &middot;{' '}
-              {new Intl.DateTimeFormat(isKo ? 'ko-KR' : 'en-US', {
+              {new Intl.DateTimeFormat(locale, {
                 dateStyle: 'medium',
                 timeStyle: 'short',
               }).format(new Date(thread.createdAt))}{' '}
-              &middot; {thread.viewCount.toLocaleString(isKo ? 'ko-KR' : 'en-US')} {isKo ? '조회' : 'views'}
+              &middot; {thread.viewCount.toLocaleString(locale)} {isKo ? '조회' : 'views'}
             </p>
           </div>
         </div>
       </div>
 
-      {/* Posts — translatable if user has a language preference */}
-      {memberLanguage && memberLanguage !== 'en' ? (
+      {memberLanguage !== 'en' ? (
         <TranslatableThread posts={enrichedPosts} targetLang={memberLanguage} />
       ) : (
         <div className="space-y-4">
@@ -229,20 +231,20 @@ export default async function ThreadPage({
         </div>
       )}
 
-      {/* Reply form */}
       <ThreadActions
         threadId={thread.id}
         categorySlug={categorySlug}
         token={token ?? ''}
+        lang={memberLanguage}
       />
     </div>
   )
 }
 
-// ─── Post card ────────────────────────────────────────────────────────────────
-
-function PostCard({ post, lang = 'en' }: { post: PostObj & { bodyHtml: string }; lang?: string }) {
+function PostCard({ post, lang }: { post: PostObj & { bodyHtml: string }; lang: Locale }) {
   const isKo = lang === 'ko'
+  const locale = isKo ? 'ko-KR' : 'en-US'
+
   return (
     <article
       className={[
@@ -259,8 +261,7 @@ function PostCard({ post, lang = 'en' }: { post: PostObj & { bodyHtml: string };
         </div>
       )}
 
-      {/* Author row */}
-      <div className="flex items-center gap-3 mb-4">
+      <div className="mb-4 flex items-center gap-3">
         <Avatar
           src={post.authorAvatarUrl}
           name={post.authorName}
@@ -269,18 +270,17 @@ function PostCard({ post, lang = 'en' }: { post: PostObj & { bodyHtml: string };
         <div>
           <p className="text-sm font-semibold text-surface-foreground">{post.authorName}</p>
           {post.authorRole !== 'member' && post.authorRole !== 'guest' && (
-            <span className="text-xs text-brand capitalize">{post.authorRole.replace('_', ' ')}</span>
+            <span className="text-xs capitalize text-brand">{post.authorRole.replace('_', ' ')}</span>
           )}
         </div>
         <time className="ml-auto text-xs text-muted-foreground">
-          {new Intl.DateTimeFormat(isKo ? 'ko-KR' : 'en-US', {
+          {new Intl.DateTimeFormat(locale, {
             dateStyle: 'medium',
             timeStyle: 'short',
           }).format(new Date(post.createdAt))}
         </time>
       </div>
 
-      {/* Body */}
       {post.bodyHtml && (
         <div
           className="prose prose-sm max-w-none prose-headings:text-surface-foreground prose-p:text-surface-foreground prose-strong:text-surface-foreground prose-code:text-brand prose-a:text-brand"

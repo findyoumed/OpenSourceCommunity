@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { apiGet } from '@/lib/api'
 import type { Metadata } from 'next'
 import { t } from '@/lib/i18n'
+import { resolveLocalePreference } from '@/lib/language'
 
 export async function generateMetadata(): Promise<Metadata> {
   const { userLanguage } = await getAdminContext()
@@ -52,15 +53,14 @@ async function getAdminContext() {
 
   const headersList = await headers()
   const acceptLanguage = headersList.get('accept-language') || ''
-  const prefersKorean = acceptLanguage.toLowerCase().includes('ko')
-  const defaultLang = cookieLang ?? (prefersKorean ? 'ko' : 'en')
+  // [LOG: 20260528_1735] Replaced old locale pattern with resolveLocalePreference
 
   let isAdmin = false
-  let userLanguage = defaultLang
+  let userLanguage = resolveLocalePreference({ cookieLanguage: cookieLang, acceptLanguage })
   try {
     const profile = await apiGet<{ role: string; language: string | null }>('/api/me', token, 60)
     isAdmin = profile.role === 'org_admin'
-    userLanguage = profile.language ?? defaultLang
+    userLanguage = resolveLocalePreference({ profileLanguage: profile.language, cookieLanguage: cookieLang, acceptLanguage })
   } catch {}
   return { token, isAdmin, userLanguage }
 }

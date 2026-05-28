@@ -6,6 +6,7 @@ import './globals.css'
 import { Providers } from './providers'
 
 import { headers, cookies } from 'next/headers'
+import { resolveLocalePreference } from '@/lib/language'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -39,14 +40,16 @@ export default async function RootLayout({
   const cookieLang = cookieStore.get('NEXT_LOCALE')?.value
 
   const headersList = await headers()
-  const acceptLanguage = headersList.get('accept-language') || ''
-  const prefersKorean = acceptLanguage.toLowerCase().includes('ko')
-  const resolvedLang = cookieLang ?? (prefersKorean ? 'ko' : 'en')
+  const acceptLanguage = headersList.get('accept-language')
+  const resolvedLang = resolveLocalePreference({
+    cookieLanguage: cookieLang,
+    acceptLanguage,
+  })
 
   return (
     <html lang={resolvedLang} className={inter.variable} suppressHydrationWarning>
       <body>
-        <Providers>{children}</Providers>
+        <Providers initialLang={resolvedLang}>{children}</Providers>
       </body>
     </html>
   )

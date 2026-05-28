@@ -1,7 +1,7 @@
 // [LOG: 20260527_1030]
 'use client'
 
-import React, { createContext, useContext, useState, useTransition, useEffect } from 'react'
+import React, { createContext, useContext, useState, useTransition } from 'react'
 import { apiClientPatch } from '@/lib/api-client'
 import { dictionary, type Locale, type DictionaryKey } from './i18n'
 import { createClient } from '@/lib/supabase/client'
@@ -32,20 +32,10 @@ export function TranslationProvider({
   initialLang,
 }: {
   children: React.ReactNode
-  initialLang: string | null
+  initialLang: Locale
 }) {
   const [lang, setLang] = useState<Locale>(initialLang === 'ko' ? 'ko' : 'en')
   const [isPending, startTransition] = useTransition()
-
-  // Detect browser language if no database preference is set
-  useEffect(() => {
-    if (!initialLang && typeof window !== 'undefined' && window.navigator) {
-      const browserLang = window.navigator.language || (window.navigator.languages && window.navigator.languages[0])
-      if (browserLang && browserLang.toLowerCase().startsWith('ko')) {
-        setLang('ko')
-      }
-    }
-  }, [initialLang])
 
   async function changeLanguage(newLang: Locale) {
     setLang(newLang)

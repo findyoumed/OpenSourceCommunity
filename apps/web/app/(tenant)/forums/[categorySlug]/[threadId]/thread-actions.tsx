@@ -4,20 +4,27 @@ import { useState, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { apiPost } from '@/lib/api'
 import { RichEditor } from '@/components/editor'
+import type { Locale } from '@/lib/i18n'
 
 interface ThreadActionsProps {
   threadId: string
   categorySlug: string
   token: string
+  lang: Locale
 }
 
-export function ThreadActions({ threadId, categorySlug: _categorySlug, token }: ThreadActionsProps) {
+export function ThreadActions({
+  threadId,
+  categorySlug: _categorySlug,
+  token,
+  lang,
+}: ThreadActionsProps) {
   const router = useRouter()
   const [body, setBody] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const isKo = lang === 'ko'
 
-  // body is HTML — treat empty paragraph as empty
   const isBodyEmpty = !body || body === '<p></p>'
 
   async function handleSubmit(e: FormEvent) {
@@ -36,7 +43,7 @@ export function ThreadActions({ threadId, categorySlug: _categorySlug, token }: 
       setBody('')
       router.refresh()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to post reply')
+      setError(err instanceof Error ? err.message : isKo ? '답글을 게시하지 못했습니다' : 'Failed to post reply')
     } finally {
       setSubmitting(false)
     }
@@ -45,18 +52,20 @@ export function ThreadActions({ threadId, categorySlug: _categorySlug, token }: 
   if (!token) {
     return (
       <div className="rounded-xl border border-border bg-card p-6 text-center text-sm text-muted-foreground">
-        Please{' '}
+        {isKo ? '답글을 작성하려면 ' : 'Please '}
         <a href="/login" className="text-brand hover:underline">
-          sign in
-        </a>{' '}
-        to reply to this thread.
+          {isKo ? '로그인' : 'sign in'}
+        </a>
+        {isKo ? '해 주세요.' : ' to reply to this thread.'}
       </div>
     )
   }
 
   return (
     <div className="rounded-xl border border-border bg-card p-6">
-      <h2 className="mb-4 text-base font-semibold text-surface-foreground">Post a reply</h2>
+      <h2 className="mb-4 text-base font-semibold text-surface-foreground">
+        {isKo ? '답글 작성' : 'Post a reply'}
+      </h2>
 
       {error && (
         <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -68,7 +77,7 @@ export function ThreadActions({ threadId, categorySlug: _categorySlug, token }: 
         <RichEditor
           value={body}
           onChange={setBody}
-          placeholder="Write your reply…"
+          placeholder={isKo ? '답글을 작성하세요...' : 'Write your reply...'}
           minHeight="150px"
           disabled={submitting}
         />
@@ -77,7 +86,7 @@ export function ThreadActions({ threadId, categorySlug: _categorySlug, token }: 
           <button
             type="submit"
             disabled={submitting || isBodyEmpty}
-            className="flex items-center gap-2 rounded-lg bg-brand px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50 transition-colors"
+            className="flex items-center gap-2 rounded-lg bg-brand px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:opacity-90 disabled:opacity-50"
           >
             {submitting && (
               <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden>
@@ -85,7 +94,7 @@ export function ThreadActions({ threadId, categorySlug: _categorySlug, token }: 
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
               </svg>
             )}
-            Post reply
+            {isKo ? '답글 게시' : 'Post reply'}
           </button>
         </div>
       </form>

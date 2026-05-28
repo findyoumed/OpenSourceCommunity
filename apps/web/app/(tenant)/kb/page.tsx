@@ -6,6 +6,7 @@ import type { Metadata } from 'next'
 import { PageHeader } from '@/components/ui/page-header'
 import { EmptyState } from '@/components/ui/empty-state'
 import { t } from '@/lib/i18n'
+import { resolveLocalePreference } from '@/lib/language'
 import { headers, cookies } from 'next/headers'
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -18,14 +19,13 @@ export async function generateMetadata(): Promise<Metadata> {
 
   const headersList = await headers()
   const acceptLanguage = headersList.get('accept-language') || ''
-  const prefersKorean = acceptLanguage.toLowerCase().includes('ko')
-  const defaultLang = cookieLang ?? (prefersKorean ? 'ko' : 'en')
+  // [LOG: 20260528_1735] Replaced old locale pattern with resolveLocalePreference
 
-  let lang = defaultLang
+  let lang = resolveLocalePreference({ cookieLanguage: cookieLang, acceptLanguage })
   if (token) {
     try {
       const profile = await apiGet<{ language: string | null }>('/api/me', token, 60)
-      lang = profile?.language ?? defaultLang
+      lang = resolveLocalePreference({ profileLanguage: profile?.language, cookieLanguage: cookieLang, acceptLanguage })
     } catch {}
   }
   return { title: t('kb.title', lang) }
@@ -56,12 +56,11 @@ export default async function KbPage() {
 
   const headersList = await headers()
   const acceptLanguage = headersList.get('accept-language') || ''
-  const prefersKorean = acceptLanguage.toLowerCase().includes('ko')
-  const defaultLang = cookieLang ?? (prefersKorean ? 'ko' : 'en')
+  // [LOG: 20260528_1735] Replaced old locale pattern with resolveLocalePreference
 
   let categories: KbCategory[] = []
   let fetchError = false
-  let userLanguage = defaultLang
+  let userLanguage = resolveLocalePreference({ cookieLanguage: cookieLang, acceptLanguage })
 
   try {
     // [LOG: 20260527_1707]
@@ -71,7 +70,7 @@ export default async function KbPage() {
         apiGet<{ language: string | null }>('/api/me', token, 60),
       ])
       categories = cats
-      userLanguage = profile?.language ?? defaultLang
+      userLanguage = resolveLocalePreference({ profileLanguage: profile?.language, cookieLanguage: cookieLang, acceptLanguage })
     } else {
       categories = await apiGet<KbCategory[]>('/api/kb/categories', undefined)
     }

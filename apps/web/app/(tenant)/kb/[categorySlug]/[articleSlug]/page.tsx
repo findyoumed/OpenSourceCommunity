@@ -6,6 +6,7 @@ import { apiGet } from '@/lib/api'
 import type { Metadata } from 'next'
 import { FeedbackButtons } from './feedback-buttons'
 import { t } from '@/lib/i18n'
+import { resolveLocalePreference } from '@/lib/language'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -131,19 +132,18 @@ export default async function KbArticlePage({
 
   const headersList = await headers()
   const acceptLanguage = headersList.get('accept-language') || ''
-  const prefersKorean = acceptLanguage.toLowerCase().includes('ko')
-  const defaultLang = cookieLang ?? (prefersKorean ? 'ko' : 'en')
+  // [LOG: 20260528_1735] Replaced old locale pattern with resolveLocalePreference
 
   // Resolve the article — articleSlug may be a UUID or a real slug
   let article: KbArticleDetail | null = null
   let fetchError = false
-  let userLanguage = defaultLang
+  let userLanguage = resolveLocalePreference({ cookieLanguage: cookieLang, acceptLanguage })
 
   // [LOG: 20260527_1727]
   if (token) {
     try {
       const profile = await apiGet<{ language: string | null }>('/api/me', token, 60)
-      userLanguage = profile?.language ?? defaultLang
+      userLanguage = resolveLocalePreference({ profileLanguage: profile?.language, cookieLanguage: cookieLang, acceptLanguage })
     } catch {}
   }
 

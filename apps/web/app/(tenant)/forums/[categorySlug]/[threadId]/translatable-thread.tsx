@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { CheckCircle2 } from 'lucide-react'
 import { Avatar } from '@/components/ui/avatar'
 import { TranslateButton } from '@/components/ui/translate-button'
+import type { Locale } from '@/lib/i18n'
 
 interface Post {
   id: string
@@ -18,12 +19,14 @@ interface Post {
 
 interface TranslatableThreadProps {
   posts: Post[]
-  targetLang: string
+  targetLang: Locale
 }
 
 export function TranslatableThread({ posts, targetLang }: TranslatableThreadProps) {
   const [translations, setTranslations] = useState<Record<string, string>>({})
   const isTranslated = Object.keys(translations).length > 0
+  const isKo = targetLang === 'ko'
+  const locale = isKo ? 'ko-KR' : 'en-US'
 
   const translateItems = posts
     .filter((p) => p.bodyText.trim())
@@ -57,7 +60,7 @@ export function TranslatableThread({ posts, targetLang }: TranslatableThreadProp
           {post.isAnswer && (
             <div className="mb-4 flex items-center gap-1.5 text-sm font-semibold text-emerald-600">
               <CheckCircle2 className="h-4 w-4" />
-              Accepted answer
+              {isKo ? '채택된 답변' : 'Accepted answer'}
             </div>
           )}
 
@@ -71,7 +74,7 @@ export function TranslatableThread({ posts, targetLang }: TranslatableThreadProp
               )}
             </div>
             <time className="ml-auto text-xs text-muted-foreground">
-              {new Intl.DateTimeFormat('en', {
+              {new Intl.DateTimeFormat(locale, {
                 dateStyle: 'medium',
                 timeStyle: 'short',
               }).format(new Date(post.createdAt))}

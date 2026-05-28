@@ -4,6 +4,7 @@ import { cookies, headers } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 import { apiGet } from '@/lib/api'
 import { t, type DictionaryKey } from '@/lib/i18n'
+import { resolveLocalePreference } from '@/lib/language'
 
 export async function generateMetadata(): Promise<Metadata> {
   const lang = await getUserLanguage()
@@ -69,16 +70,15 @@ async function getUserLanguage() {
 
   const headersList = await headers()
   const acceptLanguage = headersList.get('accept-language') || ''
-  const prefersKorean = acceptLanguage.toLowerCase().includes('ko')
-  const defaultLang = cookieLang ?? (prefersKorean ? 'ko' : 'en')
+  // [LOG: 20260528_1735] Replaced old locale pattern with resolveLocalePreference
 
   const supabase = await createClient()
   const token = (await supabase.auth.getSession()).data.session?.access_token
   try {
     const profile = await apiGet<{ language: string | null }>('/api/me', token, 60)
-    return profile?.language ?? defaultLang
+    return profile?.language ?? resolveLocalePreference({ cookieLanguage: cookieLang, acceptLanguage })
   } catch {
-    return defaultLang
+    return resolveLocalePreference({ cookieLanguage: cookieLang, acceptLanguage })
   }
 }
 

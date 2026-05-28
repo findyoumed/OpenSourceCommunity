@@ -5,6 +5,7 @@ import type { Metadata } from 'next'
 import { NewEventForm } from './new-event-form'
 import { headers, cookies } from 'next/headers'
 import { t } from '@/lib/i18n'
+import { resolveLocalePreference } from '@/lib/language'
 
 // [LOG: 20260527_1736]
 
@@ -15,10 +16,9 @@ export async function generateMetadata(): Promise<Metadata> {
 
   const headersList = await headers()
   const acceptLanguage = headersList.get('accept-language') || ''
-  const prefersKorean = acceptLanguage.toLowerCase().includes('ko')
-  const defaultLang = cookieLang ?? (prefersKorean ? 'ko' : 'en')
+  // [LOG: 20260528_1735] Replaced old locale pattern with resolveLocalePreference
 
-  return { title: t('events.new.title', defaultLang) }
+  return { title: t('events.new.title', resolveLocalePreference({ cookieLanguage: cookieLang, acceptLanguage })) }
 }
 
 export default async function NewEventPage() {
@@ -36,15 +36,14 @@ export default async function NewEventPage() {
   // Resolve language preferences
   const headersList = await headers()
   const acceptLanguage = headersList.get('accept-language') || ''
-  const prefersKorean = acceptLanguage.toLowerCase().includes('ko')
-  const defaultLang = cookieLang ?? (prefersKorean ? 'ko' : 'en')
+  // [LOG: 20260528_1735] Replaced old locale pattern with resolveLocalePreference
 
   let userLanguage = undefined
   try {
     const profile = await apiGet<{ language: string | null }>('/api/me', session.access_token, 60)
     userLanguage = profile?.language
   } catch {}
-  const lang = userLanguage ?? defaultLang
+  const lang = userLanguage ?? resolveLocalePreference({ cookieLanguage: cookieLang, acceptLanguage })
 
   return (
     <div className="space-y-6">

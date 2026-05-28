@@ -6,6 +6,7 @@ import type { Metadata } from 'next'
 import { ChatRoom } from './chat-room'
 import { headers, cookies } from 'next/headers'
 import { t } from '@/lib/i18n'
+import { resolveLocalePreference } from '@/lib/language'
 
 export async function generateMetadata({
   params,
@@ -22,17 +23,16 @@ export async function generateMetadata({
 
   const headersList = await headers()
   const acceptLanguage = headersList.get('accept-language') || ''
-  const prefersKorean = acceptLanguage.toLowerCase().includes('ko')
-  const defaultLang = cookieLang ?? (prefersKorean ? 'ko' : 'en')
+  // [LOG: 20260528_1735] Replaced old locale pattern with resolveLocalePreference
 
-  let lang = defaultLang
+  let lang = resolveLocalePreference({ cookieLanguage: cookieLang, acceptLanguage })
   let channelName = ''
   try {
     const [profile, channel] = await Promise.all([
       apiGet<{ language: string | null }>('/api/me', token, 60),
       apiGet<{ name: string }>(`/api/chat/channels/${channelId}`, token),
     ])
-    lang = profile?.language ?? defaultLang
+    lang = resolveLocalePreference({ profileLanguage: profile?.language, cookieLanguage: cookieLang, acceptLanguage })
     channelName = channel?.name ?? ''
   } catch {}
   
@@ -80,13 +80,12 @@ export default async function ChatChannelPage({
 
   const headersList = await headers()
   const acceptLanguage = headersList.get('accept-language') || ''
-  const prefersKorean = acceptLanguage.toLowerCase().includes('ko')
-  const defaultLang = cookieLang ?? (prefersKorean ? 'ko' : 'en')
+  // [LOG: 20260528_1735] Replaced old locale pattern with resolveLocalePreference
 
   let channel: Channel | null = null
   let initialMessages: Message[] = []
   let memberProfile: MemberProfile | null = null
-  let userLanguage = defaultLang
+  let userLanguage = resolveLocalePreference({ cookieLanguage: cookieLang, acceptLanguage })
 
   try {
     const [cData, mData, pData] = await Promise.all([
@@ -97,7 +96,7 @@ export default async function ChatChannelPage({
     channel = cData
     initialMessages = mData
     memberProfile = pData
-    userLanguage = pData?.language ?? defaultLang
+    userLanguage = resolveLocalePreference({ profileLanguage: pData?.language, cookieLanguage: cookieLang, acceptLanguage })
   } catch {
     notFound()
   }

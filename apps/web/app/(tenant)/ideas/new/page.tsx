@@ -6,6 +6,7 @@ import type { Metadata } from 'next'
 import { NewIdeaForm } from './new-idea-form'
 import { headers, cookies } from 'next/headers'
 import { t } from '@/lib/i18n'
+import { resolveLocalePreference } from '@/lib/language'
 
 export async function generateMetadata(): Promise<Metadata> {
   const supabase = await createClient()
@@ -17,14 +18,13 @@ export async function generateMetadata(): Promise<Metadata> {
 
   const headersList = await headers()
   const acceptLanguage = headersList.get('accept-language') || ''
-  const prefersKorean = acceptLanguage.toLowerCase().includes('ko')
-  const defaultLang = cookieLang ?? (prefersKorean ? 'ko' : 'en')
+  // [LOG: 20260528_1735] Replaced old locale pattern with resolveLocalePreference
 
-  let lang = defaultLang
+  let lang = resolveLocalePreference({ cookieLanguage: cookieLang, acceptLanguage })
   if (token) {
     try {
       const profile = await apiGet<{ language: string | null }>('/api/me', token, 60)
-      lang = profile?.language ?? defaultLang
+      lang = resolveLocalePreference({ profileLanguage: profile?.language, cookieLanguage: cookieLang, acceptLanguage })
     } catch {}
   }
   return { title: t('ideas.new.title', lang) }
@@ -51,11 +51,10 @@ export default async function NewIdeaPage() {
 
   const headersList = await headers()
   const acceptLanguage = headersList.get('accept-language') || ''
-  const prefersKorean = acceptLanguage.toLowerCase().includes('ko')
-  const defaultLang = cookieLang ?? (prefersKorean ? 'ko' : 'en')
+  // [LOG: 20260528_1735] Replaced old locale pattern with resolveLocalePreference
 
   let categories: IdeaCategory[] = []
-  let userLanguage = defaultLang
+  let userLanguage = resolveLocalePreference({ cookieLanguage: cookieLang, acceptLanguage })
 
   try {
     const [cats, profile] = await Promise.all([
@@ -63,7 +62,7 @@ export default async function NewIdeaPage() {
       apiGet<{ language: string | null }>('/api/me', token, 60),
     ])
     categories = cats
-    userLanguage = profile?.language ?? defaultLang
+    userLanguage = resolveLocalePreference({ profileLanguage: profile?.language, cookieLanguage: cookieLang, acceptLanguage })
   } catch {
     // non-fatal — form still works without categories
   }

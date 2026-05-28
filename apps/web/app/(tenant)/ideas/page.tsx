@@ -10,6 +10,7 @@ import { PageHeader } from '@/components/ui/page-header'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
 import { t } from '@/lib/i18n'
+import { resolveLocalePreference } from '@/lib/language'
 
 import { headers, cookies } from 'next/headers'
 
@@ -23,14 +24,13 @@ export async function generateMetadata(): Promise<Metadata> {
 
   const headersList = await headers()
   const acceptLanguage = headersList.get('accept-language') || ''
-  const prefersKorean = acceptLanguage.toLowerCase().includes('ko')
-  const defaultLang = cookieLang ?? (prefersKorean ? 'ko' : 'en')
+  // [LOG: 20260528_1735] Replaced old locale pattern with resolveLocalePreference
 
-  let lang = defaultLang
+  let lang = resolveLocalePreference({ cookieLanguage: cookieLang, acceptLanguage })
   if (token) {
     try {
       const profile = await apiGet<{ language: string | null }>('/api/me', token, 60)
-      lang = profile?.language ?? defaultLang
+      lang = resolveLocalePreference({ profileLanguage: profile?.language, cookieLanguage: cookieLang, acceptLanguage })
     } catch {}
   }
   return { title: t('ideas.title', lang) }
@@ -90,13 +90,12 @@ export default async function IdeasPage({
 
   const headersList = await headers()
   const acceptLanguage = headersList.get('accept-language') || ''
-  const prefersKorean = acceptLanguage.toLowerCase().includes('ko')
-  const defaultLang = cookieLang ?? (prefersKorean ? 'ko' : 'en')
+  // [LOG: 20260528_1735] Replaced old locale pattern with resolveLocalePreference
 
   let ideas: Idea[] = []
   let categories: IdeaCategory[] = []
   let fetchError = false
-  let userLanguage = defaultLang
+  let userLanguage = resolveLocalePreference({ cookieLanguage: cookieLang, acceptLanguage })
 
   const qs = new URLSearchParams({ sort: sortOption })
   if (status) qs.set('status', status)
@@ -112,7 +111,7 @@ export default async function IdeasPage({
       ])
       ideas = ideasData
       categories = catsData
-      userLanguage = profile?.language ?? defaultLang
+      userLanguage = resolveLocalePreference({ profileLanguage: profile?.language, cookieLanguage: cookieLang, acceptLanguage })
     } else {
       const [ideasData, catsData] = await Promise.all([
         apiGet<Idea[]>(`/api/ideas?${qs}`, undefined),

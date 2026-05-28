@@ -6,6 +6,7 @@ import { apiGet } from '@/lib/api'
 import type { Metadata } from 'next'
 import { NewThreadForm } from './new-thread-form'
 import { t } from '@/lib/i18n'
+import { resolveLocalePreference, type Locale } from '@/lib/language'
 
 export async function generateMetadata({
   params,
@@ -44,12 +45,13 @@ export default async function NewThreadPage({
   const cookieLang = cookieStore.get('NEXT_LOCALE')?.value
 
   const headersList = await headers()
-  const acceptLanguage = headersList.get('accept-language') || ''
-  const prefersKorean = acceptLanguage.toLowerCase().includes('ko')
-  const defaultLang = cookieLang ?? (prefersKorean ? 'ko' : 'en')
+  const acceptLanguage = headersList.get('accept-language')
 
   let category: ForumCategory | null = null
-  let userLanguage = defaultLang
+  let userLanguage: Locale = resolveLocalePreference({
+    cookieLanguage: cookieLang,
+    acceptLanguage,
+  })
 
   try {
     const [categories, profile] = await Promise.all([
@@ -57,7 +59,11 @@ export default async function NewThreadPage({
       apiGet<{ language: string | null }>('/api/me', token, 60),
     ])
     category = categories.find((c) => c.slug === categorySlug) ?? null
-    userLanguage = profile?.language ?? defaultLang
+    userLanguage = resolveLocalePreference({
+      profileLanguage: profile?.language,
+      cookieLanguage: cookieLang,
+      acceptLanguage,
+    })
   } catch {
     notFound()
   }
@@ -97,4 +103,3 @@ export default async function NewThreadPage({
     </div>
   )
 }
-

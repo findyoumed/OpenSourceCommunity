@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { TranslationProvider } from '@/lib/i18n-context'
+import type { Locale } from '@/lib/i18n'
 
 /**
  * Client-side providers wrapper.
@@ -10,7 +11,7 @@ import { TranslationProvider } from '@/lib/i18n-context'
  * Houses TanStack Query (and any future context providers) so that the root
  * layout itself can remain a Server Component.
  */
-export function Providers({ children }: { children: React.ReactNode }) {
+export function Providers({ children, initialLang }: { children: React.ReactNode; initialLang: Locale }) {
   // One QueryClient per session — stable across re-renders via useState.
   const [queryClient] = useState(
     () =>
@@ -28,8 +29,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* [LOG: 20260528_1357] Enable automatic browser language detection */}
-      <TranslationProvider initialLang={null}>{children}</TranslationProvider>
+      <TranslationProvider initialLang={initialLang}>{children}</TranslationProvider>
     </QueryClientProvider>
   )
 }

@@ -9,6 +9,7 @@ import { ProfileForm } from '../profile/profile-form'
 import { LanguageSelect } from './language-select'
 import { headers, cookies } from 'next/headers'
 import { t } from '@/lib/i18n'
+import { resolveLocalePreference } from '@/lib/language'
 
 export async function generateMetadata(): Promise<Metadata> {
   const supabase = await createClient()
@@ -20,14 +21,13 @@ export async function generateMetadata(): Promise<Metadata> {
 
   const headersList = await headers()
   const acceptLanguage = headersList.get('accept-language') || ''
-  const prefersKorean = acceptLanguage.toLowerCase().includes('ko')
-  const defaultLang = cookieLang ?? (prefersKorean ? 'ko' : 'en')
+  // [LOG: 20260528_1735] Replaced old locale pattern with resolveLocalePreference
 
-  let lang = defaultLang
+  let lang = resolveLocalePreference({ cookieLanguage: cookieLang, acceptLanguage })
   if (token) {
     try {
       const profile = await apiGet<{ language: string | null }>('/api/me', token, 60)
-      lang = profile?.language ?? defaultLang
+      lang = resolveLocalePreference({ profileLanguage: profile?.language, cookieLanguage: cookieLang, acceptLanguage })
     } catch {}
   }
   return { title: t('settings.title', lang) }
@@ -56,8 +56,7 @@ export default async function SettingsPage() {
 
   const headersList = await headers()
   const acceptLanguage = headersList.get('accept-language') || ''
-  const prefersKorean = acceptLanguage.toLowerCase().includes('ko')
-  const defaultLang = cookieLang ?? (prefersKorean ? 'ko' : 'en')
+  // [LOG: 20260528_1735] Replaced old locale pattern with resolveLocalePreference
 
   let profile: MemberProfile | null = null
   try {
@@ -72,7 +71,7 @@ export default async function SettingsPage() {
     )
   }
 
-  const userLanguage = profile.language ?? defaultLang
+  const userLanguage = profile.language ?? resolveLocalePreference({ cookieLanguage: cookieLang, acceptLanguage })
 
   return (
     <div className="space-y-8 max-w-2xl">

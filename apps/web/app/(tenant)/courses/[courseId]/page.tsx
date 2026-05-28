@@ -7,6 +7,7 @@ import { ApiError } from '@/lib/api'
 import type { Metadata } from 'next'
 import { EnrollButton } from './enroll-button'
 import { t } from '@/lib/i18n'
+import { resolveLocalePreference } from '@/lib/language'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -83,11 +84,10 @@ export default async function CourseDetailPage({
 
   const headersList = await headers()
   const acceptLanguage = headersList.get('accept-language') || ''
-  const prefersKorean = acceptLanguage.toLowerCase().includes('ko')
-  const defaultLang = cookieLang ?? (prefersKorean ? 'ko' : 'en')
+  // [LOG: 20260528_1735] Replaced old locale pattern with resolveLocalePreference
 
   let detail: CourseDetailResponse
-  let userLanguage = defaultLang
+  let userLanguage = resolveLocalePreference({ cookieLanguage: cookieLang, acceptLanguage })
 
   try {
     // [LOG: 20260527_1729]
@@ -97,7 +97,7 @@ export default async function CourseDetailPage({
         apiGet<{ language: string | null }>('/api/me', token, 60),
       ])
       detail = detailData
-      userLanguage = profile?.language ?? defaultLang
+      userLanguage = resolveLocalePreference({ profileLanguage: profile?.language, cookieLanguage: cookieLang, acceptLanguage })
     } else {
       detail = await apiGet<CourseDetailResponse>(`/api/courses/${courseId}`, undefined, 0)
     }

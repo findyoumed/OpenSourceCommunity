@@ -3,12 +3,9 @@ import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { apiGet } from '@/lib/api'
 import type { Metadata } from 'next'
-import { headers, cookies } from 'next/headers'
+import { cookies, headers } from 'next/headers'
 import { t } from '@/lib/i18n'
-
-// [LOG: 20260527_1736]
-
-// ─── Types ────────────────────────────────────────────────────────────────────
+import { resolveLocalePreference, type Locale } from '@/lib/language'
 
 interface ForumCategory {
   id: string
@@ -32,20 +29,16 @@ interface Thread {
 
 type SortOption = 'newest' | 'active'
 
-// ─── Metadata ─────────────────────────────────────────────────────────────────
-
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ categorySlug: string }>
-  }): Promise<Metadata> {
+}): Promise<Metadata> {
   const { categorySlug } = await params
-  return { title: `Forums — ${categorySlug}` }
+  return { title: `Forums - ${categorySlug}` }
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function timeAgo(iso: string, lang: string): string {
+function timeAgo(iso: string, lang: Locale): string {
   const diff = Date.now() - new Date(iso).getTime()
   const mins = Math.floor(diff / 60_000)
   const isKo = lang === 'ko'
@@ -55,8 +48,6 @@ function timeAgo(iso: string, lang: string): string {
   if (hrs < 24) return isKo ? `${hrs}시간 전` : `${hrs}h ago`
   return isKo ? `${Math.floor(hrs / 24)}일 전` : `${Math.floor(hrs / 24)}d ago`
 }
-
-// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default async function CategoryPage({
   params,
@@ -74,26 +65,26 @@ export default async function CategoryPage({
   const supabase = await createClient()
   const token = (await supabase.auth.getSession()).data.session?.access_token
 
-  // [LOG: 20260528_1520] Read language preference from server-side cookies or browser Accept-Language headers to solve Edge environment mismatches
   const cookieStore = await cookies()
   const cookieLang = cookieStore.get('NEXT_LOCALE')?.value
 
-  // Resolve language preferences
   const headersList = await headers()
-  const acceptLanguage = headersList.get('accept-language') || ''
-  const prefersKorean = acceptLanguage.toLowerCase().includes('ko')
-  const defaultLang = cookieLang ?? (prefersKorean ? 'ko' : 'en')
+  const acceptLanguage = headersList.get('accept-language')
 
-  let userLanguage = undefined
+  let userLanguage: string | null | undefined = undefined
   try {
     if (token) {
       const profile = await apiGet<{ language: string | null }>('/api/me', token, 60)
       userLanguage = profile?.language
     }
   } catch {}
-  const lang = userLanguage ?? defaultLang
 
-  // Resolve category by slug from the list endpoint
+  const lang = resolveLocalePreference({
+    profileLanguage: userLanguage,
+    cookieLanguage: cookieLang,
+    acceptLanguage,
+  })
+
   let category: ForumCategory | null = null
   let threads: Thread[] = []
 
@@ -111,9 +102,7 @@ export default async function CategoryPage({
       `/api/forums/threads?categoryId=${category.id}&sort=${sortOption}`,
       token,
     )
-  } catch {
-    // threads stays empty — show empty state
-  }
+  } catch {}
 
   const sortLabels: Record<SortOption, string> = {
     newest: t('forums.category.sortNewest', lang),
@@ -122,14 +111,12 @@ export default async function CategoryPage({
 
   return (
     <div className="space-y-6">
-      {/* ── Breadcrumb ────────────────────────────────────────────────────── */}
       <nav className="flex items-center gap-2 text-sm text-muted-foreground">
         <Link href="/forums" className="hover:text-muted-foreground">{t('nav.forums', lang)}</Link>
         <span>/</span>
-        <span className="text-surface-foreground font-medium">{category.name}</span>
+        <span className="font-medium text-surface-foreground">{category.name}</span>
       </nav>
 
-      {/* ── Header ────────────────────────────────────────────────────────── */}
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-surface-foreground">{category.name}</h1>
@@ -139,14 +126,13 @@ export default async function CategoryPage({
         </div>
         <Link
           href={`/forums/${categorySlug}/new`}
-          className="flex-shrink-0 rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white hover:opacity-90 transition-colors"
+          className="flex-shrink-0 rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white transition-colors hover:opacity-90"
         >
           {t('forums.category.newThreadBtn', lang)}
         </Link>
       </div>
 
-      {/* ── Sort controls ─────────────────────────────────────────────────── */}
-      <div className="flex items-center gap-1 rounded-lg border border-border bg-card p-1 w-fit">
+      <div className="flex w-fit items-center gap-1 rounded-lg border border-border bg-card p-1">
         {(['newest', 'active'] as const).map((s) => (
           <Link
             key={s}
@@ -163,7 +149,6 @@ export default async function CategoryPage({
         ))}
       </div>
 
-      {/* ── Thread list ───────────────────────────────────────────────────── */}
       {threads.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border bg-card px-6 py-16 text-center">
           <p className="text-sm font-medium text-muted-foreground">{t('forums.category.emptyTitle', lang)}</p>
@@ -187,8 +172,6 @@ export default async function CategoryPage({
   )
 }
 
-// ─── Thread card ──────────────────────────────────────────────────────────────
-
 function ThreadCard({
   thread,
   categorySlug,
@@ -196,16 +179,15 @@ function ThreadCard({
 }: {
   thread: Thread
   categorySlug: string
-  lang: string
+  lang: Locale
 }) {
   return (
     <li>
       <Link
         href={`/forums/${categorySlug}/${thread.id}`}
-        className="flex items-start gap-4 px-6 py-4 hover:bg-muted transition-colors"
+        className="flex items-start gap-4 px-6 py-4 transition-colors hover:bg-muted"
       >
-        {/* Avatar */}
-        <div className="flex-shrink-0 mt-0.5">
+        <div className="mt-0.5 flex-shrink-0">
           {thread.authorAvatarUrl ? (
             <img
               src={thread.authorAvatarUrl}
@@ -219,7 +201,6 @@ function ThreadCard({
           )}
         </div>
 
-        {/* Body */}
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             {thread.isPinned && (
@@ -233,7 +214,7 @@ function ThreadCard({
               </span>
             )}
           </div>
-          <h3 className="mt-1 text-sm font-semibold text-surface-foreground line-clamp-1">
+          <h3 className="mt-1 line-clamp-1 text-sm font-semibold text-surface-foreground">
             {thread.title}
           </h3>
           <p className="mt-0.5 text-xs text-muted-foreground">
@@ -241,10 +222,13 @@ function ThreadCard({
           </p>
         </div>
 
-        {/* Stats */}
         <div className="hidden flex-shrink-0 text-right text-xs text-muted-foreground sm:block">
-          <p className="font-semibold text-surface-foreground">{thread.replyCount} {t('forums.category.cardReplies', lang)}</p>
-          <p>{thread.viewCount.toLocaleString(lang === 'ko' ? 'ko-KR' : 'en-US')} {t('forums.category.cardViews', lang)}</p>
+          <p className="font-semibold text-surface-foreground">
+            {thread.replyCount} {t('forums.category.cardReplies', lang)}
+          </p>
+          <p>
+            {thread.viewCount.toLocaleString(lang === 'ko' ? 'ko-KR' : 'en-US')} {t('forums.category.cardViews', lang)}
+          </p>
           {thread.lastActivityAt && (
             <p className="text-muted-foreground">
               {t('forums.category.cardActive', lang)} {timeAgo(thread.lastActivityAt, lang)}

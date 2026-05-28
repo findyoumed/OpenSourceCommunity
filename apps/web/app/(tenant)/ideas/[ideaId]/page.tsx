@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge'
 import { Avatar } from '@/components/ui/avatar'
 import { headers, cookies } from 'next/headers'
 import { t } from '@/lib/i18n'
+import { resolveLocalePreference } from '@/lib/language'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -131,11 +132,10 @@ export default async function IdeaDetailPage({
 
   const headersList = await headers()
   const acceptLanguage = headersList.get('accept-language') || ''
-  const prefersKorean = acceptLanguage.toLowerCase().includes('ko')
-  const defaultLang = cookieLang ?? (prefersKorean ? 'ko' : 'en')
+  // [LOG: 20260528_1735] Replaced old locale pattern with resolveLocalePreference
 
   let detail: IdeaDetailResponse | null = null
-  let userLanguage = defaultLang
+  let userLanguage = resolveLocalePreference({ cookieLanguage: cookieLang, acceptLanguage })
 
   try {
     // [LOG: 20260527_1723]
@@ -145,7 +145,7 @@ export default async function IdeaDetailPage({
         apiGet<{ language: string | null }>('/api/me', token, 60),
       ])
       detail = detailData
-      userLanguage = profile?.language ?? defaultLang
+      userLanguage = resolveLocalePreference({ profileLanguage: profile?.language, cookieLanguage: cookieLang, acceptLanguage })
     } else {
       detail = await apiGet<IdeaDetailResponse>(`/api/ideas/${ideaId}`, undefined)
     }

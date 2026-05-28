@@ -5,6 +5,7 @@ import { Sidebar, type ModuleKey } from '@/components/layout/sidebar'
 import { Header } from '@/components/layout/header'
 import { TranslationProvider } from '@/lib/i18n-context'
 import { headers, cookies } from 'next/headers'
+import { resolveLocalePreference } from '@/lib/language'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -46,10 +47,7 @@ export default async function TenantLayout({
   const cookieLang = cookieStore.get('NEXT_LOCALE')?.value
 
   const headersList = await headers()
-  const acceptLanguage = headersList.get('accept-language') || ''
-  const prefersKorean = acceptLanguage.toLowerCase().includes('ko')
-  const defaultLang = cookieLang ?? (prefersKorean ? 'ko' : 'en')
-
+  const acceptLanguage = headersList.get('accept-language')
   // ── Fetch tenant config + member profile in parallel ───────────────────────
   let tenantConfig: TenantConfig = {
     id: 'default',
@@ -82,7 +80,11 @@ export default async function TenantLayout({
     ? ({ '--color-brand': tenantConfig.primaryColor } as React.CSSProperties)
     : undefined
 
-  const resolvedLang = memberProfile?.language ?? defaultLang
+  const resolvedLang = resolveLocalePreference({
+    profileLanguage: memberProfile?.language,
+    cookieLanguage: cookieLang,
+    acceptLanguage,
+  })
 
   return (
     <TranslationProvider initialLang={resolvedLang}>
@@ -114,4 +116,3 @@ export default async function TenantLayout({
     </TranslationProvider>
   )
 }
-

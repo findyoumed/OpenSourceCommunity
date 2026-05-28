@@ -10,6 +10,7 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { t } from '@/lib/i18n'
 import { headers, cookies } from 'next/headers'
 import ForumListWithSearch from './forum-list-with-search'
+import { resolveLocalePreference, type Locale } from '@/lib/language'
 
 export async function generateMetadata(): Promise<Metadata> {
   const supabase = await createClient()
@@ -20,15 +21,21 @@ export async function generateMetadata(): Promise<Metadata> {
   const cookieLang = cookieStore.get('NEXT_LOCALE')?.value
 
   const headersList = await headers()
-  const acceptLanguage = headersList.get('accept-language') || ''
-  const prefersKorean = acceptLanguage.toLowerCase().includes('ko')
-  const defaultLang = cookieLang ?? (prefersKorean ? 'ko' : 'en')
+  const acceptLanguage = headersList.get('accept-language')
+  const defaultLang = resolveLocalePreference({
+    cookieLanguage: cookieLang,
+    acceptLanguage,
+  })
 
-  let lang = defaultLang
+  let lang: Locale = defaultLang
   if (token) {
     try {
       const profile = await apiGet<{ language: string | null }>('/api/me', token, 60)
-      lang = profile?.language ?? defaultLang
+      lang = resolveLocalePreference({
+        profileLanguage: profile?.language,
+        cookieLanguage: cookieLang,
+        acceptLanguage,
+      })
     } catch {}
   }
   return { title: t('nav.forums', lang) }
@@ -65,13 +72,10 @@ export default async function ForumsPage() {
 
   // Resolve language preferences
   const headersList = await headers()
-  const acceptLanguage = headersList.get('accept-language') || ''
-  const prefersKorean = acceptLanguage.toLowerCase().includes('ko')
-  const defaultLang = cookieLang ?? (prefersKorean ? 'ko' : 'en')
-
+  const acceptLanguage = headersList.get('accept-language')
   let categories: ForumCategory[] = []
   let fetchError = false
-  let userLanguage = undefined
+  let userLanguage: string | null | undefined = undefined
 
   try {
     // [LOG: 20260527_1701]
@@ -89,7 +93,11 @@ export default async function ForumsPage() {
     fetchError = true
   }
 
-  const resolvedLang = userLanguage ?? defaultLang
+  const resolvedLang = resolveLocalePreference({
+    profileLanguage: userLanguage,
+    cookieLanguage: cookieLang,
+    acceptLanguage,
+  })
 
   return (
     <div className="space-y-6">
@@ -132,5 +140,3 @@ export default async function ForumsPage() {
     </div>
   )
 }
-
-

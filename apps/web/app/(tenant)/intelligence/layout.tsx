@@ -7,6 +7,7 @@ import type { Metadata } from 'next'
 import { SubNavLink } from './sub-nav-link'
 import { headers, cookies } from 'next/headers'
 import { t } from '@/lib/i18n'
+import { resolveLocalePreference } from '@/lib/language'
 
 // [LOG: 20260527_1736]
 
@@ -17,10 +18,9 @@ export async function generateMetadata(): Promise<Metadata> {
 
   const headersList = await headers()
   const acceptLanguage = headersList.get('accept-language') || ''
-  const prefersKorean = acceptLanguage.toLowerCase().includes('ko')
-  const defaultLang = cookieLang ?? (prefersKorean ? 'ko' : 'en')
+  // [LOG: 20260528_1735] Replaced old locale pattern with resolveLocalePreference
 
-  return { title: t('intelligence.layout.title', defaultLang) }
+  return { title: t('intelligence.layout.title', resolveLocalePreference({ cookieLanguage: cookieLang, acceptLanguage })) }
 }
 
 interface TenantConfig {
@@ -42,8 +42,7 @@ export default async function IntelligenceLayout({
   // Resolve language preferences
   const headersList = await headers()
   const acceptLanguage = headersList.get('accept-language') || ''
-  const prefersKorean = acceptLanguage.toLowerCase().includes('ko')
-  const defaultLang = cookieLang ?? (prefersKorean ? 'ko' : 'en')
+  // [LOG: 20260528_1735] Replaced old locale pattern with resolveLocalePreference
 
   let userLanguage = undefined
   let enabledModules: ModuleKey[] = []
@@ -63,7 +62,7 @@ export default async function IntelligenceLayout({
 
   if (!isAdmin) redirect('/home')
 
-  const lang = userLanguage ?? defaultLang
+  const lang = userLanguage ?? resolveLocalePreference({ cookieLanguage: cookieLang, acceptLanguage })
   const isEnabled = enabledModules.includes('intelligence')
 
   if (!isEnabled) {

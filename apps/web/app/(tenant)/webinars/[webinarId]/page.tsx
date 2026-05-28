@@ -8,6 +8,7 @@ import { RegisterButton } from './register-button'
 import { QaSection } from './qa-section'
 import type { WebinarStatus } from '../page'
 import { t } from '@/lib/i18n'
+import { resolveLocalePreference } from '@/lib/language'
 
 export async function generateMetadata({
   params,
@@ -120,13 +121,12 @@ export default async function WebinarDetailPage({
 
   const headersList = await headers()
   const acceptLanguage = headersList.get('accept-language') || ''
-  const prefersKorean = acceptLanguage.toLowerCase().includes('ko')
-  const defaultLang = cookieLang ?? (prefersKorean ? 'ko' : 'en')
+  // [LOG: 20260528_1735] Replaced old locale pattern with resolveLocalePreference
 
   let webinar: WebinarDetail | null = null
   let qaItems: QaItem[] = []
   let fetchError = false
-  let userLanguage = defaultLang
+  let userLanguage = resolveLocalePreference({ cookieLanguage: cookieLang, acceptLanguage })
 
   try {
     // [LOG: 20260527_1730]
@@ -136,7 +136,7 @@ export default async function WebinarDetailPage({
         apiGet<{ language: string | null }>('/api/me', token, 60),
       ])
       webinar = detail
-      userLanguage = profile?.language ?? defaultLang
+      userLanguage = resolveLocalePreference({ profileLanguage: profile?.language, cookieLanguage: cookieLang, acceptLanguage })
     } else {
       webinar = await apiGet<WebinarDetail>(`/api/webinars/${webinarId}`, undefined)
     }
