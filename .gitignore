@@ -62,6 +62,7 @@ coverage/
 .cache/
 tmp/
 temp/
+.zip
 
 # ─── Docker ────────────────────────────────────────────────────────────────────
 # (docker-compose.yml is intentionally committed; .dockerignore is generated)

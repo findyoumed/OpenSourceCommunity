@@ -14,11 +14,11 @@ const inter = Inter({
   display: 'swap',
 })
 
-// [LOG: 20260528_1258] Brand Update to Study With Me
+// [LOG: 20260602_1542] Change browser title template order to 'Study with Me | %s'
 export const metadata: Metadata = {
   title: {
-    template: '%s | Study With Me',
-    default: 'Study With Me — The community platform that sees everything',
+    template: 'Study with Me | %s',
+    default: 'Study with Me — The community platform that sees everything',
   },
   description:
     'A modular B2B SaaS community platform with forums, ideas, events, courses, and intelligent insights.',
